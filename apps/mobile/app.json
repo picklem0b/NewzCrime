@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "NewzCrime",
+    "slug": "newzcrime",
+    "scheme": "newzcrime",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "za.co.newzcrime.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "package": "za.co.newzcrime.app",
+      "permissions": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "WAKE_LOCK"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0B0D"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-notifications"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

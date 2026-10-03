@@ -1,0 +1,40 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# environment — never commit real values
+.env
+.env.*
+!.env.example
+
+# build output
+dist/
+build/
+.expo/
+.expo-shared/
+web-build/
+apps/mobile/android/
+apps/mobile/ios/
+
+# native signing material
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# misc
+coverage/
+*.tsbuildinfo

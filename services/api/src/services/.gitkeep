@@ -1,0 +1,2 @@
+# Domain services: feed, content, sources, search. Business logic lives here,
+# not in route handlers.

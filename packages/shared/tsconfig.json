@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    // The API client is built on `fetch`, so `AbortSignal`, `Response` and
+    // `RequestInit` must be in scope. These globals exist in both Node 20+
+    // and React Native, so no runtime dependency is implied.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/**/*.ts"]
+}
