@@ -19,6 +19,7 @@ import {
   createErrorMiddleware,
   notFoundMiddleware,
 } from './middleware/errorMiddleware';
+import { createAppRouter } from './routes/appRouter';
 import { createFeedRouter } from './routes/feedRouter';
 import { createHealthRouter } from './routes/healthRouter';
 import { createItemRouter } from './routes/itemRouter';
@@ -56,6 +57,7 @@ export function createApp(deps: ApiDependencies): Express {
   );
 
   app.use('/health', createHealthRouter(deps));
+  app.use('/v1/app', createAppRouter());
   app.use('/v1/feed', createFeedRouter(deps));
   app.use('/v1/items', createItemRouter(deps));
   app.use('/v1/sources', createSourceRouter(deps));

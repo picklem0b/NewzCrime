@@ -63,6 +63,30 @@ export const CACHE_TTL = {
   PODCAST_FEED: 3600,
 } as const;
 
+/**
+ * Release metadata served by `GET /v1/app/version` and shown by the app's
+ * update check. Edit `RELEASE_NOTES` when the app version changes.
+ */
+export const APP_RELEASE = {
+  latestVersion: '0.2.0',
+  minimumVersion: '0.1.0',
+} as const;
+
+export const RELEASE_NOTES: ReadonlyArray<{
+  version: string;
+  highlights: ReadonlyArray<string>;
+}> = [
+  {
+    version: '0.2.0',
+    highlights: [
+      'Live news feed from South African outlets',
+      'Court, crime, politics and world filters',
+      'Read headlines aloud and share stories',
+      'Curated crime and true-life podcasts with background playback',
+    ],
+  },
+];
+
 /** Prefixes for every cached key, so the worker can invalidate in bulk. */
 export const CACHE_PREFIX = {
   FEED: 'feed:',
