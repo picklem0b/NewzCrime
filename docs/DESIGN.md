@@ -11,12 +11,78 @@ setting, falling back to the OS appearance when the setting is `system`. No
 other file declares a colour, so replacing the two `palettes` entries replaces
 the whole visual system.
 
-Two rules apply to both:
+### The brand values
 
-- **One accent colour**, used app-wide for interactive emphasis.
-- **Semantic states are reserved.** Live, success, warning and danger have fixed
-  meanings and are never reused as decorative accents. Live is reserved for the
-  live-stream feature, which is not in this release, and is currently unused.
+These are the brand owner's and are used exactly as given, in both palettes
+unless a palette is listed separately:
+
+| Token | Dark | Light | Role |
+|---|---|---|---|
+| `primary` | `#C34B00` | `#C34B00` | Actions: buttons, active tab, switches, the player |
+| `accent` | `#E58A3A` | `#B45309` | Emphasis read against a surface: source lines, badges, active icons |
+| `background` | `#0B0B0B` | `#FFFFFF` | The page |
+| `surface` | `#151515` | `#F7F7F7` | Cards and rows |
+| `text` | `#F5F5F5` | `#141414` | Body and headlines |
+| `textMuted` | `#A3A3A3` | `#5C5C5C` | Secondary text |
+| `border` | `#292929` | `#E5E5E5` | Hairline dividers and outlines |
+
+### The two brand colours are not interchangeable
+
+- **`primary` is a fill.** It goes behind `onPrimary` text or icons — buttons,
+  the active tab, a switch track, the player. Used as a fill it is unambiguous.
+- **`accent` is ink.** It is read directly against a surface — the source line
+  on a story card, a badge, the icon of an action that is currently on.
+
+The rule for choosing: a selection among peers is a *highlight*, so a selected
+`TopicChips` pill and the segmented control in `SettingRow` use `accent`. A
+control that simply acts — a button, the tab bar, a switch — uses `primary`.
+
+`accent` is the one brand value that differs between palettes, for a reason: the
+brand orange `#E58A3A` reads at only 2.6:1 on white, so the light palette
+darkens it to `#B45309` (5.0:1).
+
+### Derived tokens
+
+`surfaceRaised`, `borderStrong`, `textFaint`, `onPrimary` and `onAccent` are not
+brand values. They are steps derived to keep each palette internally consistent.
+`textFaint` is the one to watch, because it carries bylines, timestamps and
+inactive tabs: it is set to clear 4.5:1 on `surface` rather than to look as pale
+as possible. `#6E6E6E` looked right and measured 3.6:1, which is why it is
+`#868686`.
+
+### Contrast
+
+Every text pair is measured against WCAG AA — 4.5:1 for body text, 3:1 for UI
+components. Measured values:
+
+| Pair | Dark | Light |
+|---|---|---|
+| `text` on `background` | 18.05:1 | 18.42:1 |
+| `text` on `surface` | 16.75:1 | 17.20:1 |
+| `textMuted` on `surface` | 7.24:1 | 6.24:1 |
+| `textFaint` on `surface` | 5.02:1 | 4.69:1 |
+| `accent` on `background` | 7.52:1 | 5.02:1 |
+| `onPrimary` on `primary` | 4.85:1 | 4.85:1 |
+| `onAccent` on `accent` | 7.52:1 | 5.02:1 |
+| `primary` as ink on `background` | **4.06:1** | 4.85:1 |
+
+The last row is the one open item. `primary` clears 3:1 on the dark background,
+so it is legible as an icon, but the active tab tint also colours an 11px label,
+which is body text and wants 4.5:1. Two ways out, both cheap: use `accent`
+(7.52:1) for the tab tint, or give `primary` a lighter dark-mode-only variant.
+
+### Reserved meanings
+
+Live, success, warning and danger have fixed meanings and are never reused as
+decorative accents. Live is reserved for the live-stream feature, which is not in
+this release, and is currently unused.
+
+## Copy
+
+The slogan is **Keeping you updated.** — spelled exactly that way, with the full
+stop. It is the brand line and appears under the wordmark on the Welcome screen;
+it is held in one place (`apps/mobile/src/app/auth/Welcome.tsx`) so the app never
+spells it two ways.
 
 ## Typography
 
