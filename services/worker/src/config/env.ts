@@ -33,6 +33,10 @@ const schema = z.object({
   WORKER_FETCH_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
   PODCAST_INDEX_API_KEY: z.string().default(''),
   PODCAST_INDEX_API_SECRET: z.string().default(''),
+  WORKER_INGEST_ON_START: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
 });
 
 /** Render zod issues as one indented line each, for the startup log. */
@@ -69,5 +73,6 @@ export function loadWorkerConfig(
     fetchTimeoutMs: values.WORKER_FETCH_TIMEOUT_MS,
     podcastIndexApiKey: values.PODCAST_INDEX_API_KEY,
     podcastIndexApiSecret: values.PODCAST_INDEX_API_SECRET,
+    ingestOnStart: values.WORKER_INGEST_ON_START,
   };
 }
