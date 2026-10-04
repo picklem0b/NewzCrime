@@ -236,6 +236,49 @@ the current setup, where the API is served over plain HTTP beside the app. It
 should be removed once the API is served over HTTPS, which is the point of
 moving to Supabase.
 
+## Android: one ABI, not four
+
+React Native ships prebuilt native libraries for four ABIs, so by default an
+APK carries four copies of every `.so` file. Measured from the first preview
+APK (99,324,354 bytes), they were 80.6% of it:
+
+| ABI | compressed | share of APK |
+|---|---|---|
+| `arm64-v8a` | 20,905,536 | 21.0% |
+| `x86_64` | 22,273,472 | 22.4% |
+| `x86` | 21,875,332 | 22.0% |
+| `armeabi-v7a` | 15,048,392 | 15.2% |
+
+`x86` and `x86_64` are emulators, and `armeabi-v7a` is 32-bit, which no Android
+device capable of running this app is. Building them costs every user who
+downloads the APK roughly 59 MB for no benefit.
+
+The build is therefore restricted to `arm64-v8a`, which takes the APK to around
+38 MB — a 60% reduction.
+
+This is written as a local config plugin, `apps/mobile/plugins/withAndroidBuildArchs.js`,
+rather than as a property of `expo-build-properties`. The SDK 52 release of that
+plugin (0.13.3) has no architecture option at all; its `buildArchs` property
+arrived with a later SDK. A local plugin adds no dependency and cannot drift
+from the SDK version.
+
+The plugin writes `reactNativeArchitectures` to `android/gradle.properties`,
+which the React Native Gradle plugin reads through `PropertyUtils` and applies
+as `ndk { abiFilters }` in `NdkConfiguratorUtils`. That path only runs when the
+New Architecture is enabled, which `app.json` sets, so the setting is live.
+
+The list stays in `app.json`, so widening it is a one-line edit:
+
+```json
+["./plugins/withAndroidBuildArchs", { "archs": ["arm64-v8a", "x86_64"] }]
+```
+
+One consequence to revisit before publishing to Google Play: the `production`
+profile builds an `.aab`, and Play generates per-device downloads from whatever
+ABIs the bundle contains. An arm64-only bundle is right for every phone in the
+target market but would exclude a 32-bit-only device, so if that coverage ever
+matters, add `armeabi-v7a` back for the production profile.
+
 ## Tags: `v1.phase.step`
 
 Each phase is committed in steps, and every step is tagged. The tag names the

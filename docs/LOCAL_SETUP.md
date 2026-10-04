@@ -178,8 +178,8 @@ Built APKs are listed under the project's builds on
 
 ### Android build settings that matter
 
-Two settings in `app.json` exist for reasons that are not obvious, and both
-produce confusing failures if removed:
+Three settings in `app.json` exist for reasons that are not obvious, and each
+produces a confusing failure or a needlessly large download if removed:
 
 - `expo-build-properties` → `android.kotlinVersion: "1.9.24"`. Expo's Android
 template defaults `ext.kotlinVersion` to `1.9.25` but declares
@@ -194,6 +194,11 @@ later block cleartext HTTP, and loopback is not exempt, so without this a
 **release** build cannot reach an API on `http://`. Development builds are
 unaffected because their debug manifest already allows it. Remove it once the
 API is served over HTTPS.
+- `./plugins/withAndroidBuildArchs` → `archs: ["arm64-v8a"]`. React Native
+ships native libraries for four ABIs, and they were 80.6% of the first APK. The
+other three are for emulators and 32-bit devices, so dropping them takes the
+APK from 95 MB to about 38 MB. To build for an emulator as well, add
+`"x86_64"` to the list.
 
 ### Other commands
 
