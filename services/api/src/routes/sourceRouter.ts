@@ -1,21 +1,69 @@
+import { CACHE_TTL, PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@newzcrime/shared';
 import { Router } from 'express';
-import type { ApiErrorBody } from '@newzcrime/shared';
+import { z } from 'zod';
 
-/**
- * `/v1/sources` — outlets and podcast shows, plus the items for each.
- *
- * TODO: list sources, fetch one source and fetch its items.
- */
-export const sourceRouter = Router();
+import { sourceParamsSchema } from '../schemas/resourceParams.schema';
+import {
+  getSource,
+  listAllSources,
+  listSourceItems,
+} from '../services/sourceService';
+import type { ApiDependencies } from '../types';
+import { asyncHandler } from '../utils/asyncHandler';
+import { HttpError } from '../utils/httpError';
 
-sourceRouter.get('/', (_req, res) => {
-  const body: ApiErrorBody = { error: 'not_implemented' };
-  res.status(501).json(body);
+const pageQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(PAGE_SIZE_MAX)
+    .default(PAGE_SIZE_DEFAULT),
 });
 
-sourceRouter.get('/:sourceId', (_req, res) => {
-  const body: ApiErrorBody = { error: 'not_implemented' };
-  res.status(501).json(body);
-});
+/** `/v1/sources` — outlets and podcast shows, plus the items for each. */
+export function createSourceRouter(deps: ApiDependencies): Router {
+  const router = Router();
 
-export default sourceRouter;
+  router.get(
+    '/',
+    asyncHandler(async (_req, res) => {
+      const sources = await listAllSources(deps);
+      res.set('Cache-Control', `public, max-age=${CACHE_TTL.SOURCES}`);
+      res.json(sources);
+    })
+  );
+
+  router.get(
+    '/:sourceId/items',
+    asyncHandler(async (req, res) => {
+      const { sourceId } = sourceParamsSchema.parse(req.params);
+      const page = pageQuerySchema.parse(req.query);
+
+      const result = await listSourceItems(deps, sourceId, page);
+
+      res.set('Cache-Control', `public, max-age=${CACHE_TTL.FEED}`);
+      res.json(result);
+    })
+  );
+
+  router.get(
+    '/:sourceId',
+    asyncHandler(async (req, res) => {
+      const { sourceId } = sourceParamsSchema.parse(req.params);
+
+      const source = await getSource(deps, sourceId);
+      if (!source) {
+        throw new HttpError(404, 'not_found', 'No source with that id');
+      }
+
+      res.set('Cache-Control', `public, max-age=${CACHE_TTL.SOURCES}`);
+      res.json(source);
+    })
+  );
+
+  return router;
+}
+
+export default createSourceRouter;
