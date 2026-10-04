@@ -2,25 +2,38 @@
  * Audio player store (zustand), backed by react-native-track-player.
  *
  * Track Player owns playback and the lock-screen controls; this store mirrors
- * what the UI needs and keeps setup in one place. Setup happens lazily on the
- * first play, so a reader who never opens a podcast never pays for it.
+ * what the UI needs and keeps setup in one place. The native module is resolved
+ * through `playerService`, so the store can be imported by any screen without
+ * the app failing to boot where audio is unavailable. Setup happens lazily on
+ * the first play, so a reader who never opens a podcast never pays for it.
  */
 
 import type { ContentItem } from '@newzcrime/shared';
-import TrackPlayer, { Capability } from 'react-native-track-player';
 import type { Track } from 'react-native-track-player';
 import { create } from 'zustand';
 
+import {
+  activePlayer,
+  loadPlayer,
+  PLAYER_UNAVAILABLE,
+} from '@/services/playerService';
+import type { PlayerHandle } from '@/services/playerService';
 import type { PlayerStore } from '@/types';
 
 let isPlayerReady = false;
 
-async function ensurePlayer(): Promise<void> {
-  if (isPlayerReady) return;
+/** Sets up the native player the first time audio is requested. */
+async function ensurePlayer(): Promise<PlayerHandle['player']> {
+  const handle = await loadPlayer();
+  if (!handle) throw new Error(PLAYER_UNAVAILABLE);
 
-  await TrackPlayer.setupPlayer();
-  await TrackPlayer.updateOptions({
-    // Drives `useProgress`, which the player screen reads.
+  if (isPlayerReady) return handle.player;
+
+  const { player, Capability } = handle;
+
+  await player.setupPlayer();
+  await player.updateOptions({
+    // Drives the progress poll in `usePlayer`.
     progressUpdateEventInterval: 1,
     capabilities: [
       Capability.Play,
@@ -41,6 +54,7 @@ async function ensurePlayer(): Promise<void> {
   });
 
   isPlayerReady = true;
+  return player;
 }
 
 const toTrack = (episode: ContentItem): Track => ({
@@ -65,7 +79,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({ status: 'loading', error: null });
 
     try {
-      await ensurePlayer();
+      const player = await ensurePlayer();
 
       const requested = queue && queue.length > 0 ? queue : [episode];
       const playable = requested.filter((item) => item.audioUrl);
@@ -73,12 +87,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         throw new Error('This episode has no audio source');
       }
 
-      await TrackPlayer.reset();
-      await TrackPlayer.add(playable.map(toTrack));
+      await player.reset();
+      await player.add(playable.map(toTrack));
 
       const index = playable.findIndex((item) => item.id === episode.id);
-      await TrackPlayer.skip(index >= 0 ? index : 0);
-      await TrackPlayer.play();
+      await player.skip(index >= 0 ? index : 0);
+      await player.play();
 
       set({ current: episode, queue: playable, status: 'playing' });
     } catch (error) {
@@ -90,12 +104,18 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { current, status } = get();
     if (!current) return;
 
+    const player = await activePlayer();
+    if (!player) {
+      set({ error: PLAYER_UNAVAILABLE });
+      return;
+    }
+
     try {
       if (status === 'playing') {
-        await TrackPlayer.pause();
+        await player.pause();
         set({ status: 'paused' });
       } else {
-        await TrackPlayer.play();
+        await player.play();
         set({ status: 'playing' });
       }
     } catch (error) {
@@ -104,8 +124,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   stop: async () => {
+    const player = await activePlayer();
+
     try {
-      await TrackPlayer.stop();
+      await player?.stop();
     } catch (error) {
       set({ error: errorMessage(error) });
     } finally {
@@ -114,32 +136,40 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   seekTo: async (seconds) => {
+    const player = await activePlayer();
+
     try {
-      await TrackPlayer.seekTo(seconds);
+      await player?.seekTo(seconds);
     } catch (error) {
       set({ error: errorMessage(error) });
     }
   },
 
   skipBy: async (seconds) => {
+    const player = await activePlayer();
+
     try {
-      await TrackPlayer.seekBy(seconds);
+      await player?.seekBy(seconds);
     } catch (error) {
       set({ error: errorMessage(error) });
     }
   },
 
   next: async () => {
+    const player = await activePlayer();
+
     try {
-      await TrackPlayer.skipToNext();
+      await player?.skipToNext();
     } catch (error) {
       set({ error: errorMessage(error) });
     }
   },
 
   previous: async () => {
+    const player = await activePlayer();
+
     try {
-      await TrackPlayer.skipToPrevious();
+      await player?.skipToPrevious();
     } catch (error) {
       set({ error: errorMessage(error) });
     }

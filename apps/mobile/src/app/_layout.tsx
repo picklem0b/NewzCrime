@@ -4,26 +4,31 @@ import { useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import TrackPlayer from 'react-native-track-player';
 
 import { useTheme } from '@/hooks/useTheme';
 import { playbackService } from '@/services/playbackService';
+import { loadPlayer } from '@/services/playerService';
 import { useSavedStore } from '@/stores/saved.store';
 import { useSettingsStore } from '@/stores/settings.store';
 
 /**
  * Root navigator.
  *
- * The player's background service is registered once, at module scope, because
- * it must be listening before the first track is loaded. Stored settings and
- * bookmarks are read on mount; screens render defaults until that finishes.
+ * The player's background service is registered on the first effect, which
+ * still runs before any screen can start a track, and only when this build
+ * actually ships the native player. Stored settings and bookmarks are read on
+ * mount; screens render defaults until that finishes.
  */
-TrackPlayer.registerPlaybackService(() => playbackService);
-
 export default function RootLayout(): ReactElement {
   const { colour, scheme } = useTheme();
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const hydrateSaved = useSavedStore((state) => state.hydrate);
+
+  useEffect(() => {
+    void loadPlayer().then((handle) => {
+      handle?.player.registerPlaybackService(() => playbackService);
+    });
+  }, []);
 
   useEffect(() => {
     void hydrateSettings();
