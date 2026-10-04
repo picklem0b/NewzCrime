@@ -3,7 +3,7 @@
  *
  * Every ingestion source implements an adapter interface, and the job layer
  * depends only on those interfaces, so adding a source does not change the job
- * layer.
+ * layer. Configuration for the process is described here too.
  */
 
 import type { NormalizedItem, Source, SourceType } from '@newzcrime/shared';
@@ -35,17 +35,47 @@ export interface PodcastIndexAdapter {
   fetchShowByFeedUrl(feedUrl: string): Promise<PodcastShow | null>;
 }
 
+/** Log levels accepted by pino. */
+export type LogLevel =
+  | 'fatal'
+  | 'error'
+  | 'warn'
+  | 'info'
+  | 'debug'
+  | 'trace';
+
 /** Everything the worker process needs, resolved once at startup. */
 export interface WorkerConfig {
-  nodeEnv: string;
+  nodeEnv: 'development' | 'test' | 'production';
   /**
    * Direct connection (port 5432), never the Supabase transaction pooler:
    * pg-boss needs `LISTEN/NOTIFY`, which port 6543 does not support.
    */
   databaseUrl: string;
-  redisRestUrl: string;
-  redisRestToken: string;
-  /** Cron expression for the ingest scheduler. */
+  /** TCP Redis endpoint, e.g. `redis://127.0.0.1:6379`. */
+  redisUrl: string;
   ingestCron: string;
-  logLevel: string;
+  logLevel: LogLevel;
+  /** Sent to publishers that reject unknown user agents. */
+  userAgent: string;
+  /** Per-request timeout when fetching a feed. */
+  fetchTimeoutMs: number;
+  /** Podcast Index API key and secret; discovery is skipped when either is empty. */
+  podcastIndexApiKey: string;
+  podcastIndexApiSecret: string;
+}
+
+/** Payload of the per-source ingest job. */
+export interface IngestSourceJobData {
+  sourceId: string;
+}
+
+/** Result of one source ingest, recorded in the log. */
+export interface IngestSourceResult {
+  sourceId: string;
+  sourceName: string;
+  fetched: number;
+  inserted: number;
+  failed: boolean;
+  error?: string;
 }

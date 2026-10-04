@@ -10,14 +10,19 @@ export type ContentType = 'article' | 'court_ruling' | 'podcast_episode';
 /** How the worker ingests a source. */
 export type SourceType = 'rss' | 'podcast_index';
 
-/** Feed filters the client may ask for. */
-export type Topic = 'all' | 'court' | 'crime' | 'politics' | 'world';
+/** A topic an item can carry. Items with no match stay untagged. */
+export type ItemTopic = 'court' | 'crime' | 'politics' | 'world';
+
+/** Feed filters the client may ask for. `all` means no topic filter. */
+export type Topic = 'all' | ItemTopic;
 
 /** A news outlet or a podcast show — both are rows in `sources`. */
 export interface Source {
   id: string;
   name: string;
   type: SourceType;
+  /** Content kind every item from this source is stored as. */
+  contentType: ContentType;
   feedUrl: string;
   siteUrl: string | null;
   logoUrl: string | null;
@@ -44,6 +49,8 @@ export interface ContentItem extends NormalizedItem {
   id: string;
   sourceId: string;
   type: ContentType;
+  /** Classified topic, or `null` when the text matched nothing. */
+  topic: ItemTopic | null;
 }
 
 /** Cursor-paginated list envelope. */

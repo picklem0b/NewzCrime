@@ -1,19 +1,30 @@
 /**
- * API service contracts.
+ * Configuration the API process is built from, resolved once at startup.
  *
- * Describes the configuration the app is built from. Request/response shapes
- * that cross the network live in `@newzcrime/shared`, not here — this file is
- * for things the process itself needs.
+ * Request and response shapes that cross the network live in
+ * `@newzcrime/shared`; this file covers what the process itself needs.
  */
 
-/** Everything `createApp` needs, resolved once at startup. */
 export interface ApiConfig {
-  nodeEnv: string;
+  nodeEnv: 'development' | 'test' | 'production';
   port: number;
+  /** Allowed CORS origins. Empty means same-origin only. */
   corsOrigins: string[];
-  /** Pooled Postgres URL — port 6543 on Supabase. */
+  /** Pooled Postgres connection — port 6543 on Supabase. */
   databaseUrl: string;
-  /** Upstash REST endpoint; empty when caching is disabled locally. */
-  redisRestUrl: string;
-  redisRestToken: string;
+  /** TCP Redis endpoint, e.g. `redis://127.0.0.1:6379`. */
+  redisUrl: string;
+  logLevel: LogLevel;
+  /** Requests per window per IP for the public API. */
+  rateLimitMax: number;
+  rateLimitWindowMs: number;
 }
+
+/** Log levels accepted by pino. */
+export type LogLevel =
+  | 'fatal'
+  | 'error'
+  | 'warn'
+  | 'info'
+  | 'debug'
+  | 'trace';
