@@ -11,7 +11,7 @@ import 'dotenv/config';
 import { createCache } from '@newzcrime/cache';
 import { createDatabase, listActiveSources } from '@newzcrime/db';
 
-import { createRssAdapter } from '../src/adapters/rssAdapter';
+import { createAdapters } from '../src/adapters';
 import { loadWorkerConfig } from '../src/config/env';
 import { ingestSource } from '../src/jobs/ingestSourceJob';
 import { createLogger } from '../src/logger';
@@ -22,12 +22,7 @@ async function main(): Promise<void> {
 
   const db = createDatabase({ connectionString: config.databaseUrl });
   const cache = await createCache({ url: config.redisUrl });
-  const adapters = [
-    createRssAdapter({
-      userAgent: config.userAgent,
-      timeoutMs: config.fetchTimeoutMs,
-    }),
-  ];
+  const adapters = createAdapters(config);
 
   const requestedId = process.argv[2];
   const sources = await listActiveSources(db);

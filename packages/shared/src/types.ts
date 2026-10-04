@@ -7,8 +7,13 @@
 /** How a piece of content reaches the reader. */
 export type ContentType = 'article' | 'court_ruling' | 'podcast_episode';
 
-/** How the worker ingests a source. */
-export type SourceType = 'rss' | 'podcast_index';
+/**
+ * How the worker ingests a source.
+ *
+ * `saflii` is RSS too, but its items carry no dates or excerpts, so it has a
+ * normaliser of its own rather than sharing the generic RSS one.
+ */
+export type SourceType = 'rss' | 'podcast_index' | 'saflii';
 
 /** A topic an item can carry. Items with no match stay untagged. */
 export type ItemTopic = 'court' | 'crime' | 'politics' | 'world';
