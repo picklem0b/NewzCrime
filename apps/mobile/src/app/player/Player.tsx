@@ -182,7 +182,7 @@ export default function PlayerScreen(): ReactElement {
 
             <Pressable
               accessibilityRole='button'
-              accessibilityLabel={player.status === 'playing' ? 'PauseIcon' : 'PlayIcon'}
+              accessibilityLabel={player.status === 'playing' ? 'Pause' : 'Play'}
               onPress={() => {
                 void player.toggle();
               }}

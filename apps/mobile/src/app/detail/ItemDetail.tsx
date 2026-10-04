@@ -167,7 +167,7 @@ export default function ItemDetailScreen(): ReactElement {
                   fontWeight: typography.weight.semibold,
                 }}
               >
-                {isPlaying ? 'PauseIcon episode' : 'PlayIcon episode'}
+                {isPlaying ? 'Pause episode' : 'Play episode'}
               </Text>
             </Pressable>
           ) : null}
