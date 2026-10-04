@@ -27,17 +27,18 @@ deferred. See [`ROADMAP.md`](ROADMAP.md) for what each would cost.
 
 | Screen | Purpose |
 |---|---|
-| `auth/Welcome` | First screen; leads to sign in or registration |
-| `auth/LoginSheet` | Sign in |
-| `auth/RegisterSheet` | Registration |
-| `tabs/Home` | The court and crime feed |
-| `tabs/Discover` | Podcast shows and outlets to follow |
+| `tabs/Home` | The court and crime feed, with topic filters, read-aloud and sharing |
+| `tabs/Discover` | Search, plus every outlet and show to browse |
 | `tabs/Saved` | Bookmarked articles and episodes |
-| `tabs/Settings` | Preferences |
+| `tabs/Podcasts` | Curated shows and their latest episodes |
+| `tabs/Settings` | Appearance, release notes and the update check |
 | `search/Search` | Search over stored articles and episodes |
 | `detail/ItemDetail` | An article, judgment or episode |
 | `detail/SourceDetail` | One outlet or one show |
-| `player/Player` | Audio playback |
+| `player/Player` | Audio playback with background and lock-screen controls |
+| `auth/Welcome` | Not routed to yet; accounts are a later phase |
+| `auth/LoginSheet` | Not routed to yet |
+| `auth/RegisterSheet` | Not routed to yet |
 
 ## Definition of done
 

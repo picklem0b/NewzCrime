@@ -4,7 +4,7 @@
 Expo app ──▶ Express API ──▶ Redis (cache)
                   │
                   ▼
-             Postgres ◀── worker (RSS, Podcast Index)
+             Postgres ◀── worker (RSS ingestion, pg-boss queue)
 ```
 
 A modular monolith API plus a separate ingestion worker. The API is stateless
@@ -19,12 +19,20 @@ feed competes with user requests.
 
 | Layer | Local development | Production |
 |---|---|---|
-| Database | Postgres via `docker-compose` | Supabase Postgres |
-| Cache | Redis via `docker-compose` | Upstash Redis |
-| Job queue | pg-boss (inside Postgres) | pg-boss (inside Postgres) |
+| Database | local Postgres | Supabase Postgres |
+| Cache | local Redis | Upstash Redis (TCP endpoint) |
+| Job queue | pg-boss, inside Postgres | same |
 | API | `services/api` | same |
 | Worker | `services/worker` | same |
 | Language | TypeScript, strict, run through `tsx` | same |
+
+## Packages
+
+| Package | Responsibility |
+|---|---|
+| `@newzcrime/shared` | Domain types, constants, API client. Dependency-free so it stays cheap for the app to bundle |
+| `@newzcrime/db` | Pool, repositories, cursor codec, migrations. Both services run the same SQL |
+| `@newzcrime/cache` | Redis client with an in-process fallback |
 
 ## Database connections
 
@@ -55,14 +63,27 @@ job layer owns persistence, de-duplication and cache invalidation.
 
 | Adapter | Provides | Notes |
 |---|---|---|
-| `rssAdapter` | News articles and podcast episodes | No key, no quota |
+| `rssAdapter` | News articles and podcast episodes | Handles RSS 2.0 and Atom; no key, no quota |
 | `podcastIndexAdapter` | Podcast show discovery | Episodes still arrive through RSS |
+
+The scheduler enqueues one fan-out job on a cron. That job reads the active
+sources and enqueues one ingest job per source, so each feed fails or succeeds on
+its own. A failing source is logged and counted; it does not fail the run.
+
+A source's `contentType` decides the content kind of its items, and a keyword
+classifier assigns each item a topic at ingest. Both are stored on the row, so
+the feed filter is an indexed column lookup rather than a scan at request time.
 
 ## Caching
 
-Redis caches feed responses, upstream payloads and rate-limit counters. The job
-queue does not live in Redis; see the connection constraint above. The cache
-client is not wired up yet.
+Redis caches feed pages, individual items, source lists and search results. Keys
+are namespaced by the prefixes in `packages/shared/src/constants.ts`, and the
+worker drops the feed and search namespaces when an ingest inserts something new.
+
+If Redis is unreachable the cache degrades to an in-process map instead of
+failing. `/health` reports which backend is live.
+
+The job queue does not live in Redis; see the connection constraint above.
 
 ## Client audio
 
@@ -77,9 +98,11 @@ than Expo Go. Platform configuration already in `app.json`:
 - Android: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`,
   `WAKE_LOCK`
 
+Episodes store the publisher's audio enclosure URL. Audio is streamed from the
+publisher and never copied.
+
 ## Supabase
 
 Production Postgres is Supabase, so the schema and queries are unchanged from
 local development. Supabase also offers Auth, Storage and Realtime, none of
-which are in use yet. Auth is a candidate for the accounts work in a later
-phase.
+which are in use yet. Auth is the intended provider for the accounts phase.
