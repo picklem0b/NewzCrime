@@ -1,6 +1,7 @@
 {
   "name": "newzcrime",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "author": "Lethabo KHEDAMA <lethabokhedama@gmail.com>",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
