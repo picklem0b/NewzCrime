@@ -10,10 +10,13 @@
   },
   "scripts": {
     "migrate": "tsx scripts/migrate.ts",
+    "test": "echo \"no tests configured\"",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"no lint configured\""
   },
   "dependencies": {
+    "@newzcrime/shared": "workspace:^",
+    "dotenv": "^16.4.7",
     "pg": "^8.13.1"
   },
   "devDependencies": {
