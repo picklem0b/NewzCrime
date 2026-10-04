@@ -40,6 +40,8 @@ export interface NormalizedItem {
   url: string;
   excerpt: string | null;
   imageUrl: string | null;
+  /** Podcast audio enclosure. `null` for anything without playable audio. */
+  audioUrl: string | null;
   author: string | null;
   publishedAt: string;
 }

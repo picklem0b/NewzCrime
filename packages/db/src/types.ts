@@ -75,6 +75,7 @@ export interface ContentItemRow extends QueryResultRow {
   url: string;
   excerpt: string | null;
   image_url: string | null;
+  audio_url: string | null;
   author: string | null;
   published_at: Date;
   created_at: Date;
