@@ -69,7 +69,7 @@ export const CACHE_TTL = {
  * update check. Edit `RELEASE_NOTES` when the app version changes.
  */
 export const APP_RELEASE = {
-  latestVersion: '0.2.0',
+  latestVersion: '1.0.0',
   minimumVersion: '0.1.0',
 } as const;
 
@@ -77,6 +77,14 @@ export const RELEASE_NOTES: ReadonlyArray<{
   version: string;
   highlights: ReadonlyArray<string>;
 }> = [
+  {
+    version: '1.0.0',
+    highlights: [
+      'First installable Android build',
+      'Court judgments from SAFLII ingest as their own topic',
+      'Podcast playback that keeps going with the screen off',
+    ],
+  },
   {
     version: '0.2.0',
     highlights: [

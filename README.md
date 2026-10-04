@@ -78,3 +78,8 @@ pnpm --filter ./apps/mobile ios
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phase history and deferred work |
 | [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) | File naming, code organisation, commits and tags |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Visual system and the artwork brief |
+
+## Creator
+
+Lethabo KHEDAMA
+
