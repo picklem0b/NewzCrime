@@ -45,6 +45,20 @@ export interface RssAdapterOptions {
   maxItems?: number;
 }
 
+/**
+ * Options the SAFLII adapter needs. There is no `maxItems` override beyond the
+ * default: a court feed only ever lists its own recent decisions.
+ */
+export interface SafliiAdapterOptions {
+  /** Sent as the `User-Agent`; SAFLII sits behind Cloudflare, which rejects
+   * requests with no user agent outright. */
+  userAgent: string;
+  /** Abort a feed fetch after this long. */
+  timeoutMs: number;
+  /** Upper bound on items taken from one court feed. */
+  maxItems?: number;
+}
+
 /** Options for Podcast Index discovery. Skipped when the key is empty. */
 export interface PodcastIndexAdapterOptions {
   apiKey: string;

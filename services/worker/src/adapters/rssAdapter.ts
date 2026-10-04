@@ -18,11 +18,16 @@ import { XMLParser } from 'fast-xml-parser';
 import type { NormalizedItem, Source } from '@newzcrime/shared';
 
 import type { RssAdapterOptions, SourceAdapter } from '../types';
+import { fetchXml } from '../utils/fetchXml';
 import { firstImageUrl, stripHtml, toExcerpt } from '../utils/text';
 
 type XmlNode = Record<string, unknown>;
 
 const DEFAULT_MAX_ITEMS = 60;
+
+/** Content types a publisher's feed might legitimately be served as. */
+const FEED_ACCEPT =
+  'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8';
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -226,34 +231,6 @@ function mapEntry(entry: XmlNode): NormalizedItem | null {
   };
 }
 
-async function fetchXml(
-  url: string,
-  options: RssAdapterOptions
-): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options.timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      redirect: 'follow',
-      signal: controller.signal,
-      headers: {
-        'user-agent': options.userAgent,
-        accept:
-          'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`responded ${response.status} ${response.statusText}`);
-    }
-
-    return await response.text();
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 export function createRssAdapter(options: RssAdapterOptions): SourceAdapter {
   const maxItems = options.maxItems ?? DEFAULT_MAX_ITEMS;
 
@@ -261,7 +238,11 @@ export function createRssAdapter(options: RssAdapterOptions): SourceAdapter {
     type: 'rss',
 
     async fetchFeed(source: Source): Promise<NormalizedItem[]> {
-      const xml = await fetchXml(source.feedUrl, options);
+      const xml = await fetchXml(source.feedUrl, {
+        userAgent: options.userAgent,
+        timeoutMs: options.timeoutMs,
+        accept: FEED_ACCEPT,
+      });
       const parsed = parser.parse(xml) as XmlNode;
 
       const channel = asNode(asNode(parsed.rss)?.channel);

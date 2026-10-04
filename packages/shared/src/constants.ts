@@ -20,6 +20,7 @@ export const CONTENT_TYPE = {
 export const SOURCE_TYPE = {
   RSS: 'rss',
   PODCAST_INDEX: 'podcast_index',
+  SAFLII: 'saflii',
 } as const satisfies Record<string, SourceType>;
 
 /** Feed topics offered as filter chips on Home. */

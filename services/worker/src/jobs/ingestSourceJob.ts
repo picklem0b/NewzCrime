@@ -9,7 +9,16 @@
 import type { Cache } from '@newzcrime/cache';
 import type { ContentItemInput, Database } from '@newzcrime/db';
 import { getSourceById, upsertItems } from '@newzcrime/db';
-import { CACHE_PREFIX, CONTENT_TYPE } from '@newzcrime/shared';
+import {
+  CACHE_PREFIX,
+  CONTENT_TYPE,
+  ITEM_TOPIC,
+} from '@newzcrime/shared';
+import type {
+  ContentType,
+  ItemTopic,
+  NormalizedItem,
+} from '@newzcrime/shared';
 import type PgBoss from 'pg-boss';
 import type { Logger } from 'pino';
 
@@ -25,6 +34,24 @@ export interface IngestSourceDeps {
   cache: Cache;
   adapters: ReadonlyArray<SourceAdapter>;
   logger: Logger;
+}
+
+/**
+ * The topic an item carries.
+ *
+ * A podcast episode is deliberately untagged: it belongs to a show, not to a
+ * news topic. A judgment is always `court` on its face — its title is a case
+ * name, which the keyword heuristic would read as `null`, and a court ruling
+ * filed under no topic is the one thing a court-ruling feed must never do.
+ * Everything else is classified from its text.
+ */
+function topicForSource(
+  contentType: ContentType,
+  item: NormalizedItem
+): ItemTopic | null {
+  if (contentType === CONTENT_TYPE.PODCAST_EPISODE) return null;
+  if (contentType === CONTENT_TYPE.COURT_RULING) return ITEM_TOPIC.COURT;
+  return classifyTopic(item.title, item.excerpt);
 }
 
 /** Fetch one source and store what came back. Never throws on feed failure. */
@@ -68,10 +95,7 @@ export async function ingestSource(
 
     const inputs: ContentItemInput[] = fetched.map((item) => ({
       ...item,
-      topic:
-        source.contentType === CONTENT_TYPE.PODCAST_EPISODE
-          ? null
-          : classifyTopic(item.title, item.excerpt),
+      topic: topicForSource(source.contentType, item),
     }));
 
     const result = await upsertItems(db, source, inputs);

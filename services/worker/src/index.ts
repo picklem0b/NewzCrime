@@ -11,7 +11,7 @@ import 'dotenv/config';
 import { createCache } from '@newzcrime/cache';
 import { createDatabase } from '@newzcrime/db';
 
-import { createRssAdapter } from './adapters/rssAdapter';
+import { createAdapters } from './adapters';
 import { loadWorkerConfig } from './config/env';
 import { createIngestAllJob } from './jobs/ingestAllJob';
 import { createIngestSourceJob } from './jobs/ingestSourceJob';
@@ -38,12 +38,7 @@ async function main(): Promise<void> {
       logger.warn({ reason }, 'redis unavailable; using in-memory cache'),
   });
 
-  const adapters = [
-    createRssAdapter({
-      userAgent: config.userAgent,
-      timeoutMs: config.fetchTimeoutMs,
-    }),
-  ];
+  const adapters = createAdapters(config);
 
   const boss = await createQueue(config, logger);
 
