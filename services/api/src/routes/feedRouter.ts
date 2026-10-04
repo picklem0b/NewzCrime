@@ -1,19 +1,38 @@
+import { CACHE_TTL } from '@newzcrime/shared';
 import { Router } from 'express';
-import type { ApiErrorBody } from '@newzcrime/shared';
+
+import { feedQuerySchema, toItemTopic } from '../schemas/feedQuery.schema';
+import { getFeed } from '../services/feedService';
+import type { ApiDependencies } from '../types';
+import { asyncHandler } from '../utils/asyncHandler';
 
 /**
  * `/v1/feed` — reverse-chronological feed of court, crime and news items.
  *
  * Query: `?topic= &sourceId= &includePodcasts=1 &cursor= &limit=`
- *
- * TODO: validate against `FeedQuery`, read through the cache and query
- * Postgres. Handlers belong in `../services`; this file wires paths only.
  */
-export const feedRouter = Router();
+export function createFeedRouter(deps: ApiDependencies): Router {
+  const router = Router();
 
-feedRouter.get('/', (_req, res) => {
-  const body: ApiErrorBody = { error: 'not_implemented' };
-  res.status(501).json(body);
-});
+  router.get(
+    '/',
+    asyncHandler(async (req, res) => {
+      const input = feedQuerySchema.parse(req.query);
 
-export default feedRouter;
+      const page = await getFeed(deps, {
+        cursor: input.cursor,
+        limit: input.limit,
+        topic: toItemTopic(input.topic),
+        sourceId: input.sourceId,
+        includePodcasts: input.includePodcasts,
+      });
+
+      res.set('Cache-Control', `public, max-age=${CACHE_TTL.FEED}`);
+      res.json(page);
+    })
+  );
+
+  return router;
+}
+
+export default createFeedRouter;
