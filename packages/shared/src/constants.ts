@@ -7,7 +7,7 @@
  * First-release scope: articles, court rulings and podcast episodes.
  */
 
-import type { ContentType, SourceType, Topic } from './types';
+import type { ContentType, ItemTopic, SourceType, Topic } from './types';
 
 /** Content kinds stored in `content_items.type`. */
 export const CONTENT_TYPE = {
@@ -31,6 +31,25 @@ export const TOPIC = {
   WORLD: 'world',
 } as const satisfies Record<string, Topic>;
 
+/**
+ * Topics an item can be tagged with. Excludes `all`, which is a filter value
+ * rather than a property of any item.
+ */
+export const ITEM_TOPIC = {
+  COURT: 'court',
+  CRIME: 'crime',
+  POLITICS: 'politics',
+  WORLD: 'world',
+} as const satisfies Record<string, ItemTopic>;
+
+/** Every item topic, in display order. */
+export const ITEM_TOPICS = [
+  ITEM_TOPIC.COURT,
+  ITEM_TOPIC.CRIME,
+  ITEM_TOPIC.POLITICS,
+  ITEM_TOPIC.WORLD,
+] as const satisfies ReadonlyArray<ItemTopic>;
+
 /** API pagination bounds. */
 export const PAGE_SIZE_DEFAULT = 20;
 export const PAGE_SIZE_MAX = 100;
@@ -39,5 +58,15 @@ export const PAGE_SIZE_MAX = 100;
 export const CACHE_TTL = {
   FEED: 300,
   ITEM: 3600,
+  SOURCES: 3600,
+  SEARCH: 120,
   PODCAST_FEED: 3600,
+} as const;
+
+/** Prefixes for every cached key, so the worker can invalidate in bulk. */
+export const CACHE_PREFIX = {
+  FEED: 'feed:',
+  ITEM: 'item:',
+  SOURCES: 'sources:',
+  SEARCH: 'search:',
 } as const;
