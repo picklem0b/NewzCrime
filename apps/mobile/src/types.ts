@@ -41,6 +41,8 @@ export interface ColourTokens {
   text: string;
   textMuted: string;
   textFaint: string;
+  primary: string;
+  onPrimary: string;
   accent: string;
   onAccent: string;
   live: string;

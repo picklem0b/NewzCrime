@@ -130,7 +130,7 @@ export default function PlayerScreen(): ReactElement {
                 style={{
                   width: `${Math.round(progress * 100)}%`,
                   height: '100%',
-                  backgroundColor: colour.accent,
+                  backgroundColor: colour.primary,
                 }}
               />
             </View>
@@ -190,15 +190,15 @@ export default function PlayerScreen(): ReactElement {
                 width: 68,
                 height: 68,
                 borderRadius: radius.pill,
-                backgroundColor: colour.accent,
+                backgroundColor: colour.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               {player.status === 'playing' ? (
-                <PauseIcon size={28} color={colour.onAccent} weight='fill' />
+                <PauseIcon size={28} color={colour.onPrimary} weight='fill' />
               ) : (
-                <PlayIcon size={28} color={colour.onAccent} weight='fill' />
+                <PlayIcon size={28} color={colour.onPrimary} weight='fill' />
               )}
             </Pressable>
 

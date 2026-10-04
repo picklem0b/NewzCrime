@@ -151,7 +151,7 @@ export function StoryCard({
           active={isSpeaking}
           icon={
             isSpeaking ? (
-              <PauseIcon size={18} color={colour.accent} />
+              <PauseIcon size={18} color={colour.primary} />
             ) : (
               <SpeakerHighIcon size={18} color={colour.textMuted} />
             )
@@ -179,7 +179,7 @@ export function StoryCard({
           icon={
             <BookmarkSimpleIcon
               size={18}
-              color={isSaved ? colour.accent : colour.textMuted}
+              color={isSaved ? colour.primary : colour.textMuted}
               weight={isSaved ? 'fill' : 'regular'}
             />
           }
