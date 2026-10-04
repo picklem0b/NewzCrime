@@ -12,7 +12,7 @@ they behave the same way: a name, a URL to poll and items that belong to it.
 |---|---|---|
 | `id` | uuid, primary key | `gen_random_uuid()` |
 | `name` | text, not null | Display name |
-| `type` | text, not null | How it is ingested: `rss` or `podcast_index` |
+| `type` | text, not null | How it is ingested: `rss`, `podcast_index` or `saflii` |
 | `content_type` | text, not null | What its items are: `article`, `court_ruling` or `podcast_episode` |
 | `feed_url` | text, not null, unique | RSS/Atom URL the worker polls |
 | `site_url` | text | Publisher's site |
@@ -24,6 +24,11 @@ they behave the same way: a name, a URL to poll and items that belong to it.
 `type` and `content_type` are separate because they answer different questions:
 how the source is fetched, and what the fetched items are. A podcast show is
 ingested as `rss` but produces `podcast_episode` rows.
+
+`saflii` is a normalisation strategy rather than a different protocol: the feeds
+are RSS, but an item carries only a title and a link, so it needs its own parser.
+Every SAFLII source has `content_type = 'court_ruling'`, and its items are always
+tagged `court`.
 
 ## `content_items`
 

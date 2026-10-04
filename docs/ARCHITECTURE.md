@@ -64,7 +64,11 @@ job layer owns persistence, de-duplication and cache invalidation.
 | Adapter | Provides | Notes |
 |---|---|---|
 | `rssAdapter` | News articles and podcast episodes | Handles RSS 2.0 and Atom; no key, no quota |
+| `safliiAdapter` | Court judgments (`court_ruling`) | SAFLII feeds carry only a title and a link; the normaliser derives the date, citation and excerpt from the title |
 | `podcastIndexAdapter` | Podcast show discovery | Episodes still arrive through RSS |
+
+`services/worker/src/adapters/index.ts` builds the adapter list once, so the
+long-running worker and the one-shot ingest script cannot drift apart.
 
 The scheduler enqueues one fan-out job on a cron. That job reads the active
 sources and enqueues one ingest job per source, so each feed fails or succeeds on

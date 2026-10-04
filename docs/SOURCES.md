@@ -1,8 +1,9 @@
 # Sources
 
-The starter set is seeded by migration `1730000000002_seedSources`. Each row is
-a `sources` record with a `feed_url` the RSS adapter reads. Re-running the seed
-is safe: it inserts on `feed_url` and skips anything already present.
+The starter set is seeded by migration `1730000000002_seedSources`, and the
+court feeds by `1730000000005_seedSafliiSources`. Each row is a `sources` record
+with a `feed_url` an adapter reads. Re-running a seed is safe: it inserts on
+`feed_url` and skips anything already present.
 
 Feed URLs change and feeds stop working, so verify a URL before adding it, and
 set `is_active` to false rather than deleting a source that has stopped
@@ -49,13 +50,68 @@ Podcast Index discovery is implemented but requires a free API key and secret;
 see `.env.example`. With no credentials, discovery is skipped and the seeded
 shows still ingest.
 
+## Court judgments
+
+Judgments come from SAFLII, the Southern African Legal Information Institute,
+which publishes one RSS feed per court:
+
+```
+https://www.saflii.org/cgi-bin/rss_feed.cgi?path=za/cases/<COURT>
+```
+
+The `path` code is the court's neutral-citation code, so `ZACC` is the
+Constitutional Court and `[2024] ZASCA 161` is a Supreme Court of Appeal
+judgment. All 13 seeded courts:
+
+| Court | Code |
+|---|---|
+| Constitutional Court | `ZACC` |
+| Supreme Court of Appeal | `ZASCA` |
+| Gauteng Division, Pretoria | `ZAGPPHC` |
+| Gauteng Local Division, Johannesburg | `ZAGPJHC` |
+| Western Cape Division, Cape Town | `ZAWCHC` |
+| KwaZulu-Natal Local Division, Durban | `ZAKZDHC` |
+| KwaZulu-Natal Division, Pietermaritzburg | `ZAKZPHC` |
+| Eastern Cape Division, Makhanda | `ZAECGHC` |
+| Eastern Cape Local Division, Bhisho | `ZAECBHC` |
+| Free State Division, Bloemfontein | `ZAFSHC` |
+| Northern Cape Division, Kimberley | `ZANCHC` |
+| Limpopo Division, Polokwane | `ZALMPHC` |
+| North West Division, Mahikeng | `ZANWHC` |
+
+These are seeded **active**. SAFLII sits behind a Cloudflare challenge that
+datacentre addresses do not get past, so a host running from one will log all 13
+as `403 Forbidden` on every run — that is handled per source like any other
+failure, and the court-ruling feature is worth more switched on than switched
+off. Set `is_active = false` on this set if the deployment host is blocked and
+the noise is not wanted.
+
+### Why SAFLII needs its own adapter
+
+A SAFLII item carries a title and a link and nothing else — no `pubDate`, no
+`description`, no `guid`:
+
+```
+Fono and Another v Port St Johns Municipality (1271/2022) [2024] ZASCA 161 (22 November 2024)
+```
+
+`safliiAdapter` reads the delivery date, the neutral citation and the case number
+out of that title, takes the supplying court from the feed path, and assembles an
+excerpt from the four, because the feed supplies none. The neutral citation is
+used as the de-duplication key, and judgment links are upgraded from `http` to
+`https`.
+
+An item whose date cannot be established is dropped rather than dated with the
+current time, which would place a years-old judgment at the top of the live feed.
+
 ## Adapter behaviour
 
-Feeds vary. The adapter tolerates:
+Feeds vary. The adapters tolerate:
 
 - Atom as well as RSS.
 - Missing `pubDate`, missing GUID and missing author.
 - Headline-only feeds that provide no excerpt.
+- Titles that carry the date and citation instead of a `pubDate` (SAFLII).
 - Publishers that reject unknown user agents.
 - Feeds whose entity usage exceeds the parser's default budget.
 
