@@ -1,46 +1,46 @@
 # Design
 
-The app is a reading product first. The visual system is a dark editorial
-layout built for trust, readability and information density: headlines, source
-names and timestamps are the content, so they carry the design.
+The app is a reading product first. Headlines, source names and timestamps are
+the content, so they carry the design; chrome stays out of the way.
 
 ## Colour
 
-The palette is not final. `apps/mobile/src/constants/theme.ts` ships a neutral
-placeholder palette so screens can be built before the colours are chosen.
-Every colour lives in the single `colour` object in that file; no other file
-hard-codes a colour. Replacing that object replaces the palette.
+Two palettes, one light and one dark, with identical keys in
+`apps/mobile/src/constants/theme.ts`. `useTheme` picks one from the `colourMode`
+setting, falling back to the OS appearance when the setting is `system`. No
+other file declares a colour, so replacing the two `palettes` entries replaces
+the whole visual system.
 
-Two rules apply regardless of the palette:
+Two rules apply to both:
 
 - **One accent colour**, used app-wide for interactive emphasis.
 - **Semantic states are reserved.** Live, success, warning and danger have fixed
   meanings and are never reused as decorative accents. Live is reserved for the
-  live-stream feature, which is not in the first release, and is currently
-  unused.
+  live-stream feature, which is not in this release, and is currently unused.
 
 ## Typography
 
 A single sans display face is used throughout. Serif is reserved for editorial
 pull-quotes and is never the default. Display leading is never `1.0`.
 
-Size, leading and weight scales are in `theme.ts`. Screen text size is a user
-setting, so body copy must render at three sizes without breaking layout.
+Size, leading and weight scales are in `theme.ts`. Body copy is multiplied by
+`textScale` from the reader text-size setting, so headlines and excerpts render
+at three sizes without changing the layout.
 
 ## Layout
 
 - One radius scale: inputs `12`, cards `16`, sheets `24`, pills `999`.
-- Cards are used only where elevation communicates something. Otherwise use
-  borders or spacing.
+- Cards are used where a boundary earns it — story cards and show cards. Lists
+  use separators instead.
 - Safe areas, the status bar, the tab bar and the home-indicator region are
-  respected on every screen.
-- The first screen is calm: one focal point, a short headline, one action.
+  respected on every screen. The player bar sits above the tab bar and renders
+  nothing while no episode is loaded.
 
 ## States
 
-Every list and screen defines four states: loading, empty, error and content.
-Loading uses skeletons that match the final layout's shape. Empty states are
-composed, not blank. Errors appear inline rather than as a toast.
+Every list defines four states: loading, empty, error and content. Loading uses
+skeletons that match the final layout's shape. Empty states are composed, not
+blank. Errors appear inline with a retry, never as a toast.
 
 ## Motion
 
@@ -52,7 +52,8 @@ composed, not blank. Errors appear inline rather than as a toast.
 
 ## Iconography
 
-One icon family (Phosphor), one stroke width, no hand-drawn SVG paths.
+One icon family (Phosphor), one weight per context, the `*Icon` exports, and no
+hand-drawn SVG paths. Icons are added through `react-native-svg`.
 
 ## Artwork brief
 
@@ -78,7 +79,8 @@ Rules:
 - **Texture, not noise.** Subtle grain or gradient depth is fine; heavy texture
   that competes with the UI is not.
 - **No stock-photo filler.**
-- Colours follow the palette once it is finalised.
+- Both palettes must be considered: artwork that only works on a dark background
+  is not finished.
 
 Suggested sizes: hero images 1170 × 2532 (portrait), icons 1024 × 1024,
 empty-state art 600 × 600 transparent PNG.

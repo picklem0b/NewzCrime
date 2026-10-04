@@ -113,8 +113,13 @@ app/            expo-router routes only
   detail/       ItemDetail · SourceDetail
   player/       Player
 components/     reusable UI, grouped by domain
-  auth/ feed/ podcast/ player/
+  feedback/   loading, empty and error states
+  feed/       story cards, headline rows, topic chips
+  layout/     screen container and header
+  player/     mini player
+  podcast/    show cards and episode rows
 constants/      index.ts (barrel) + theme.ts
+feed/           constants.ts: feed topic options
 hooks/          useSomething.ts
 stores/         something.store.ts
 services/       somethingService.ts
@@ -185,12 +190,22 @@ docs(scope): record why audiobooks are deferred
 
 ## Versioning and tags
 
-Tags are semantic versioning, `vMAJOR.MINOR.PATCH`. A milestone is tagged when
-it ships and is verified.
+A tag names the phase and the step within it: `v1.PHASE.STEP`.
 
-- **MAJOR** — a breaking API or schema contract change.
-- **MINOR** — a shipped milestone or phase.
-- **PATCH** — fixes and internal changes only.
+- `v1.0.0` is the scaffold.
+- `v1.1.1` is phase 1, step 1; `v1.3.4` is phase 3, step 4.
+- A step is tagged when the repository typechecks and the step's behaviour has
+  been verified against a real database, not only by inspection.
+
+Tag messages start with the tag name, so `git tag` output and release notes
+read consistently:
+
+```bash
+git tag -a v1.3.2 -m "v1.3.2: ingest jobs"
+```
+
+A breaking API or schema change is a step of its own rather than being folded
+into another, so a reader can find the commit that changed the contract.
 
 ## Tooling
 

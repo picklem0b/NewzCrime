@@ -29,6 +29,9 @@ apps/mobile/ios/
 npm-debug.log*
 pnpm-debug.log*
 
+# local Redis snapshot
+*.rdb
+
 # editor / OS
 .DS_Store
 .idea/

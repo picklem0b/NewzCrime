@@ -4,7 +4,13 @@
 
 - Node.js 20 or newer
 - pnpm 9 (`packageManager` is pinned in the root `package.json`)
-- Docker, for local Postgres and Redis
+- Postgres and Redis, reachable at the addresses in `.env`
+
+`docker-compose.yml` provides both if you would rather not run them natively:
+
+```bash
+docker compose up -d
+```
 
 ## Install
 
@@ -14,33 +20,65 @@ cp .env.example .env
 ```
 
 The defaults in `.env.example` point at the addresses used by
-`docker-compose.yml`, so no edits are needed for local development.
+`docker-compose.yml`. Two are easy to get wrong:
 
-## Start Postgres and Redis
+- Use `127.0.0.1`, not `localhost`. Some local Postgres servers listen on IPv4
+  only, and Node resolves `localhost` to `::1` first.
+- `DATABASE_URL` is the pooled connection (port 6543 on Supabase), used by the
+  API. `DATABASE_URL_DIRECT` is the direct connection (port 5432), used by the
+  worker, migrations and pg-boss. Pointing the worker at the pooled URL produces
+  a queue that accepts jobs and never runs them.
+
+## Create the database
+
+The application needs its own role and database:
 
 ```bash
-docker compose up -d
+createuser --createdb newzcrime
+createdb --owner newzcrime newzcrime
 ```
 
-This starts:
+Then apply the schema and seed the starter sources:
 
-| Service | Address |
-|---|---|
-| Postgres | `localhost:5432` |
-| Redis | `localhost:6379` |
+```bash
+pnpm --filter @newzcrime/db migrate up
+```
 
-Both define health checks. Confirm they are ready with `docker compose ps`.
+This creates `sources`, `content_items`, the search indexes and the pg-boss
+schema, then inserts the outlets and podcast shows listed in
+[`SOURCES.md`](SOURCES.md).
+
+## Collect content
+
+```bash
+pnpm --filter @newzcrime/worker ingest
+```
+
+Reads every active source once and exits. Pass a source id to ingest just one.
+A source that fails is reported and skipped; the run continues.
 
 ## Run
 
 ```bash
-pnpm dev:api       # Express API
-pnpm dev:worker    # ingestion worker
-pnpm dev:mobile    # Expo app
+pnpm dev:api       # Express API on :4000
+pnpm dev:worker    # scheduler, queue and ingest handlers
+pnpm dev:mobile    # Expo
 ```
 
-The API and worker currently log a startup line and exit; neither opens a
-database connection yet.
+The worker enqueues one ingest run at startup by default. Set
+`WORKER_INGEST_ON_START=false` to leave that to the cron schedule.
+
+## Check it
+
+```bash
+curl http://127.0.0.1:4000/health
+curl 'http://127.0.0.1:4000/v1/feed?limit=3'
+curl 'http://127.0.0.1:4000/v1/search?q=court'
+```
+
+`/health` reports whether the database is reachable and which cache backend is
+live. `"cache": "memory"` means Redis was unreachable and the API fell back to
+an in-process cache — the app still works, and responses are no longer shared.
 
 ## Type checking
 
@@ -66,13 +104,6 @@ pnpm --filter ./apps/mobile ios
 
 `expo start` alone is only useful for Expo's bundler in a development build.
 
-## Environment variables
-
-`.env.example` documents every variable. The two that are easy to get wrong:
-
-- `DATABASE_URL` — pooled connection, port 6543 on Supabase. Used by the API.
-- `DATABASE_URL_DIRECT` — direct connection, port 5432. Used by the worker,
-  migrations and pg-boss. pg-boss requires `LISTEN/NOTIFY`, which the
-  transaction pooler does not support.
-
-Locally both point at the same Docker Postgres instance.
+`EXPO_PUBLIC_API_URL` is read at build time and defaults to
+`http://127.0.0.1:4000`. A device on the same network needs the host machine's
+LAN address instead.

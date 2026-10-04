@@ -30,7 +30,9 @@ const schema = z.object({
   WORKER_USER_AGENT: z
     .string()
     .default('NewzCrimeBot/1.0 (+https://newzcrime.app)'),
-  WORKER_FETCH_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
+  // 25s: publishers with heavy feeds occasionally take longer than 15s to
+  // answer, and a timeout there means a source silently misses a run.
+  WORKER_FETCH_TIMEOUT_MS: z.coerce.number().int().positive().default(25_000),
   PODCAST_INDEX_API_KEY: z.string().default(''),
   PODCAST_INDEX_API_SECRET: z.string().default(''),
   WORKER_INGEST_ON_START: z
