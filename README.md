@@ -54,15 +54,21 @@ pnpm dev:mobile                          # Expo
 
 Postgres and Redis must be reachable at the addresses in `.env`.
 
-### Development build required
+### Installing it on a phone
 
-Podcast playback uses `react-native-track-player`, a native module, so Expo Go
-cannot run the app. Build a development client instead:
+Podcast playback uses `react-native-track-player`, a native module, so the app
+needs its own binary rather than Expo Go. EAS compiles it in Expo's cloud, on
+the free plan, so no Android SDK is needed locally:
 
 ```bash
-pnpm --filter ./apps/mobile android
-pnpm --filter ./apps/mobile ios
+pnpm exec expo login
+pnpm --filter ./apps/mobile build:preview:android   # standalone APK, no Metro
+pnpm --filter ./apps/mobile build:dev:android       # dev client, reloads from Metro
 ```
+
+`pnpm exec` matters: `expo` and `eas` are project dependencies, not global
+commands. `pnpm --filter ./apps/mobile android` compiles locally instead, and
+does need the Android SDK or Xcode.
 
 ## Documentation
 

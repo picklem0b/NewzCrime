@@ -114,10 +114,14 @@ in. It is built in Expo's cloud, so no Android SDK is needed locally, and it is
 free — the free plan includes 15 Android and 15 iOS builds per month.
 
 ```bash
-expo login                                  # once, free account
-expo start --dev-client                     # start Metro
-npx eas-cli build --profile development --platform android
+pnpm exec expo login                        # once, free account
+pnpm --filter ./apps/mobile dev             # Metro, for a dev client
+pnpm --filter ./apps/mobile build:dev:android
 ```
+
+Neither `expo` nor `eas` is a global command. Both live in the project's
+`node_modules`, so they are reached through `pnpm exec` or `npx` — as the
+scripts above do — rather than by typing `expo` or `eas` on their own.
 
 The build prints a URL. Open it on the device, or install the `.apk` directly
 (`eas.json` sets `buildType: "apk"` for exactly this reason — an `.aab` cannot
@@ -146,18 +150,61 @@ project's. The project is on SDK 52, so it needs
 the current Expo Go on the store targets SDK 57 and will refuse to open the
 app with "Project is incompatible with this version of Expo Go".
 
-Even on a matching Expo Go, playback is unavailable. Every player action is
-already guarded — `useProgress` swallows the missing-module error and the store
-catches failed setup — so the app runs and reports a playback error rather than
-crashing.
+Even on a matching Expo Go, playback is unavailable, but the screens do render.
+`react-native-track-player` builds its `Capability` enum out of the native
+module while its own module body is being evaluated, so a plain `import` of it
+throws wherever no native player exists and takes down every route that reaches
+the player store or the player bar. The app therefore reaches it only through
+the guarded loader in `src/services/playerService.ts`, which resolves the
+module on first use and returns `null` when it is missing. Attempting to play
+reports that playback needs a development build instead of crashing.
+
+### Release build (standalone APK)
+
+The `preview` profile produces a normal release build: the JavaScript bundle is
+compiled into the binary, so it opens without Metro and without a computer.
+
+```bash
+pnpm --filter ./apps/mobile build:preview:android
+```
+
+Use this to hand the app to someone, or to use it on a device that is away from
+the development machine. Use a development build when you are changing code,
+because a release build has to be rebuilt for every JavaScript edit.
+
+Built APKs are listed under the project's builds on
+[expo.dev](https://expo.dev/accounts/the_devi/projects/newzcrime/builds), and
+`eas build:view <id>` prints the download URL for any one of them.
+
+### Android build settings that matter
+
+Two settings in `app.json` exist for reasons that are not obvious, and both
+produce confusing failures if removed:
+
+- `expo-build-properties` → `android.kotlinVersion: "1.9.24"`. Expo's Android
+template defaults `ext.kotlinVersion` to `1.9.25` but declares
+`classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')` with no version, so
+the plugin resolves to the 1.9.24 that `react-native` 0.76.5 pins. The two
+disagree, and `expo-modules-core` picks its Compose compiler from
+`ext.kotlinVersion`: 1.9.25 selects Compose 1.5.15, which refuses to run against
+Kotlin 1.9.24 and fails `:expo-modules-core:compileReleaseKotlin`. Declaring the
+version makes both sides agree, which selects the matching Compose 1.5.14.
+- `expo-build-properties` → `android.usesCleartextTraffic: true`. Android 9 and
+later block cleartext HTTP, and loopback is not exempt, so without this a
+**release** build cannot reach an API on `http://`. Development builds are
+unaffected because their debug manifest already allows it. Remove it once the
+API is served over HTTPS.
 
 ### Other commands
 
 ```bash
 pnpm --filter ./apps/mobile dev                 # expo start --dev-client
+pnpm --filter ./apps/mobile start               # expo start (Expo Go)
 pnpm --filter ./apps/mobile build:dev:android   # EAS development APK
 pnpm --filter ./apps/mobile build:preview:android
 ```
 
 `pnpm --filter ./apps/mobile android` and `ios` run `expo run:*`, which compiles
-locally and therefore does need the Android SDK or Xcode installed.
+locally and therefore does need the Android SDK or Xcode installed. EAS builds
+in Expo's cloud instead, and its free plan includes 15 Android and 15 iOS builds
+per month.
