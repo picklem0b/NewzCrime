@@ -5,6 +5,10 @@
  * `@newzcrime/shared`; this file covers what the process itself needs.
  */
 
+import type { Cache } from '@newzcrime/cache';
+import type { Database } from '@newzcrime/db';
+import type { Logger } from 'pino';
+
 export interface ApiConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
@@ -18,6 +22,18 @@ export interface ApiConfig {
   /** Requests per window per IP for the public API. */
   rateLimitMax: number;
   rateLimitWindowMs: number;
+}
+
+/** What the read services need: data and cache. */
+export interface ServiceDeps {
+  db: Database;
+  cache: Cache;
+}
+
+/** Everything `createApp` needs, resolved once at startup. */
+export interface ApiDependencies extends ServiceDeps {
+  config: ApiConfig;
+  logger: Logger;
 }
 
 /** Log levels accepted by pino. */
