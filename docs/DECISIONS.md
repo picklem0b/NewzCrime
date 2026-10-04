@@ -186,11 +186,55 @@ native modules and cannot load it, so **Expo Go cannot play audio in this app**.
 Development happens in a development build, which EAS compiles in the cloud on
 the free plan.
 
-The player code already degrades safely where the module is missing: `useProgress`
-wraps its polling in a `try`/`catch` because it is designed to run before the
-player is set up, and the store catches failed setup. So a matching Expo Go
-renders the app and reports a playback error rather than crashing. This is a
-convenience for reviewing layout, not a supported target.
+***Caveat.*** Guarding the player's *calls* is not enough, and the first attempt
+at this was wrong. Track Player builds its `Capability` enum by reading the
+native module while its own module body is being evaluated, so a static
+`import` of it throws `Cannot read property 'CAPABILITY_PLAY' of null` — before
+any of the app's own code runs. Because the player store and the player bar are
+reached from nearly every screen, that single import took down the whole route
+table: expo-router reported every route as missing a default export, which
+points at the routes rather than at the real cause.
+
+Access therefore goes through `src/services/playerService.ts`, which resolves
+the module on first use and returns `null` when it is absent. The progress poll
+is local to `usePlayer` rather than borrowed from the library's `useProgress`,
+for the same reason: importing that hook is what evaluates the module. A
+matching Expo Go now renders every screen, and attempting to play reports that
+playback needs a development build. This is a convenience for reviewing layout,
+not a supported target.
+
+## Android: Kotlin and the Compose compiler agree by declaration
+
+Expo's Android template writes `kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'`
+but declares `classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')` with no
+version. The plugin there resolves to whatever is already on the classpath, and
+`react-native` 0.76.5 pins 1.9.24 in its own version catalog. The two then
+disagree.
+
+That is fatal because `expo-modules-core` derives its Compose compiler
+extension from `ext.kotlinVersion`, using a table of known-good pairs: 1.9.24 →
+Compose 1.5.14, 1.9.25 → Compose 1.5.15. Reading 1.9.25, it selected Compose
+1.5.15, which refuses to run against the 1.9.24 compiler actually in use and
+fails the build at `:expo-modules-core:compileReleaseKotlin`.
+
+Declaring `android.kotlinVersion: "1.9.24"` in `expo-build-properties` fixes it
+at the source: the property and the pin now agree, and the matching Compose
+compiler 1.5.14 is selected. 1.9.24 is chosen over 1.9.25 deliberately — it is
+the version React Native actually resolves, so it stays consistent even if
+something else on the classpath holds the plugin down.
+
+## Cleartext HTTP is allowed, for now
+
+Android 9 and later block cleartext traffic by default, and loopback is **not**
+exempt. A release build therefore could not reach an API on
+`http://127.0.0.1:4000` at all — every request failed before it left the device.
+Development builds never showed this, because their debug manifest sets
+`usesCleartextTraffic` itself.
+
+`expo-build-properties` sets it explicitly. This is a deliberate concession to
+the current setup, where the API is served over plain HTTP beside the app. It
+should be removed once the API is served over HTTPS, which is the point of
+moving to Supabase.
 
 ## Tags: `v1.phase.step`
 
