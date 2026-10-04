@@ -4,6 +4,7 @@
  * in the matching `constants.ts`.
  */
 
+import type { ContentItem } from '@newzcrime/shared';
 import type { ViewStyle } from 'react-native';
 
 /** Every screen in `src/app` accepts this. */
@@ -24,9 +25,33 @@ export type AsyncState<TData> =
   | { status: 'error'; error: string };
 
 /* ------------------------------------------------------------------ *
+ * Theme
+ * ------------------------------------------------------------------ */
+
+/** Which palette is active after the setting and the OS are resolved. */
+export type ColourScheme = 'light' | 'dark';
+
+/** Every colour the app may use. Both palettes share these keys. */
+export interface ColourTokens {
+  background: string;
+  surface: string;
+  surfaceRaised: string;
+  border: string;
+  borderStrong: string;
+  text: string;
+  textMuted: string;
+  textFaint: string;
+  accent: string;
+  onAccent: string;
+  live: string;
+  success: string;
+  warning: string;
+  danger: string;
+}
+
+/* ------------------------------------------------------------------ *
  * Settings
  *
- * The settings sections are not final, so these fields may change.
  * Defaults and option lists live in `src/settings/constants.ts`.
  * ------------------------------------------------------------------ */
 
@@ -67,10 +92,76 @@ export interface SettingsStore {
   draft: SettingsState;
   /** Keys where `draft` differs from `saved`. */
   changed: SettingsKey[];
+  /** False until the persisted document has been read. */
+  isHydrated: boolean;
   set: <TKey extends SettingsKey>(
     key: TKey,
     value: SettingsState[TKey]
   ) => void;
   discard: () => void;
   save: () => void;
+  hydrate: () => Promise<void>;
 }
+
+/* ------------------------------------------------------------------ *
+ * Saved items
+ * ------------------------------------------------------------------ */
+
+/** The bookmarks store, implemented in `src/stores/saved.store.ts`. */
+export interface SavedStore {
+  items: ContentItem[];
+  isHydrated: boolean;
+  isSaved: (itemId: string) => boolean;
+  toggle: (item: ContentItem) => void;
+  clear: () => void;
+  hydrate: () => Promise<void>;
+}
+
+/* ------------------------------------------------------------------ *
+ * Audio player
+ * ------------------------------------------------------------------ */
+
+/** What the player is doing, in terms the UI cares about. */
+export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused';
+
+/** The player store, implemented in `src/stores/player.store.ts`. */
+export interface PlayerStore {
+  /** The episode currently loaded, if any. */
+  current: ContentItem | null;
+  /** Episodes queued behind the current one, in the order given. */
+  queue: ContentItem[];
+  status: PlaybackStatus;
+  /** Set when setup or playback fails, so the UI can say why. */
+  error: string | null;
+  play: (episode: ContentItem, queue?: ContentItem[]) => Promise<void>;
+  toggle: () => Promise<void>;
+  stop: () => Promise<void>;
+  seekTo: (seconds: number) => Promise<void>;
+  /** Move by a relative offset, for the skip-back and skip-forward buttons. */
+  skipBy: (seconds: number) => Promise<void>;
+  next: () => Promise<void>;
+  previous: () => Promise<void>;
+}
+
+/* ------------------------------------------------------------------ *
+ * Feed
+ * ------------------------------------------------------------------ */
+
+/** Result of the paginated feed hook. */
+export interface FeedResult {
+  items: ContentItem[];
+  state: AsyncState<ContentItem[]>;
+  /** True while a further page is being fetched. */
+  isLoadingMore: boolean;
+  hasMore: boolean;
+  refresh: () => void;
+  loadMore: () => void;
+}
+
+/** State of the update check on the App settings section. */
+export type UpdateCheckResult =
+  | { status: 'idle' }
+  | { status: 'checking' }
+  | { status: 'up_to_date'; currentVersion: string }
+  | { status: 'update_available'; currentVersion: string; latestVersion: string }
+  | { status: 'error'; message: string };
