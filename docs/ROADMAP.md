@@ -12,7 +12,8 @@ is tagged `v1.phase.step` — `v1.1.3` is phase 1, step 3.
 | 4 | Public API: feed, items, sources, podcasts, search | `v1.4.1`–`v1.4.3` | Done |
 | 5 | Mobile app: feed, discover, saved, podcasts, settings | `v1.5.1`–`v1.5.5` | Done |
 | 6 | Verification and documentation | `v1.6.1` | Done |
-| 7 | Accounts, follows, bookmarks sync, notifications | — | Not started |
+| 7 | SAFLII court judgments as `court_ruling` | `v1.7.1`–`v1.7.3` | Done |
+| 8 | Accounts, follows, bookmarks sync, notifications | — | Not started |
 
 ## Deferred work
 
@@ -45,13 +46,41 @@ There is no machine-readable source. Ingesting email requires an inbound mail
 pipeline and parsing arbitrary HTML, and it would be done one publisher at a
 time.
 
-### SAFLII judgments as `court_ruling`
+### SAFLII judgments: delivered in phase 7
 
-SAFLII does not publish an RSS feed, so judgments are not in the first release.
-GroundUp's court reporting is ingested, but it is classified as reporting rather
-than as a ruling. Adding real judgments means either an adapter over SAFLII's
-site structure or their bulk data, and is the single change that would most
-strengthen the product's differentiator.
+This was recorded as the change that would most strengthen the product's
+differentiator, and it turned out to be cheaper than expected. The first-release
+note said SAFLII publishes no RSS feed; that was wrong. It publishes one per
+court, at `/cgi-bin/rss_feed.cgi?path=za/cases/<COURT>`, and those are now
+ingested as `court_ruling` by `safliiAdapter`. See [`SOURCES.md`](SOURCES.md).
+
+GroundUp's court reporting is still ingested, and still classified as reporting.
+The two are complementary: the adapter supplies the judgment, the reporting
+supplies the context around it.
+
+What remains unproven is the live fetch: SAFLII answers this development host
+with a Cloudflare `403`, so the parser is verified against a recorded feed and
+the persistence path against that same recording. The first deployment on an
+ordinary host will be its real test.
+
+### Running the app on a device
+
+Delivered in phase 8. The app bundles and typechecks, but it had never run on a
+device, and the reason turned out not to be the app: pnpm's isolated
+`node_modules` stopped Metro from resolving `expo-asset`, so the bundler failed
+before it started. That is fixed, and the bundle now builds — 4,495 modules, and
+a 7 MB development bundle served over Metro.
+
+What is still unverified is the app on a screen. There is no emulator and no
+device attached to this development host, so the phase is verified by a successful
+bundle and by typecheck. The first `eas build` and the first launch are the real
+test, and no amount of local checking substitutes for them.
+
+One artefact is worth knowing about: `expo export` cannot finish on this host
+because the Hermes compiler shipped with React Native is a prebuilt x86-64 Linux
+binary and this host is ARM, so it exits with `SIGILL`. It is a local limitation
+only — EAS compiles on x86-64 runners — and it does not affect the development
+bundle, which is what a dev client loads.
 
 ### Accounts, follows and notifications
 
