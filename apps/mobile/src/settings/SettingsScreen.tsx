@@ -87,7 +87,7 @@ export default function SettingsScreen(): ReactElement {
             accessibilityRole='button'
             onPress={save}
             style={{
-              backgroundColor: colour.accent,
+              backgroundColor: colour.primary,
               borderRadius: radius.pill,
               paddingVertical: spacingY.sm,
               paddingHorizontal: spacingX.xl,
@@ -95,7 +95,7 @@ export default function SettingsScreen(): ReactElement {
           >
             <Text
               style={{
-                color: colour.onAccent,
+                color: colour.onPrimary,
                 fontSize: typography.size.small,
                 fontWeight: typography.weight.semibold,
               }}

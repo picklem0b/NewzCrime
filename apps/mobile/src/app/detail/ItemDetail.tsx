@@ -150,19 +150,19 @@ export default function ItemDetailScreen(): ReactElement {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: spacingX.sm,
-                backgroundColor: colour.accent,
+                backgroundColor: colour.primary,
                 borderRadius: radius.pill,
                 paddingVertical: spacingY.md,
               }}
             >
               {isPlaying ? (
-                <PauseIcon size={18} color={colour.onAccent} weight='fill' />
+                <PauseIcon size={18} color={colour.onPrimary} weight='fill' />
               ) : (
-                <PlayIcon size={18} color={colour.onAccent} weight='fill' />
+                <PlayIcon size={18} color={colour.onPrimary} weight='fill' />
               )}
               <Text
                 style={{
-                  color: colour.onAccent,
+                  color: colour.onPrimary,
                   fontSize: typography.size.body,
                   fontWeight: typography.weight.semibold,
                 }}
@@ -183,7 +183,7 @@ export default function ItemDetailScreen(): ReactElement {
               active={isSpeaking}
               icon={
                 isSpeaking ? (
-                  <PauseIcon size={20} color={colour.accent} />
+                  <PauseIcon size={20} color={colour.primary} />
                 ) : (
                   <SpeakerHighIcon size={20} color={colour.textMuted} />
                 )
@@ -211,7 +211,7 @@ export default function ItemDetailScreen(): ReactElement {
               icon={
                 <BookmarkSimpleIcon
                   size={20}
-                  color={isSaved ? colour.accent : colour.textMuted}
+                  color={isSaved ? colour.primary : colour.textMuted}
                   weight={isSaved ? 'fill' : 'regular'}
                 />
               }

@@ -72,7 +72,7 @@ export function SettingRow({
         <Switch
           value={toggle.value}
           onValueChange={toggle.onChange}
-          trackColor={{ false: colour.border, true: colour.accent }}
+          trackColor={{ false: colour.border, true: colour.primary }}
           thumbColor={colour.background}
         />
       ) : (

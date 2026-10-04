@@ -4,6 +4,16 @@
  * Colours exist twice, as a light and a dark palette with the same keys. The
  * active one is chosen by `useTheme` from the `colourMode` setting and the OS
  * appearance. Nothing outside this file declares a colour.
+ *
+ * Two brand colours carry fixed roles and are not interchangeable:
+ *
+ * - `primary` is for actions — buttons, active tabs, switches, the player. It is
+ *   used as a fill, with `onPrimary` text or icons on top of it.
+ * - `accent` is for emphasis read directly against a surface — source lines,
+ *   badges, the icon of an action that is currently on. It is used as ink.
+ *
+ * `onPrimary` and `onAccent` are the readable colours for each fill. Both
+ * palettes are checked against WCAG AA; see docs/DESIGN.md.
  */
 
 import type { ColourScheme, ColourTokens } from '@/types';
@@ -18,27 +28,36 @@ const semanticStates = {
 
 export const palettes: Record<ColourScheme, ColourTokens> = {
   dark: {
-    background: '#0B0B0D',
-    surface: '#131316',
-    surfaceRaised: '#1B1B20',
-    border: '#26262C',
-    borderStrong: '#3A3A42',
-    text: '#F4F4F5',
-    textMuted: '#A1A1AA',
-    textFaint: '#6B6B76',
-    accent: '#E9A23B',
-    onAccent: '#0B0B0D',
+    background: '#0B0B0B',
+    surface: '#151515',
+    // One step above `surface` and below `border`, so a raised card still reads
+    // as raised without a shadow.
+    surfaceRaised: '#1F1F1F',
+    border: '#292929',
+    borderStrong: '#3A3A3A',
+    text: '#F5F5F5',
+    textMuted: '#A3A3A3',
+    // Lightened from the obvious #6E6E6E, which reads at only 3.6:1 on a card.
+    textFaint: '#868686',
+    primary: '#C34B00',
+    onPrimary: '#FFFFFF',
+    accent: '#E58A3A',
+    onAccent: '#0B0B0B',
     ...semanticStates,
   },
   light: {
     background: '#FFFFFF',
-    surface: '#F6F6F7',
+    surface: '#F7F7F7',
     surfaceRaised: '#FFFFFF',
-    border: '#E4E4E7',
-    borderStrong: '#D4D4D8',
-    text: '#18181B',
-    textMuted: '#52525B',
-    textFaint: '#8B8B94',
+    border: '#E5E5E5',
+    borderStrong: '#D4D4D4',
+    text: '#141414',
+    textMuted: '#5C5C5C',
+    textFaint: '#6F6F6F',
+    primary: '#C34B00',
+    onPrimary: '#FFFFFF',
+    // The brand orange darkened to carry as ink on white. The bright #E58A3A
+    // manages only 2.6:1 there, which is not readable as text.
     accent: '#B45309',
     onAccent: '#FFFFFF',
     ...semanticStates,

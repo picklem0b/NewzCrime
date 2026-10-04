@@ -95,7 +95,7 @@ export function EpisodeRow({
           }}
         >
           {isPlaying ? (
-            <PauseIcon size={18} color={colour.accent} weight='fill' />
+            <PauseIcon size={18} color={colour.primary} weight='fill' />
           ) : (
             <PlayIcon size={18} color={colour.text} weight='fill' />
           )}
