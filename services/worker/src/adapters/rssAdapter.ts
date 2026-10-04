@@ -143,6 +143,26 @@ function pickImage(entry: XmlNode, html: string | null): string | null {
   return firstImageUrl(html);
 }
 
+/** The playable audio enclosure, for podcast episodes. */
+function pickAudioUrl(entry: XmlNode): string | null {
+  for (const node of asArray(entry.enclosure)) {
+    const type = readAttr(node, 'type');
+    const url = readAttr(node, 'url');
+    if (url && type?.startsWith('audio')) return url;
+  }
+
+  for (const link of asArray(entry.link)) {
+    const rel = readAttr(link, 'rel');
+    const type = readAttr(link, 'type');
+    const href = readAttr(link, 'href');
+    if (href && rel === 'enclosure' && (type?.startsWith('audio') ?? false)) {
+      return href;
+    }
+  }
+
+  return null;
+}
+
 function pickAuthor(entry: XmlNode): string | null {
   const direct = firstText(entry, ['author', 'dc:creator', 'creator']);
   if (direct) return stripHtml(direct);
@@ -200,6 +220,7 @@ function mapEntry(entry: XmlNode): NormalizedItem | null {
     url,
     excerpt: toExcerpt(html),
     imageUrl: pickImage(entry, html),
+    audioUrl: pickAudioUrl(entry),
     author: pickAuthor(entry),
     publishedAt,
   };

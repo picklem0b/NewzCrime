@@ -20,9 +20,12 @@ import type {
 /** Rows per `INSERT` statement. Keeps the parameter count well under the limit. */
 const INSERT_CHUNK_SIZE = 100;
 
+/** Values bound per row in the insert above. */
+const COLUMNS_PER_ROW = 11;
+
 const SELECT_COLUMNS = `
   id, source_id, type, topic, external_id, title, url, excerpt, image_url,
-  author, published_at, created_at
+  audio_url, author, published_at, created_at
 `;
 
 export function mapContentItem(row: ContentItemRow): ContentItem {
@@ -36,6 +39,7 @@ export function mapContentItem(row: ContentItemRow): ContentItem {
     url: row.url,
     excerpt: row.excerpt,
     imageUrl: row.image_url,
+    audioUrl: row.audio_url,
     author: row.author,
     publishedAt: row.published_at.toISOString(),
   };
@@ -90,13 +94,14 @@ export async function upsertItems(
         item.url,
         item.excerpt,
         item.imageUrl,
+        item.audioUrl,
         item.author,
         item.publishedAt
       );
 
-      const start = index * 10;
+      const start = index * COLUMNS_PER_ROW;
       const placeholders = Array.from(
-        { length: 10 },
+        { length: COLUMNS_PER_ROW },
         (_unused, column) => `$${start + column + 1}`
       ).join(', ');
       return `(${placeholders})`;
@@ -104,13 +109,14 @@ export async function upsertItems(
 
     const result = await db.query<{ inserted: boolean }>(
       `INSERT INTO content_items
-         (source_id, type, topic, external_id, title, url, excerpt, image_url, author, published_at)
+         (source_id, type, topic, external_id, title, url, excerpt, image_url, audio_url, author, published_at)
        VALUES ${tuples.join(', ')}
        ON CONFLICT (source_id, external_id) DO UPDATE SET
          title = EXCLUDED.title,
          url = EXCLUDED.url,
          excerpt = EXCLUDED.excerpt,
          image_url = EXCLUDED.image_url,
+         audio_url = EXCLUDED.audio_url,
          author = EXCLUDED.author,
          published_at = EXCLUDED.published_at,
          topic = EXCLUDED.topic
