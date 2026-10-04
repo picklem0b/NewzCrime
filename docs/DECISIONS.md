@@ -34,6 +34,30 @@ publisher agreement, and it exercises the full pipeline: fetch, normalise,
 de-duplicate, store, cache, serve, render. Adding a second vertical afterward
 reuses that pipeline instead of extending it.
 
+## Court judgments: an adapter of their own, not the generic RSS one
+
+The first release recorded that SAFLII publishes no RSS feed. That was wrong:
+it publishes one per court. The feeds are standard RSS, which is why they were
+almost ingested by `rssAdapter` — but an item carries only a title and a link.
+With no `pubDate`, every judgment would have been dated with the ingest time and
+stacked on top of the live news feed.
+
+The decision was therefore to give them a `saflii` source type and a normaliser
+of their own that reads the date, neutral citation and case number out of the
+title. The alternative — teaching `rssAdapter` to guess at dates from arbitrary
+titles — would have paid for SAFLII's shape in every other publisher's parser.
+
+`content_type` stays the classifier's concern: every SAFLII source is
+`court_ruling`, and a judgment's title is a case name, which the keyword
+heuristic reads as *nothing*. A court-ruling feed that files its rulings under no
+topic is useless, so `court_ruling` items are tagged `court` on their face
+rather than classified.
+
+The court feeds are seeded active even though this development host is blocked
+by Cloudflare. The blockage is a property of the host, not of the source, and
+shipping the feature switched off would hide a working pipeline from production.
+A blocked feed fails per source, like any other.
+
 ## Cache: Redis over TCP, never the REST client
 
 The scaffold depended on `@upstash/redis`, a REST client. It cannot open a
@@ -73,10 +97,11 @@ all. `pino-http` covers the API's requests on the same pipeline.
 
 ## Source type and content type are separate columns
 
-`sources.type` says how a source is fetched (`rss`). `sources.content_type` says
-what its items are (`article`, `court_ruling`, `podcast_episode`). One column
-could not express both: a podcast show is fetched over RSS but produces
-episodes, and the feed needs to distinguish them.
+`sources.type` says how a source is fetched (`rss`, `podcast_index`,
+`saflii`). `sources.content_type` says what its items are (`article`,
+`court_ruling`, `podcast_episode`). One column could not express both: a podcast
+show is fetched over RSS but produces episodes, and the feed needs to
+distinguish them.
 
 ## Topic is classified at ingest and stored
 
@@ -132,6 +157,40 @@ The app compares its installed version against the release the API reports, and
 offers the update when a newer one exists. The version constants live in
 `@newzcrime/shared`, so the client and server cannot disagree. Installing still
 happens through the store or the development build.
+
+## Monorepo: pnpm with a hoisted `node_modules`
+
+The workspace uses pnpm, but with `node-linker=hoisted` in `.npmrc` rather than
+pnpm's default isolated layout.
+
+Metro resolves a module by walking the physical `node_modules` directories above
+the requiring file. Under isolation, the only copy of a transitive package lives
+in `node_modules/.pnpm/`, reachable by symlink only from the packages that
+declare it. `@expo/metro-config` requires `expo-asset`, which `expo` declares,
+but the config itself cannot see it — so `expo start` failed before Metro began
+bundling. The symptom is a project that appears to hang and then never loads.
+
+Expo [documents](https://docs.expo.dev/guides/monorepos/) hoisting as the fix for
+pnpm, and it resolves the whole class of problem at once rather than one missing
+package at a time.
+
+One module still needed an explicit entry. `expo-router` imports `query-string`
+without declaring it as a dependency, so it is absent from the tree entirely;
+it is now a direct dependency of the app, pinned to `^7.1.3`. Version 8 and later
+of `query-string` are ESM-only, which Metro's CommonJS bundling does not load.
+
+## Development builds, not Expo Go
+
+`react-native-track-player` is a native module. Expo Go ships a fixed set of
+native modules and cannot load it, so **Expo Go cannot play audio in this app**.
+Development happens in a development build, which EAS compiles in the cloud on
+the free plan.
+
+The player code already degrades safely where the module is missing: `useProgress`
+wraps its polling in a `try`/`catch` because it is designed to run before the
+player is set up, and the store catches failed setup. So a matching Expo Go
+renders the app and reports a playback error rather than crashing. This is a
+convenience for reviewing layout, not a supported target.
 
 ## Tags: `v1.phase.step`
 
