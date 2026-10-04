@@ -35,6 +35,23 @@ export interface PodcastIndexAdapter {
   fetchShowByFeedUrl(feedUrl: string): Promise<PodcastShow | null>;
 }
 
+/** Options the RSS adapter needs to fetch politely. */
+export interface RssAdapterOptions {
+  /** Sent as the `User-Agent`; some publishers reject unknown clients. */
+  userAgent: string;
+  /** Abort a feed fetch after this long. */
+  timeoutMs: number;
+  /** Upper bound on items taken from one feed. */
+  maxItems?: number;
+}
+
+/** Options for Podcast Index discovery. Skipped when the key is empty. */
+export interface PodcastIndexAdapterOptions {
+  apiKey: string;
+  apiSecret: string;
+  timeoutMs: number;
+}
+
 /** Log levels accepted by pino. */
 export type LogLevel =
   | 'fatal'
@@ -63,6 +80,8 @@ export interface WorkerConfig {
   /** Podcast Index API key and secret; discovery is skipped when either is empty. */
   podcastIndexApiKey: string;
   podcastIndexApiSecret: string;
+  /** Kick off one ingest run as soon as the worker starts. */
+  ingestOnStart: boolean;
 }
 
 /** Payload of the per-source ingest job. */
