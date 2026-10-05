@@ -1,8 +1,15 @@
 import type { Source } from '@newzcrime/shared';
 import { useRouter } from 'expo-router';
-import { MagnifyingGlassIcon } from 'phosphor-react-native';
+import { MagnifyingGlassIcon, NewspaperIcon } from 'phosphor-react-native';
 import type { ReactElement } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import EmptyState from '@/components/feedback/EmptyState';
 import ErrorState from '@/components/feedback/ErrorState';
@@ -22,7 +29,7 @@ import { useTheme } from '@/hooks/useTheme';
 export default function DiscoverScreen(): ReactElement {
   const router = useRouter();
   const { colour, radius, spacingX, spacingY, typography } = useTheme();
-  const sources = useSources();
+  const { state: sources, reload: reloadSources } = useSources();
 
   const openSearch = () => router.push('/search/Search');
   const openSource = (source: Source) =>
@@ -42,6 +49,13 @@ export default function DiscoverScreen(): ReactElement {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: spacingY.xxxl }}
+        refreshControl={
+          <RefreshControl
+            refreshing={sources.status === 'loading'}
+            onRefresh={reloadSources}
+            tintColor={colour.textMuted}
+          />
+        }
       >
         <ScreenHeader title='Discover' subtitle='Search and browse' />
 
@@ -75,11 +89,14 @@ export default function DiscoverScreen(): ReactElement {
         ) : null}
 
         {sources.status === 'error' ? (
-          <ErrorState message={sources.error} />
+          <ErrorState message={sources.error} onRetry={reloadSources} />
         ) : null}
 
         {sources.status === 'success' && sources.data.length === 0 ? (
           <EmptyState
+            icon={
+              <NewspaperIcon size={36} color={colour.textFaint} weight='duotone' />
+            }
             title='No sources yet'
             message='Outlets and shows appear here once the worker has ingested their feeds.'
           />

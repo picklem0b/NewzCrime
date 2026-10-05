@@ -1,10 +1,12 @@
 import { Stack } from 'expo-router';
+import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import ErrorScreen from '@/components/feedback/ErrorScreen';
 import { useTheme } from '@/hooks/useTheme';
 import { playbackService } from '@/services/playbackService';
 import { loadPlayer } from '@/services/playerService';
@@ -47,5 +49,27 @@ export default function RootLayout(): ReactElement {
         />
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+/**
+ * Boundary for every route below the root.
+ *
+ * expo-router wraps a route in this when the module exports it, and errors
+ * propagate up to the nearest boundary — so one here covers all screens. A
+ * render failure becomes a readable screen with a retry instead of a blank
+ * window that shows nothing until the app is restarted.
+ */
+export function ErrorBoundary({
+  error,
+  retry,
+}: ErrorBoundaryProps): ReactElement {
+  return (
+    <ErrorScreen
+      message={error.message || 'Something went wrong'}
+      onRetry={() => {
+        void retry();
+      }}
+    />
   );
 }

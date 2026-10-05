@@ -5,12 +5,6 @@
  */
 
 import type { ContentItem } from '@newzcrime/shared';
-import type { ViewStyle } from 'react-native';
-
-/** Every screen in `src/app` accepts this. */
-export interface ScreenProps {
-  style?: ViewStyle;
-}
 
 /**
  * The single way loading state is represented in this app.
@@ -143,6 +137,24 @@ export interface PlayerStore {
   skipBy: (seconds: number) => Promise<void>;
   next: () => Promise<void>;
   previous: () => Promise<void>;
+}
+
+/* ------------------------------------------------------------------ *
+ * Text to speech
+ * ------------------------------------------------------------------ */
+
+/**
+ * The speech store, implemented in `src/stores/speech.store.ts`.
+ *
+ * Speech is app-wide rather than per-row: the feed recycles its rows, so a
+ * hook owned by a row would stop playback the moment the speaking row scrolled
+ * out of view.
+ */
+export interface SpeechStore {
+  /** Id of the item currently being read, or `null`. */
+  speakingId: string | null;
+  speak: (itemId: string, text: string) => void;
+  stop: () => void;
 }
 
 /* ------------------------------------------------------------------ *

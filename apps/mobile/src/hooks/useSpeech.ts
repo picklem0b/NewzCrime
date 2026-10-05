@@ -1,41 +1,28 @@
 /**
  * Text to speech.
  *
- * Only one item is spoken at a time: starting a new one stops the previous, so
- * the UI can show which row is talking.
+ * Only one item is spoken at a time. The state lives in the speech store, so
+ * every row that offers a listen button agrees on which item is being read.
  */
 
-import * as Speech from 'expo-speech';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-export interface UseSpeechResult {
-  /** Id of the item currently being read, or `null`. */
-  speakingId: string | null;
-  speak: (itemId: string, text: string) => void;
-  stop: () => void;
+import { useSpeechStore } from '@/stores/speech.store';
+import type { SpeechStore } from '@/types';
+
+/** The app-wide reading state. Safe to call from a recycled list row. */
+export function useSpeech(): SpeechStore {
+  return useSpeechStore();
 }
 
-export function useSpeech(): UseSpeechResult {
-  const [speakingId, setSpeakingId] = useState<string | null>(null);
+/**
+ * Stops speech when the screen that owns the listening surface goes away.
+ *
+ * Deliberately separate from `useSpeech`: a list row must never stop speech on
+ * unmount, because scrolling a row out of view unmounts it.
+ */
+export function useStopSpeechOnUnmount(): void {
+  const stop = useSpeechStore((state) => state.stop);
 
-  const stop = useCallback(() => {
-    Speech.stop();
-    setSpeakingId(null);
-  }, []);
-
-  const speak = useCallback((itemId: string, text: string) => {
-    Speech.stop();
-    setSpeakingId(itemId);
-
-    Speech.speak(text, {
-      onDone: () => setSpeakingId(null),
-      onStopped: () => setSpeakingId(null),
-      onError: () => setSpeakingId(null),
-    });
-  }, []);
-
-  // Leaving the screen should not leave the device talking.
-  useEffect(() => () => void Speech.stop(), []);
-
-  return { speakingId, speak, stop };
+  useEffect(() => () => stop(), [stop]);
 }

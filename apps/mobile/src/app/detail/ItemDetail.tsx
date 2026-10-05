@@ -19,7 +19,7 @@ import ScreenHeader from '@/components/layout/ScreenHeader';
 import { useItem } from '@/hooks/useItem';
 import { usePlayer } from '@/hooks/usePlayer';
 import { useIsSaved, useSaved } from '@/hooks/useSaved';
-import { useSpeech } from '@/hooks/useSpeech';
+import { useSpeech, useStopSpeechOnUnmount } from '@/hooks/useSpeech';
 import { useSourceIndex } from '@/hooks/useSources';
 import { useTextScale } from '@/hooks/useTextScale';
 import { useTheme } from '@/hooks/useTheme';
@@ -41,12 +41,15 @@ export default function ItemDetailScreen(): ReactElement {
   const { colour, radius, spacingX, spacingY, typography } = useTheme();
   const textScale = useTextScale();
 
-  const state = useItem(itemId ?? '');
+  const { state, reload } = useItem(itemId ?? '');
   const sourceIndex = useSourceIndex();
   const isSaved = useIsSaved(itemId ?? '');
   const { toggle } = useSaved();
   const { speakingId, speak, stop } = useSpeech();
   const player = usePlayer();
+
+  // Reading this article is this screen's job, so leaving it stops the audio.
+  useStopSpeechOnUnmount();
 
   const item = state.status === 'success' ? state.data : null;
   const sourceName = item ? sourceIndex.get(item.sourceId)?.name : undefined;
@@ -61,7 +64,9 @@ export default function ItemDetailScreen(): ReactElement {
         <ListSkeleton rows={3} />
       ) : null}
 
-      {state.status === 'error' ? <ErrorState message={state.error} /> : null}
+      {state.status === 'error' ? (
+        <ErrorState message={state.error} onRetry={reload} />
+      ) : null}
 
       {item ? (
         <ScrollView
@@ -183,7 +188,7 @@ export default function ItemDetailScreen(): ReactElement {
               active={isSpeaking}
               icon={
                 isSpeaking ? (
-                  <PauseIcon size={20} color={colour.primary} />
+                  <PauseIcon size={20} color={colour.accent} />
                 ) : (
                   <SpeakerHighIcon size={20} color={colour.textMuted} />
                 )
@@ -211,7 +216,7 @@ export default function ItemDetailScreen(): ReactElement {
               icon={
                 <BookmarkSimpleIcon
                   size={20}
-                  color={isSaved ? colour.primary : colour.textMuted}
+                  color={isSaved ? colour.accent : colour.textMuted}
                   weight={isSaved ? 'fill' : 'regular'}
                 />
               }

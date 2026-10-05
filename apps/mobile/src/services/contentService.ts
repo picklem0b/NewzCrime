@@ -5,13 +5,12 @@
  * parameter names are written once.
  */
 
-import type { ContentItem, ItemTopic, Paginated, Source, Topic } from '@newzcrime/shared';
+import type { ContentItem, Paginated, Source, Topic } from '@newzcrime/shared';
 
 import { apiClient } from './apiService';
 
 export interface FeedParams {
   topic?: Topic;
-  itemTopic?: ItemTopic;
   sourceId?: string;
   includePodcasts?: boolean;
   cursor?: string;
