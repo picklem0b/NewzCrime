@@ -279,6 +279,62 @@ ABIs the bundle contains. An arm64-only bundle is right for every phone in the
 target market but would exclude a 32-bit-only device, so if that coverage ever
 matters, add `armeabi-v7a` back for the production profile.
 
+## The cache fallback uses the same keys as Redis
+
+The memory backend exists so a missing Redis degrades the cache instead of
+stopping the API. That only works if the two backends are interchangeable, and
+they were not: the Redis backend prefixes every key with `newzcrime:`, while the
+memory backend stored keys unprefixed. Reads and writes still agreed with each
+other, so nothing looked broken — but `delByPrefix('feed:')` built its match as
+`newzcrime:feed:` and therefore deleted nothing.
+
+The effect was the worst kind: silent. With Redis down, an ingest would insert
+new items, the invalidation would no-op, and the feed would keep serving stale
+pages until the TTL expired. Both backends now apply the prefix, and a test
+asserts that a prefix delete reaches a key written under the same prefix.
+
+## Testing: vitest, one config per workspace
+
+Every workspace runs `vitest` through its own `test` script, so `pnpm test` at
+the root covers the whole repo. Tests sit beside the code as
+`something.test.ts`, matching the file conventions.
+
+What is covered, and why each one earns its place:
+
+- **`packages/shared`** — the API client. URL building, query encoding, auth
+  headers, retries, the timeout, and caller cancellation. The last two are the
+  behaviours hardest to reason about by reading.
+- **`packages/cache`** — the fallback path, against an address nothing listens
+  on, so the memory backend is the code under test.
+- **`packages/db`** — cursor encoding and decoding, which is easy to get
+  subtly wrong in a way that only shows up as a duplicated row.
+- **`services/api`** — environment validation and the query schemas. These are
+  the guards that turn a bad request into a 400 instead of a 500.
+- **`services/worker`** — the adapters against recorded feeds (`rssAdapter`
+  covers RSS 2.0 and Atom; SAFLII uses a captured response because it answers
+  datacentre addresses with a Cloudflare challenge), the text and
+  classification helpers, and the ingest job with a mocked database.
+- **`apps/mobile`** — the pure logic: time and version formatting, the request
+  shapes the content service builds, the update check, and the three zustand
+  stores, with their native dependencies (`AsyncStorage`, `expo-speech`)
+  mocked.
+
+Mobile tests run under `vitest` in a Node environment, so they deliberately do
+**not** render components: there is no React Native runtime here, and adding one
+would buy a rendering harness instead of behavioural confidence. Components are
+verified by `tsc` and by the bundle, not by a test.
+
+## API client: a timeout a caller can tell apart
+
+`createApiClient` gives every request a 15-second deadline unless told otherwise.
+A stall is reported as `ApiError` with status `408` and `isTimeoutError()`, not
+as the bare `AbortError` the platform throws — a reader should be told the
+request timed out, not that it was aborted.
+
+Each attempt owns its own `AbortController`, so the timeout and the caller's
+`AbortSignal` can both stop it and a retry starts from a clean one. A timeout is
+never retried, because the caller has already waited once.
+
 ## Tags: `v1.phase.step`
 
 Each phase is committed in steps, and every step is tagged. The tag names the

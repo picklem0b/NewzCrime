@@ -99,6 +99,28 @@ Individual workspaces also expose `typecheck`, for example:
 pnpm --filter @newzcrime/api typecheck
 ```
 
+## Tests
+
+```bash
+pnpm test                  # every workspace
+```
+
+Individual workspaces also expose `test`:
+
+```bash
+pnpm --filter @newzcrime/worker test
+pnpm --filter ./apps/mobile test
+```
+
+The tests are unit and contract tests; they need no database and no network.
+The worker's RSS tests run against recorded feeds, and the SAFLII adapter's run
+against a captured response, because SAFLII answers datacentre addresses with a
+Cloudflare challenge. What is covered, and what is deliberately not, is
+recorded in `docs/DECISIONS.md`.
+
+`pnpm lint` runs ESLint for the mobile workspace. It is slow on a phone — the
+first run can take a couple of minutes — but it should finish clean.
+
 ## Mobile app
 
 The app uses `react-native-track-player` to play podcast episodes. It is a

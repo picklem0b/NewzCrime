@@ -82,6 +82,41 @@ binary and this host is ARM, so it exits with `SIGILL`. It is a local limitation
 only — EAS compiles on x86-64 runners — and it does not affect the development
 bundle, which is what a dev client loads.
 
+### The audit before the first install
+
+Rather than wait for the first launch to find out, every screen, hook, store and
+service was read end to end and the states that break a first run were fixed:
+
+- **Error states now offer a retry.** The hooks already exposed `reload`, but
+  the screens discarded it, so a failed fetch left a dead end.
+- **`RefreshControl` was wired to a constant.** Pull-to-refresh showed a spinner
+  that never moved.
+- **The Settings tab had no safe area**, unlike every other tab.
+- **Speech lived in a hook per row**, so the feed recycling a row stopped
+  playback mid-sentence. It is now a store, with a guard against the native
+  layer firing a replaced utterance's `onStopped` late.
+- **A podcast with no audio was detected as playable**, because `null` and the
+  empty string meant the same thing to the check.
+- **A route asking for episodes with an empty id** fired a request that could
+  only fail.
+- **Accessibility labels read `"PauseIcon episode"`** — a find-and-replace
+  artefact. They now say `Pause episode`.
+- An error boundary and a `+not-found` route were added, so an unexpected crash
+  or an unknown link no longer leaves a blank screen.
+- Dead helpers (`utils/styling.ts`) were removed.
+
+The backend was verified live rather than by reading: migrations applied, one
+real ingest run (29 sources, 37 items inserted, 13 failed — all SAFLII `403`s
+from the Cloudflare challenge above), then every endpoint exercised against the
+running API. `/health`, `/v1/feed` (with every topic and `includePodcasts`),
+`/v1/sources`, `/v1/podcasts`, `/v1/search` and `/v1/app/version` all answer
+`200`; a bad topic `400`s with a field-level message; an unknown item and an
+unknown route both `404`. The ingest run completing with 13 failures is the
+partial-success design working, not an error.
+
+The app itself still has not been seen on a screen. That limitation is unchanged
+and is stated above rather than worked around.
+
 ### Accounts, follows and notifications
 
 Not required to prove the ingestion pipeline. Bookmarks and settings are stored
