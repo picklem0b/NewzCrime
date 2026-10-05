@@ -21,15 +21,23 @@ interface MemoryEntry {
 const DEFAULT_PREFIX = 'newzcrime:';
 const DEFAULT_CONNECT_TIMEOUT_MS = 2_000;
 
-/** Map-backed cache used when Redis is unreachable. */
+/**
+ * Map-backed cache used when Redis is unreachable.
+ *
+ * Keys carry the same prefix as the Redis backend. The prefix must be applied
+ * here too: `delByPrefix` matches on the stored key, so a backend that stored
+ * unprefixed keys would silently fail to invalidate, and stale feed pages would
+ * outlive their TTL whenever Redis is down.
+ */
 function createMemoryCache(prefix: string): Cache {
   const store = new Map<string, MemoryEntry>();
+  const keyed = (key: string) => `${prefix}${key}`;
 
   const readLive = (key: string): MemoryEntry | null => {
-    const entry = store.get(key);
+    const entry = store.get(keyed(key));
     if (!entry) return null;
     if (entry.expiresAt <= Date.now()) {
-      store.delete(key);
+      store.delete(keyed(key));
       return null;
     }
     return entry;
@@ -43,11 +51,14 @@ function createMemoryCache(prefix: string): Cache {
     },
 
     async set<TValue>(key: string, value: TValue, ttlSeconds: number) {
-      store.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1_000 });
+      store.set(keyed(key), {
+        value,
+        expiresAt: Date.now() + ttlSeconds * 1_000,
+      });
     },
 
     async del(...keys: string[]) {
-      for (const key of keys) store.delete(key);
+      for (const key of keys) store.delete(keyed(key));
     },
 
     async delByPrefix(rawPrefix: string) {
