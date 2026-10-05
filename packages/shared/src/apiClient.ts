@@ -18,6 +18,8 @@ export interface ApiClientOptions {
   getToken?: () => Promise<string | null>;
   /** Retries a failed idempotent `GET` once. Defaults to true. */
   retryOnNetworkError?: boolean;
+  /** Aborts a request that has not produced a response. Defaults to 15s. */
+  timeoutMs?: number;
 }
 
 export interface RequestOptions {
@@ -47,6 +49,13 @@ export class ApiError extends Error {
   }
 }
 
+/** Raised when a request is abandoned because it produced no response in time. */
+export function isTimeoutError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 408;
+}
+
+const DEFAULT_TIMEOUT_MS = 15_000;
+
 const encodeQuery = (query?: Record<string, QueryValue>): string => {
   if (!query) return '';
 
@@ -74,12 +83,16 @@ const isApiErrorBody = (value: unknown): value is ApiErrorBody =>
   typeof (value as { error?: unknown }).error === 'string';
 
 /** A network-level failure, as opposed to an HTTP status. */
-const isNetworkError = (error: unknown): boolean =>
-  error instanceof TypeError;
+const isNetworkError = (error: unknown): boolean => error instanceof TypeError;
+
+/** True when a rejection is the abort this client itself requested. */
+const isAbortError = (error: unknown): boolean =>
+  error instanceof Error && error.name === 'AbortError';
 
 export function createApiClient(options: ApiClientOptions): ApiClient {
   const base = options.baseUrl.replace(/\/+$/, '');
   const retryOnNetworkError = options.retryOnNetworkError ?? true;
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   const send = async (
     method: 'GET' | 'POST',
@@ -97,19 +110,53 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}${encodeQuery(request.query)}`;
 
-    const attempt = (): Promise<Response> =>
-      fetch(url, {
-        method,
-        headers,
-        signal: request.signal,
-        body:
-          request.body === undefined ? undefined : JSON.stringify(request.body),
-      });
+    /**
+     * Each attempt gets its own controller so the timeout and the caller's
+     * `AbortSignal` can both stop it, and so a retry starts from a clean one.
+     */
+    const attempt = async (): Promise<Response> => {
+      const controller = new AbortController();
+      let timedOut = false;
+
+      const timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, timeoutMs);
+
+      const abortFromCaller = (): void => controller.abort();
+      request.signal?.addEventListener('abort', abortFromCaller);
+
+      if (request.signal?.aborted) controller.abort();
+
+      try {
+        return await fetch(url, {
+          method,
+          headers,
+          signal: controller.signal,
+          body:
+            request.body === undefined ? undefined : JSON.stringify(request.body),
+        });
+      } catch (error) {
+        // Report a stall as a timeout rather than a bare "aborted", so the
+        // message a reader sees says what actually happened.
+        if (timedOut && isAbortError(error)) {
+          throw new ApiError(408, {
+            error: 'timeout',
+            message: 'The request timed out',
+          });
+        }
+        throw error;
+      } finally {
+        clearTimeout(timer);
+        request.signal?.removeEventListener('abort', abortFromCaller);
+      }
+    };
 
     try {
       return await attempt();
     } catch (error) {
-      // A dropped connection is worth one retry for a read; nothing else is.
+      // A dropped connection is worth one retry for a read; nothing else is,
+      // and a timeout is not retried because the caller already waited.
       if (method === 'GET' && retryOnNetworkError && isNetworkError(error)) {
         return attempt();
       }
