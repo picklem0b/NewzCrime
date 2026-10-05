@@ -10,7 +10,7 @@
   },
   "scripts": {
     "migrate": "tsx scripts/migrate.ts",
-    "test": "echo \"no tests configured\"",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"no lint configured\""
   },
@@ -24,6 +24,7 @@
     "@types/pg": "^8.11.10",
     "node-pg-migrate": "^7.9.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
