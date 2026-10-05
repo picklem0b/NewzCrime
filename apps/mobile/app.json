@@ -21,8 +21,8 @@
       }
     },
     "android": {
-      "package": "za.co.newzcrime.app",
-      "versionCode": 1,
+    "package": "za.co.newzcrime.app",
+    "versionCode": 2,
       "permissions": [
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
