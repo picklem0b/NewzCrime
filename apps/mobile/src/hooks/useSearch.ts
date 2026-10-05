@@ -7,16 +7,21 @@
 
 import { PAGE_SIZE_DEFAULT } from '@newzcrime/shared';
 import type { ContentItem, Paginated } from '@newzcrime/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { contentService } from '@/services/contentService';
 import type { AsyncState } from '@/types';
 
+import type { UseAsyncResult } from './useAsync';
+
 const DEBOUNCE_MS = 350;
 const MIN_QUERY_LENGTH = 2;
 
-export function useSearch(query: string): AsyncState<Paginated<ContentItem>> {
+export function useSearch(
+  query: string
+): UseAsyncResult<Paginated<ContentItem>> {
   const [debounced, setDebounced] = useState(query);
+  const [nonce, setNonce] = useState(0);
   const [state, setState] = useState<AsyncState<Paginated<ContentItem>>>({
     status: 'idle',
   });
@@ -29,7 +34,7 @@ export function useSearch(query: string): AsyncState<Paginated<ContentItem>> {
   useEffect(() => {
     if (debounced.length < MIN_QUERY_LENGTH) {
       setState({ status: 'idle' });
-      return;
+      return undefined;
     }
 
     const controller = new AbortController();
@@ -53,7 +58,9 @@ export function useSearch(query: string): AsyncState<Paginated<ContentItem>> {
       isActive = false;
       controller.abort();
     };
-  }, [debounced]);
+  }, [debounced, nonce]);
 
-  return state;
+  const reload = useCallback(() => setNonce((value) => value + 1), []);
+
+  return { state, reload };
 }

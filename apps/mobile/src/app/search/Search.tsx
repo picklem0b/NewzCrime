@@ -31,7 +31,7 @@ export default function SearchScreen(): ReactElement {
   const router = useRouter();
   const { colour, radius, spacingX, spacingY, typography } = useTheme();
   const [query, setQuery] = useState('');
-  const state = useSearch(query);
+  const { state, reload } = useSearch(query);
   const sourceIndex = useSourceIndex();
 
   const openItem = (item: ContentItem) =>
@@ -105,10 +105,15 @@ export default function SearchScreen(): ReactElement {
 
         {state.status === 'loading' ? <ListSkeleton rows={4} /> : null}
 
-        {state.status === 'error' ? <ErrorState message={state.error} /> : null}
+        {state.status === 'error' ? (
+          <ErrorState message={state.error} onRetry={reload} />
+        ) : null}
 
         {state.status === 'success' && state.data.items.length === 0 ? (
           <EmptyState
+            icon={
+              <MagnifyingGlassIcon size={36} color={colour.textFaint} weight='duotone' />
+            }
             title='No matches'
             message={`Nothing stored matches “${query.trim()}”. Try a shorter word.`}
           />

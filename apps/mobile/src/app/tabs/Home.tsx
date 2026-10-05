@@ -1,7 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import type { ContentItem, Topic } from '@newzcrime/shared';
 import { useRouter } from 'expo-router';
-import { MagnifyingGlassIcon } from 'phosphor-react-native';
+import { MagnifyingGlassIcon, NewspaperIcon } from 'phosphor-react-native';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -22,6 +22,7 @@ import ScreenHeader from '@/components/layout/ScreenHeader';
 import TabScreen from '@/components/layout/TabScreen';
 import { useFeed } from '@/hooks/useFeed';
 import { useSourceIndex } from '@/hooks/useSources';
+import { useStopSpeechOnUnmount } from '@/hooks/useSpeech';
 import { useTheme } from '@/hooks/useTheme';
 
 /** How many items get the full card treatment before the list goes compact. */
@@ -34,6 +35,11 @@ export default function HomeScreen(): ReactElement {
 
   const feed = useFeed({ topic });
   const sourceIndex = useSourceIndex();
+
+  // Leaving the feed leaves the reading surface, so a read-aloud stops here.
+  // The rows deliberately do not do this: the list recycles them, and stopping
+  // there would cut the audio off as soon as the speaking row scrolled away.
+  useStopSpeechOnUnmount();
 
   const openSearch = () => router.push('/search/Search');
   const openItem = (item: ContentItem) =>
@@ -70,6 +76,9 @@ export default function HomeScreen(): ReactElement {
 
       {feed.state.status === 'success' && feed.items.length === 0 ? (
         <EmptyState
+          icon={
+            <NewspaperIcon size={36} color={colour.textFaint} weight='duotone' />
+          }
           title='Nothing here yet'
           message='No stories match this filter. Try another topic, or pull down to refresh.'
         />
@@ -145,7 +154,7 @@ export default function HomeScreen(): ReactElement {
         }
         refreshControl={
           <RefreshControl
-            refreshing={false}
+            refreshing={feed.state.status === 'loading'}
             onRefresh={feed.refresh}
             tintColor={colour.textMuted}
           />

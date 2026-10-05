@@ -7,7 +7,7 @@
  */
 
 import { CaretRightIcon } from 'phosphor-react-native';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import type { Option } from '@/types';
@@ -100,7 +100,7 @@ export function SettingRow({
 export interface ChoiceRowProps<TId extends string> {
   label: string;
   description?: string;
-  options: ReadonlyArray<Option<TId>>;
+  options: readonly Option<TId>[];
   value: TId;
   onChange: (next: TId) => void;
 }

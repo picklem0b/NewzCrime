@@ -3,14 +3,14 @@
 import type { ContentItem } from '@newzcrime/shared';
 
 import { contentService } from '@/services/contentService';
-import type { AsyncState } from '@/types';
 
 import { useAsync } from './useAsync';
+import type { UseAsyncResult } from './useAsync';
 
-export function useItem(itemId: string): AsyncState<ContentItem> {
-  const { state } = useAsync<ContentItem>(
+export function useItem(itemId: string): UseAsyncResult<ContentItem> {
+  return useAsync<ContentItem>(
     (signal) => contentService.item(itemId, signal),
-    [itemId]
+    [itemId],
+    { enabled: itemId.length > 0 }
   );
-  return state;
 }

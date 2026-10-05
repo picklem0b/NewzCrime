@@ -64,7 +64,7 @@ export function MiniPlayer({ onOpen }: MiniPlayerProps): ReactElement | null {
 
       <Pressable
         accessibilityRole='button'
-        accessibilityLabel={status === 'playing' ? 'PauseIcon' : 'PlayIcon'}
+        accessibilityLabel={status === 'playing' ? 'Pause' : 'Play'}
         onPress={() => {
           void toggle();
         }}

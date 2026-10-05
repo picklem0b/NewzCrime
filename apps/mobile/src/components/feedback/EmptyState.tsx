@@ -1,7 +1,13 @@
-/** Composed empty state. A blank screen is never an acceptable outcome. */
+/**
+ * Composed empty state. A blank screen is never an acceptable outcome.
+ *
+ * The icon is a caller decision: a bookmark suits the saved list, a magnifier
+ * suits search, and reusing one glyph everywhere reads as a mistake rather
+ * than a deliberate screen.
+ */
 
 import { BookmarkSimpleIcon } from 'phosphor-react-native';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
@@ -9,13 +15,16 @@ import { useTheme } from '@/hooks/useTheme';
 export interface EmptyStateProps {
   title: string;
   message: string;
+  /** Line-art glyph shown above the title. Defaults to a bookmark. */
+  icon?: ReactNode;
   /** Optional action, e.g. a button that switches tab. */
-  action?: ReactElement;
+  action?: ReactNode;
 }
 
 export function EmptyState({
   title,
   message,
+  icon,
   action,
 }: EmptyStateProps): ReactElement {
   const { colour, spacingX, spacingY, typography } = useTheme();
@@ -27,7 +36,9 @@ export function EmptyState({
         { paddingHorizontal: spacingX.xl, paddingVertical: spacingY.xxxl },
       ]}
     >
-      <BookmarkSimpleIcon size={36} color={colour.textFaint} weight='duotone' />
+      {icon ?? (
+        <BookmarkSimpleIcon size={36} color={colour.textFaint} weight='duotone' />
+      )}
 
       <Text
         style={{

@@ -3,24 +3,26 @@
 import type { ContentItem, Paginated, Source } from '@newzcrime/shared';
 
 import { contentService } from '@/services/contentService';
-import type { AsyncState } from '@/types';
 
 import { useAsync } from './useAsync';
+import type { UseAsyncResult } from './useAsync';
 
-export function usePodcastShows(): AsyncState<Source[]> {
-  const { state } = useAsync<Source[]>(
-    (signal) => contentService.podcasts(signal),
-    []
-  );
-  return state;
+export function usePodcastShows(): UseAsyncResult<Source[]> {
+  return useAsync<Source[]>((signal) => contentService.podcasts(signal), []);
 }
 
+/**
+ * Episodes for one show.
+ *
+ * `sourceId` is `null` until the shows have loaded, and the request is skipped
+ * while it is, rather than asking the API for the items of an empty id.
+ */
 export function useShowEpisodes(
-  sourceId: string
-): AsyncState<Paginated<ContentItem>> {
-  const { state } = useAsync<Paginated<ContentItem>>(
-    (signal) => contentService.sourceItems(sourceId, { signal }),
-    [sourceId]
+  sourceId: string | null
+): UseAsyncResult<Paginated<ContentItem>> {
+  return useAsync<Paginated<ContentItem>>(
+    (signal) => contentService.sourceItems(sourceId ?? '', { signal }),
+    [sourceId],
+    { enabled: sourceId !== null && sourceId.length > 0 }
   );
-  return state;
 }

@@ -1,5 +1,5 @@
 /**
- * App: what's new, the update check, alerts and playback behaviour.
+ * App: what's new, the update check, start-up and playback behaviour.
  *
  * The update check compares the installed version against the release the API
  * reports. Installing still happens through the store or the development build.
@@ -11,7 +11,8 @@ import { Text, View } from 'react-native';
 
 import { useSettings } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
-import { SettingRow } from '@/settings/components/SettingRow';
+import { ChoiceRow, SettingRow } from '@/settings/components/SettingRow';
+import { startTabs } from '@/settings/constants';
 import {
   checkForUpdates,
   currentVersion,
@@ -26,6 +27,7 @@ export function AppSection(): ReactElement {
 
   const [check, setCheck] = useState<UpdateCheckResult>({ status: 'idle' });
   const [notes, setNotes] = useState<ReleaseNotes[]>([]);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -59,14 +61,22 @@ export function AppSection(): ReactElement {
 
   return (
     <View style={{ gap: spacingY.sm }}>
+      <ChoiceRow
+        label='Open on'
+        description='Which tab the app starts on'
+        options={startTabs}
+        value={draft.startTab}
+        onChange={(value) => set('startTab', value)}
+      />
+
       <SettingRow
         label="What's new"
         description={latest ? `Version ${latest.version}` : 'Release notes'}
-        value='View'
-        onPress={() => undefined}
+        value={showNotes ? 'Hide' : 'View'}
+        onPress={() => setShowNotes((previous) => !previous)}
       />
 
-      {latest ? (
+      {showNotes && latest ? (
         <View style={{ paddingHorizontal: 4, gap: 4 }}>
           {latest.highlights.map((highlight) => (
             <Text

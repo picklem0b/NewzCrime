@@ -36,7 +36,7 @@ export default function PlayerScreen(): ReactElement {
   const router = useRouter();
   const { colour, radius, spacingX, spacingY, typography } = useTheme();
 
-  const requested = useItem(itemId ?? '');
+  const { state: requested } = useItem(itemId ?? '');
   const play = usePlayerStore((state) => state.play);
   const player = usePlayer();
   const sourceIndex = useSourceIndex();

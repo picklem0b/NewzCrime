@@ -15,7 +15,7 @@ import { apiClient } from './apiService';
 
 export interface ReleaseNotes {
   version: string;
-  highlights: ReadonlyArray<string>;
+  highlights: readonly string[];
 }
 
 export interface ReleaseInfo {

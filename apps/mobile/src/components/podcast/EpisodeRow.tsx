@@ -31,7 +31,9 @@ export function EpisodeRow({
 
   const isCurrent = current?.id === episode.id;
   const isPlaying = isCurrent && status === 'playing';
-  const isPlayable = episode.audioUrl !== null;
+  // A truthy check, not `!== null`: an item stored before `audioUrl` existed,
+  // or returned without the field, has `undefined` rather than `null`.
+  const isPlayable = Boolean(episode.audioUrl);
 
   return (
     <View
@@ -76,7 +78,7 @@ export function EpisodeRow({
       {isPlayable ? (
         <Pressable
           accessibilityRole='button'
-          accessibilityLabel={isPlaying ? 'PauseIcon episode' : 'PlayIcon episode'}
+          accessibilityLabel={isPlaying ? 'Pause episode' : 'Play episode'}
           onPress={() => {
             if (isCurrent) {
               void toggle();
@@ -95,7 +97,7 @@ export function EpisodeRow({
           }}
         >
           {isPlaying ? (
-            <PauseIcon size={18} color={colour.primary} weight='fill' />
+            <PauseIcon size={18} color={colour.accent} weight='fill' />
           ) : (
             <PlayIcon size={18} color={colour.text} weight='fill' />
           )}

@@ -8,6 +8,7 @@
 import type { ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import ScreenHeader from '@/components/layout/ScreenHeader';
 import { useSettings } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 import AppSection from '@/settings/sections/AppSection';
@@ -26,6 +27,8 @@ export default function SettingsScreen(): ReactElement {
           gap: spacingY.xl,
         }}
       >
+        <ScreenHeader title='Settings' subtitle='Appearance, alerts and playback' />
+
         <View style={{ gap: spacingY.sm }}>
           <Text
             style={{

@@ -33,7 +33,7 @@ export function CardAction({
       {icon}
       <Text
         style={{
-          color: active ? colour.primary : colour.textMuted,
+          color: active ? colour.accent : colour.textMuted,
           fontSize: typography.size.caption,
           fontWeight: typography.weight.medium,
         }}

@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import type { ReactElement } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import PrimaryButton from '@/components/layout/PrimaryButton';
 import Screen from '@/components/layout/Screen';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -25,7 +26,7 @@ const SLOGAN = 'Keeping you updated.';
  * docs/DESIGN.md for its treatment. The screen reads correctly without it.
  */
 export default function WelcomeScreen(): ReactElement {
-  const { colour, radius, spacingX, spacingY, typography } = useTheme();
+  const { colour, spacingX, spacingY, typography } = useTheme();
   const router = useRouter();
 
   return (
@@ -61,27 +62,10 @@ export default function WelcomeScreen(): ReactElement {
           </Text>
         </View>
 
-        <Pressable
-          accessibilityRole='button'
-          accessibilityLabel='Get started'
+        <PrimaryButton
+          label='Get started'
           onPress={() => router.replace('/tabs/Home')}
-          style={{
-            backgroundColor: colour.primary,
-            borderRadius: radius.pill,
-            paddingVertical: spacingY.lg,
-            alignItems: 'center',
-          }}
-        >
-          <Text
-            style={{
-              color: colour.onPrimary,
-              fontSize: typography.size.body,
-              fontWeight: typography.weight.semibold,
-            }}
-          >
-            Get started
-          </Text>
-        </Pressable>
+        />
       </View>
     </Screen>
   );

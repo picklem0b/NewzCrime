@@ -24,10 +24,10 @@ import { openExternalUrl } from '@/utils/external';
 export default function SourceDetailScreen(): ReactElement {
   const { sourceId } = useLocalSearchParams<{ sourceId?: string }>();
   const router = useRouter();
-  const { colour, spacingX, spacingY } = useTheme();
+  const { colour, spacingX, spacingY, typography } = useTheme();
 
-  const source = useSource(sourceId ?? '');
-  const items = useSourceItems(sourceId ?? '');
+  const { state: source, reload: reloadSource } = useSource(sourceId ?? '');
+  const { state: items, reload: reloadItems } = useSourceItems(sourceId ?? '');
 
   const isPodcast =
     source.status === 'success' &&
@@ -73,7 +73,13 @@ export default function SourceDetailScreen(): ReactElement {
         </View>
       ) : null}
 
-      {items.status === 'error' ? <ErrorState message={items.error} /> : null}
+      {source.status === 'error' ? (
+        <ErrorState message={source.error} onRetry={reloadSource} />
+      ) : null}
+
+      {source.status !== 'error' && items.status === 'error' ? (
+        <ErrorState message={items.error} onRetry={reloadItems} />
+      ) : null}
 
       {items.status === 'success' && items.data.items.length === 0 ? (
         <EmptyState
@@ -111,13 +117,12 @@ export default function SourceDetailScreen(): ReactElement {
             <Text
               style={{
                 color: colour.textFaint,
-                fontSize: 12,
+                fontSize: typography.size.caption,
                 paddingHorizontal: spacingX.lg,
                 paddingTop: spacingY.lg,
               }}
             >
-              Showing the latest items. Older items load as the feed supports
-              paging on this screen.
+              Showing the {items.data.items.length} most recent items.
             </Text>
           ) : null}
         </ScrollView>
