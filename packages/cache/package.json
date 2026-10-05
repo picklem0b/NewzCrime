@@ -10,13 +10,15 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "echo \"no lint configured\""
+    "lint": "echo \"no lint configured\"",
+    "test": "vitest run"
   },
   "dependencies": {
     "ioredis": "^5.4.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
