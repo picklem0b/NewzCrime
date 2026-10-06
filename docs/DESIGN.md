@@ -46,9 +46,18 @@ darkens it to `#B45309` (5.0:1).
 `surfaceRaised`, `borderStrong`, `textFaint`, `onPrimary` and `onAccent` are not
 brand values. They are steps derived to keep each palette internally consistent.
 `textFaint` is the one to watch, because it carries bylines, timestamps and
-inactive tabs: it is set to clear 4.5:1 on `surface` rather than to look as pale
-as possible. `#6E6E6E` looked right and measured 3.6:1, which is why it is
+inactive tabs: it is set to clear 4.5:1 on `surface` rather than to lookas pale as possible. `#6E6E6E` looked right and measured 3.6:1, which is why it is
 `#868686`.
+
+### Over imagery
+
+The lead story card puts copy on top of a photograph. Those colours live in
+`onImage` rather than in the palettes, because what sits underneath is an image
+behind a dark scrim, so the contrast is identical in light and dark mode —
+splitting them across the two schemes would imply a difference that does not
+exist. `kicker` is a lightened tint of the brand orange, since the brand value
+itself is unreadable over a photo. `shadowColour` is single valued for the same
+reason; the opacity on each shadow carries the weight.
 
 ### Contrast
 

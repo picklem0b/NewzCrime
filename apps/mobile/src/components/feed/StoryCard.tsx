@@ -29,7 +29,8 @@ export default function StoryCard({
 	onPress,
 	featured = false
 }: StoryCardProps): ReactElement {
-	const { colour, radius, spacingY, typography } = useTheme();
+	const { colour, onImage, radius, shadowColour, spacingY, typography } =
+		useTheme();
 	const scale = useTextScale();
 	const saved = useIsSaved(item.id);
 	const { toggle } = useSaved();
@@ -44,7 +45,7 @@ export default function StoryCard({
 					{
 						borderRadius: radius.card,
 						backgroundColor: colour.surfaceRaised,
-						shadowColor: '#000'
+						shadowColor: shadowColour
 					}
 				]}
 			>
@@ -66,22 +67,21 @@ export default function StoryCard({
 						/>
 					) : null}
 					<LinearGradient
-						colors={['rgba(10,12,14,0.05)', 'rgba(10,12,14,0.88)']}
+						colors={onImage.scrim}
 						locations={[0.2, 1]}
 						style={StyleSheet.absoluteFill}
 					/>
-					<View style={styles.featuredTop}>
-						<Text style={styles.livePill}>● LIVE</Text>
-						<Text style={styles.location}>South Africa</Text>
-					</View>
 					<View style={styles.featuredCopy}>
-						<Text style={styles.featuredKicker}>
+						<Text
+							style={[styles.featuredKicker, { color: onImage.kicker }]}
+						>
 							TOP STORY · {topic.toUpperCase()}
 						</Text>
 						<Text
 							style={[
 								styles.featuredTitle,
 								{
+									color: onImage.text,
 									fontSize:
 										typography.size.display * 0.86 * scale
 								}
@@ -92,20 +92,36 @@ export default function StoryCard({
 						{item.excerpt ? (
 							<Text
 								numberOfLines={2}
-								style={styles.featuredExcerpt}
+								style={[
+									styles.featuredExcerpt,
+									{ color: onImage.textMuted }
+								]}
 							>
 								{item.excerpt}
 							</Text>
 						) : null}
 						<View style={styles.featuredMeta}>
-							<Text style={styles.featuredMetaText}>
+							<Text
+								style={[
+									styles.featuredMetaText,
+									{ color: onImage.textFaint }
+								]}
+							>
 								{formatRelativeTime(item.publishedAt)} ·{' '}
 								{sourceName ?? 'NewzCrime'}
 							</Text>
-							<View style={styles.nextCircle}>
+							<View
+								style={[
+									styles.nextCircle,
+									{
+										backgroundColor: onImage.control,
+										borderColor: onImage.controlBorder
+									}
+								]}
+							>
 								<CaretRightIcon
 									size={22}
-									color='#fff'
+									color={onImage.text}
 									weight='bold'
 								/>
 							</View>
@@ -121,7 +137,7 @@ export default function StoryCard({
 				{
 					backgroundColor: colour.surfaceRaised,
 					borderRadius: radius.card,
-					shadowColor: '#000'
+					shadowColor: shadowColour
 				}
 			]}
 		>
@@ -294,65 +310,25 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 10 },
 		elevation: 5
 	},
-	featuredPress: { flex: 1, padding: 20, justifyContent: 'space-between' },
-	featuredTop: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center'
-	},
-	livePill: {
-		color: '#fff',
-		backgroundColor: '#F15B2A',
-		borderRadius: 999,
-		paddingHorizontal: 12,
-		paddingVertical: 7,
-		fontSize: 12,
-		fontWeight: '800',
-		letterSpacing: 0.7
-	},
-	location: {
-		color: 'rgba(255,255,255,0.9)',
-		fontSize: 13,
-		fontWeight: '600'
-	},
+	featuredPress: { flex: 1, padding: 20, justifyContent: 'flex-end' },
 	featuredCopy: { gap: 9 },
-	featuredKicker: {
-		color: '#FFB28B',
-		fontSize: 11,
-		fontWeight: '800',
-		letterSpacing: 1.5
-	},
-	featuredTitle: {
-		color: '#fff',
-		fontWeight: '800',
-		lineHeight: 42,
-		letterSpacing: -1
-	},
-	featuredExcerpt: {
-		color: 'rgba(255,255,255,0.78)',
-		fontSize: 15,
-		lineHeight: 21
-	},
+	featuredKicker: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
+	featuredTitle: { fontWeight: '800', lineHeight: 42, letterSpacing: -1 },
+	featuredExcerpt: { fontSize: 15, lineHeight: 21 },
 	featuredMeta: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		marginTop: 2
 	},
-	featuredMetaText: {
-		color: 'rgba(255,255,255,0.75)',
-		fontSize: 12,
-		flex: 1
-	},
+	featuredMetaText: { fontSize: 12, flex: 1 },
 	nextCircle: {
 		width: 48,
 		height: 48,
 		borderRadius: 24,
-		backgroundColor: 'rgba(255,255,255,0.2)',
 		alignItems: 'center',
 		justifyContent: 'center',
-		borderWidth: 1,
-		borderColor: 'rgba(255,255,255,0.25)'
+		borderWidth: 1
 	},
 	wrap: {
 		padding: 10,

@@ -9,8 +9,10 @@ import { useColorScheme } from 'react-native';
 
 import {
   motion,
+  onImage,
   palettes,
   radius,
+  shadowColour,
   spacingX,
   spacingY,
   tabBar,
@@ -30,7 +32,9 @@ export function useTheme() {
   return {
     colour: palettes[scheme],
     scheme,
+    onImage,
     radius,
+    shadowColour,
     spacingX,
     spacingY,
     tabBar,
