@@ -13,6 +13,7 @@ import {
   radius,
   spacingX,
   spacingY,
+  tabBar,
   typography,
 } from '@/constants/theme';
 import type { ColourScheme } from '@/types';
@@ -32,6 +33,7 @@ export function useTheme() {
     radius,
     spacingX,
     spacingY,
+    tabBar,
     typography,
     motion,
   };

@@ -101,6 +101,11 @@ at three sizes without changing the layout.
 - Safe areas, the status bar, the tab bar and the home-indicator region are
   respected on every screen. The player bar sits above the tab bar and renders
   nothing while no episode is loaded.
+- The tab bar floats over the content instead of reserving space beside it, so
+  every list that scrolls beneath it pads its content by `tabBar.clearance`.
+  That token is derived from the bar's own `height` and `offset`, so the bar and
+  the lists cannot drift apart; without the padding the last row sits under the
+  bar and cannot be tapped.
 
 ## States
 

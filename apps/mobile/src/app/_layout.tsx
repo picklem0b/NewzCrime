@@ -45,6 +45,9 @@ export default function RootLayout(): ReactElement {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: colour.background },
+            animation: 'slide_from_right',
+            animationDuration: 240,
+            gestureEnabled: true,
           }}
         />
       </SafeAreaProvider>
