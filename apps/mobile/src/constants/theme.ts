@@ -60,6 +60,27 @@ export const tabBar = {
 	offset: TAB_BAR_OFFSET,
 	clearance: TAB_BAR_HEIGHT + TAB_BAR_OFFSET + spacingY.lg
 } as const;
+/**
+ * Colours for content drawn over imagery.
+ *
+ * Deliberately outside `palettes`: what sits underneath is a photograph behind a
+ * dark scrim, so the contrast is the same in light and dark mode and the two
+ * schemes must not pretend otherwise.
+ */
+export const onImage = {
+	/** Bottom scrim for a hero that carries copy on top of it. */
+	scrim: ['rgba(10,12,14,0.05)', 'rgba(10,12,14,0.88)'],
+	text: '#FFFFFF',
+	textMuted: 'rgba(255,255,255,0.78)',
+	textFaint: 'rgba(255,255,255,0.75)',
+	/** Lightened: the bright brand orange is unreadable over a photograph. */
+	kicker: '#FFB28B',
+	/** Translucent fill and outline for a control sitting on imagery. */
+	control: 'rgba(255,255,255,0.2)',
+	controlBorder: 'rgba(255,255,255,0.25)'
+} as const;
+/** Elevation shadows are black in both schemes; opacity carries the weight. */
+export const shadowColour = '#000';
 export const typography = {
 	size: {
 		display: 36,
@@ -85,9 +106,11 @@ export const motion = {
 export type RadiusToken = keyof typeof radius;
 export default {
 	palettes,
+	onImage,
 	radius,
 	spacingX,
 	spacingY,
+	shadowColour,
 	tabBar,
 	typography,
 	motion,
