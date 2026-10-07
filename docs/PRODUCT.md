@@ -27,18 +27,20 @@ deferred. See [`ROADMAP.md`](ROADMAP.md) for what each would cost.
 
 | Screen | Purpose |
 |---|---|
-| `tabs/Home` | The court and crime feed, with topic filters, read-aloud and sharing |
-| `tabs/Discover` | Search, plus every outlet and show to browse |
-| `tabs/Saved` | Bookmarked articles and episodes |
+| `tabs/Home` | Today: the court and crime feed with a lead story, top stories, topic sections and topic filters |
+| `tabs/Search` | Search with recent searches, result filters and every outlet to browse |
 | `tabs/Podcasts` | Curated shows and their latest episodes |
-| `tabs/Settings` | Appearance, release notes and the update check |
-| `search/Search` | Search over stored articles and episodes |
-| `detail/ItemDetail` | An article, judgment or episode |
+| `tabs/Saved` | Library: saved stories and episodes, with a route to Settings |
+| `settings/Settings` | Appearance, start screen, release notes and the update check; applies instantly |
+| `tabs/Discover` | Browse every outlet and show. Registered but hidden (`href: null`), pending a decision on the final tab set |
+| `tabs/Settings` | The same screen as `settings/Settings`, registered but hidden for the same reason |
+| `search/Search` | The same screen as `tabs/Search`, reached from the Discover search field |
+| `detail/ItemDetail` | An article, judgment or episode: headline, byline, summary, link to the publisher |
 | `detail/SourceDetail` | One outlet or one show |
 | `player/Player` | Audio playback with background and lock-screen controls |
-| `auth/Welcome` | Not routed to yet; accounts are a later phase |
-| `auth/LoginSheet` | Not routed to yet |
-| `auth/RegisterSheet` | Not routed to yet |
+
+Each row is a route in `src/app/`. The screen itself lives beside its feature in
+`src/` (for example `home/HomeScreen.tsx`), and the route file only returns it.
 
 ## Definition of done
 

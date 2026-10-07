@@ -9,13 +9,13 @@ not by tooling.
 |---|---|---|
 | Folders | lowercase | `settings/`, `adapters/` |
 | Components | `PascalCase.tsx` | `FeedCard.tsx` |
-| Screens | `PascalCase.tsx` | `Home.tsx`, `ItemDetail.tsx` |
+| Screens | `FeatureScreen.tsx` | `home/HomeScreen.tsx` |
 | Hooks | `useSomething.ts` | `useSettings.ts` |
 | Stores | `something.store.ts` | `settings.store.ts` |
 | Types | `types.ts` | `src/types.ts` |
-| Constants | `constants.ts` | `settings/constants.ts` |
+| Constants | `constants.ts` | `constants/settings.ts` |
 | Utilities | `something.ts` | `styling.ts` |
-| Tests | `something.test.ts` | `rssAdapter.test.ts` |
+| Tests | `__tests__/something.test.ts` | `utils/__tests__/time.test.ts` |
 | Routes | Expo Router convention | `app/tabs/Home.tsx` |
 | Services | `somethingService.ts` | `feedService.ts` |
 | Adapters | `somethingAdapter.ts` | `rssAdapter.ts` |
@@ -37,6 +37,10 @@ Rules that follow from the table:
   names, so the table does not apply there.
 - **Barrels are `index.ts` and contain nothing else.** A file with logic is not
   a barrel.
+- **Tests live in a sibling `__tests__/` directory**, named for the file they
+  cover: `src/utils/time.ts` is tested by `src/utils/__tests__/time.test.ts`.
+  The directory mirrors the source tree, so a test is never more than one hop
+  from its subject.
 
 ### Framework exceptions
 
@@ -105,37 +109,54 @@ values live in `constants.ts` and shapes live in `types.ts`.
 ### `apps/mobile/src`
 
 ```
-app/            expo-router routes only
+app/            expo-router routes only, one thin file per route
   index.tsx  _layout.tsx
+  tabs/         _layout · Home · Search · Podcasts · Saved · Discover · Settings
   auth/         Welcome · LoginSheet · RegisterSheet
-  tabs/         _layout · Home · Discover · Saved · Settings
-  search/       Search
   detail/       ItemDetail · SourceDetail
   player/       Player
+  search/       Search
+  settings/     Settings
 components/     reusable UI, grouped by domain
   feedback/   loading, empty and error states
-  feed/       story cards, headline rows, topic chips
-  layout/     screen container and header
+  ui/         Text, Button, IconButton, Chip, Badge, SearchField, Skeleton, Thumb
+  feed/       LeadStory, StoryRow, StoryMeta, StoryKicker, SaveButton, TopicBar
+  layout/     Screen, TabScreen, ScreenHeader
+  settings/   SettingRow, AppearanceSection, GeneralSection, AboutSection
   player/     mini player
-  podcast/    show cards and episode rows
-constants/      index.ts (barrel) + theme.ts
-feed/           constants.ts: feed topic options
+  podcast/    EpisodeRow, ShowTile
+  source/     SourceRow
+constants/      index.ts (barrel) · theme.ts · settings.ts
+feed/           constants.ts and layout.ts: feed topic options and hierarchy
+home/           HomeScreen.tsx
+discover/       DiscoverScreen.tsx
+search/         SearchScreen.tsx
+podcasts/       PodcastsScreen.tsx
+saved/          SavedScreen.tsx
+settings/       SettingsScreen.tsx
 hooks/          useSomething.ts
 stores/         something.store.ts
 services/       somethingService.ts
 utils/          something.ts
-settings/       settings module: constants, screen, components, sections
 types.ts        every type the app declares
 ```
 
-Three rules that are easy to get wrong:
+Five rules that are easy to get wrong:
 
 - **Only routes in `src/app/`.** expo-router treats every file there as a
   screen.
+- **A route file is thin.** It imports the screen and returns it, so the file
+  name the router forces on us never has to match the name the screen deserves.
+  Every tab, Settings and Search follow this: `app/tabs/Home.tsx` renders
+  `home/HomeScreen.tsx`.
+- **Every route is registered.** expo-router turns every file in a Tabs
+  directory into a tab, so a route that is not listed in `tabs/_layout.tsx`
+  still draws one. A route that should not take a tab is declared with
+  `href: null` rather than left out.
 - **Stores and hooks are central.** Long-lived state is in `src/stores`; reused
   hooks are in `src/hooks`. A module owns its domain, not its store, which is
-  why the settings store is at `src/stores/settings.store.ts` rather than inside
-  `src/settings/`.
+  why the settings store is at `src/stores/settings.store.ts` and the apply
+  helper at `src/hooks/useApplySetting.ts`, rather than inside `src/settings/`.
 - **A `.store.ts` file contains no JSX.** The settings store is a zustand store,
   so no provider wraps the root layout.
 
@@ -150,8 +171,9 @@ middleware/     somethingMiddleware.ts
 routes/         somethingRouter.ts
 services/       somethingService.ts
 cache/          cache helpers
-tests/          something.test.ts
 ```
+
+Tests sit beside their subject: `services/api/src/cache/__tests__/cacheKeys.test.ts`.
 
 ### `services/worker/src`
 
@@ -163,8 +185,10 @@ adapters/       somethingAdapter.ts
 jobs/           somethingJob.ts
 queue/          pg-boss setup
 utils/          something.ts
-tests/          something.test.ts
 ```
+
+Tests sit beside their subject, and fixtures sit beside the adapter they feed:
+`adapters/__tests__/rssAdapter.test.ts` reads `adapters/rssAdapter.fixture.ts`.
 
 ### Packages
 

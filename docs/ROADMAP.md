@@ -14,6 +14,7 @@ is tagged `v1.phase.step` — `v1.1.3` is phase 1, step 3.
 | 6 | Verification and documentation | `v1.6.1` | Done |
 | 7 | SAFLII court judgments as `court_ruling` | `v1.7.1`–`v1.7.3` | Done |
 | 8 | Accounts, follows, bookmarks sync, notifications | — | Not started |
+| 9 | UI/UX rebuild: design system, editorial feed, Search tab, Library | `v1.9.1` | Done |
 
 ## Deferred work
 
