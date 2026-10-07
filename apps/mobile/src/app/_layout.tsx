@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { playbackService } from '@/services/playbackService';
 import { loadPlayer } from '@/services/playerService';
 import { useSavedStore } from '@/stores/saved.store';
+import { useRecentSearchesStore } from '@/stores/search.store';
 import { useSettingsStore } from '@/stores/settings.store';
 
 /**
@@ -22,37 +23,36 @@ import { useSettingsStore } from '@/stores/settings.store';
  * mount; screens render defaults until that finishes.
  */
 export default function RootLayout(): ReactElement {
-  const { colour, scheme } = useTheme();
-  const hydrateSettings = useSettingsStore((state) => state.hydrate);
-  const hydrateSaved = useSavedStore((state) => state.hydrate);
+	const { colour, scheme } = useTheme();
+	const hydrateSettings = useSettingsStore(state => state.hydrate);
+	const hydrateSaved = useSavedStore(state => state.hydrate);
+	const hydrateRecents = useRecentSearchesStore(state => state.hydrate);
 
-  useEffect(() => {
-    void loadPlayer().then((handle) => {
-      handle?.player.registerPlaybackService(() => playbackService);
-    });
-  }, []);
+	useEffect(() => {
+		void loadPlayer().then(handle => {
+			handle?.player.registerPlaybackService(() => playbackService);
+		});
+	}, []);
 
-  useEffect(() => {
-    void hydrateSettings();
-    void hydrateSaved();
-  }, [hydrateSettings, hydrateSaved]);
+	useEffect(() => {
+		void hydrateSettings();
+		void hydrateSaved();
+		void hydrateRecents();
+	}, [hydrateSettings, hydrateSaved, hydrateRecents]);
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colour.background },
-            animation: 'slide_from_right',
-            animationDuration: 240,
-            gestureEnabled: true,
-          }}
-        />
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
-  );
+	return (
+		<GestureHandlerRootView style={{ flex: 1 }}>
+			<SafeAreaProvider>
+				<StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+				<Stack
+					screenOptions={{
+						headerShown: false,
+						contentStyle: { backgroundColor: colour.background }
+					}}
+				/>
+			</SafeAreaProvider>
+		</GestureHandlerRootView>
+	);
 }
 
 /**
@@ -64,15 +64,15 @@ export default function RootLayout(): ReactElement {
  * window that shows nothing until the app is restarted.
  */
 export function ErrorBoundary({
-  error,
-  retry,
+	error,
+	retry
 }: ErrorBoundaryProps): ReactElement {
-  return (
-    <ErrorScreen
-      message={error.message || 'Something went wrong'}
-      onRetry={() => {
-        void retry();
-      }}
-    />
-  );
+	return (
+		<ErrorScreen
+			message={error.message || 'Something went wrong'}
+			onRetry={() => {
+				void retry();
+			}}
+		/>
+	);
 }

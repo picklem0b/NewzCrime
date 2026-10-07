@@ -1,72 +1,121 @@
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-	BookmarkSimpleIcon,
+	ArrowLeftIcon,
 	ArrowSquareOutIcon,
 	PauseIcon,
 	PlayIcon,
 	ShareNetworkIcon,
-	SpeakerHighIcon
+	SpeakerHighIcon,
+	StopIcon
 } from 'phosphor-react-native';
 import type { ReactElement } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import CardAction from '@/components/feed/CardAction';
 import ErrorState from '@/components/feedback/ErrorState';
 import ListSkeleton from '@/components/feedback/ListSkeleton';
+import SaveButton from '@/components/feed/SaveButton';
+import StoryKicker from '@/components/feed/StoryKicker';
+import StoryRow from '@/components/feed/StoryRow';
 import Screen from '@/components/layout/Screen';
-import ScreenHeader from '@/components/layout/ScreenHeader';
+import Button from '@/components/ui/Button';
+import Column from '@/components/ui/Column';
+import IconButton from '@/components/ui/IconButton';
+import SectionHeader from '@/components/ui/SectionHeader';
+import Text from '@/components/ui/Text';
+import Thumb from '@/components/ui/Thumb';
 import { useItem } from '@/hooks/useItem';
+import { useLayout } from '@/hooks/useLayout';
 import { usePlayer } from '@/hooks/usePlayer';
-import { useIsSaved, useSaved } from '@/hooks/useSaved';
 import { useSpeech, useStopSpeechOnUnmount } from '@/hooks/useSpeech';
-import { useSourceIndex } from '@/hooks/useSources';
-import { useTextScale } from '@/hooks/useTextScale';
+import { useSourceIndex, useSourceItems } from '@/hooks/useSources';
 import { useTheme } from '@/hooks/useTheme';
 import { openExternalUrl, shareItem } from '@/utils/external';
-import { formatRelativeTime } from '@/utils/time';
+import { formatPublished } from '@/utils/time';
 
-/**
- * Content detail — an article, judgment or podcast episode.
- *
- * The item id arrives as a query parameter because the route is static:
- *   `router.push({ pathname: '/detail/ItemDetail', params: { itemId } })`
- *
- * Shows the excerpt and links out to the publisher. The article body is never
- * reproduced.
- */
 export default function ItemDetailScreen(): ReactElement {
 	const { itemId } = useLocalSearchParams<{ itemId?: string }>();
 	const router = useRouter();
-	const { colour, radius, spacingX, spacingY, typography } = useTheme();
-	const textScale = useTextScale();
+	const { colour, layout, spacing } = useTheme();
+	const { gutter, isWide } = useLayout();
 
 	const { state, reload } = useItem(itemId ?? '');
 	const sourceIndex = useSourceIndex();
-	const isSaved = useIsSaved(itemId ?? '');
-	const { toggle } = useSaved();
 	const { speakingId, speak, stop } = useSpeech();
 	const player = usePlayer();
 
-	// Reading this article is this screen's job, so leaving it stops the audio.
 	useStopSpeechOnUnmount();
 
 	const item = state.status === 'success' ? state.data : null;
-	const sourceName = item ? sourceIndex.get(item.sourceId)?.name : undefined;
+	const source = item ? sourceIndex.get(item.sourceId) : undefined;
+	const sourceName = source?.name;
+	const related = useSourceItems(item?.sourceId ?? '');
+	const relatedItems =
+		related.state.status === 'success'
+			? related.state.data.items
+					.filter(entry => entry.id !== item?.id)
+					.slice(0, 3)
+			: [];
+
 	const isSpeaking = item !== null && speakingId === item.id;
 	const isPlaying =
 		item !== null &&
 		player.current?.id === item.id &&
 		player.status === 'playing';
+	const isJudgment = item?.type === 'court_ruling';
+	const isEpisode = Boolean(item?.audioUrl);
+
+	const goBack = () => {
+		if (router.canGoBack()) {
+			router.back();
+			return;
+		}
+		router.replace('/tabs/Home');
+	};
+
+	const openSource = () => {
+		if (item) void openExternalUrl(item.url);
+	};
+
+	const readLabel = isJudgment
+		? `Read the full judgment${sourceName ? ` on ${sourceName}` : ''}`
+		: `Read the full story${sourceName ? ` on ${sourceName}` : ''}`;
 
 	return (
-		<Screen>
-			<ScreenHeader
-				eyebrow='NewzCrime reader'
-				title={sourceName ?? 'Story'}
-				onBack={() => router.back()}
-			/>
+		<Screen showPlayer>
+			<View
+				style={[
+					styles.topBar,
+					{
+						minHeight: layout.touch + spacing.sm,
+						paddingHorizontal: spacing.xs
+					}
+				]}
+			>
+				<IconButton
+					label='Go back'
+					onPress={goBack}
+					icon={<ArrowLeftIcon size={22} color={colour.text} />}
+				/>
+				<View style={styles.topActions}>
+					{item ? (
+						<>
+							<IconButton
+								label='Share'
+								onPress={() => {
+									void shareItem(item);
+								}}
+								icon={
+									<ShareNetworkIcon
+										size={22}
+										color={colour.text}
+									/>
+								}
+							/>
+							<SaveButton item={item} size={24} />
+						</>
+					) : null}
+				</View>
+			</View>
 
 			{state.status === 'loading' || state.status === 'idle' ? (
 				<ListSkeleton rows={3} />
@@ -79,217 +128,190 @@ export default function ItemDetailScreen(): ReactElement {
 			{item ? (
 				<ScrollView
 					showsVerticalScrollIndicator={false}
-					contentContainerStyle={{
-						paddingHorizontal: spacingX.lg,
-						paddingBottom: spacingY.xxxl,
-						gap: spacingY.lg
-					}}
+					contentContainerStyle={{ paddingBottom: spacing.xxxl }}
 				>
-					{item.imageUrl ? (
+					<Column max={layout.readingMax + gutter * 2}>
+						{item.imageUrl ? (
+							<Thumb
+								uri={item.imageUrl}
+								label={sourceName}
+								width='100%'
+								aspectRatio={layout.heroAspect}
+								rounded={isWide}
+							/>
+						) : null}
+
 						<View
 							style={{
-								width: '100%',
-								height: 264,
-								borderRadius: radius.card,
-								overflow: 'hidden',
-								backgroundColor: colour.surfaceRaised
+								paddingHorizontal: gutter,
+								paddingTop: spacing.lg,
+								gap: spacing.md
 							}}
 						>
-							<Image
-								source={{ uri: item.imageUrl }}
-								style={StyleSheet.absoluteFill}
-								contentFit='cover'
-								transition={150}
-							/>
-							<LinearGradient
-								colors={['transparent', 'rgba(0,0,0,0.35)']}
-								style={StyleSheet.absoluteFill}
-								pointerEvents='none'
-							/>
-						</View>
-					) : null}
+							<StoryKicker item={item} />
 
-					<View style={{ gap: spacingY.sm }}>
-						<Text
-							style={{
-								color: colour.accent,
-								fontSize: typography.size.caption,
-								fontWeight: typography.weight.semibold,
-								textTransform: 'uppercase',
-								letterSpacing: 0.6
-							}}
-						>
-							{sourceName ?? 'NewzCrime'} ·{' '}
-							{formatRelativeTime(item.publishedAt)}
-						</Text>
-
-						<Text
-							style={{
-								color: colour.text,
-								fontSize: typography.size.heading * textScale,
-								fontWeight: typography.weight.bold,
-								lineHeight:
-									typography.size.heading *
-									textScale *
-									typography.leading.tight,
-								letterSpacing: -0.3
-							}}
-						>
-							{item.title}
-						</Text>
-
-						{item.author ? (
 							<Text
+								variant={isWide ? 'display' : 'h1'}
+								accessibilityRole='header'
+							>
+								{item.title}
+							</Text>
+
+							<View style={{ gap: spacing.xxs }}>
+								<Text
+									variant='small'
+									style={{ fontWeight: '600' }}
+								>
+									{item.author
+										? `By ${item.author}`
+										: (sourceName ?? '')}
+								</Text>
+								<Text variant='meta' tone='faint'>
+									{item.author && sourceName
+										? `${sourceName} · `
+										: ''}
+									{formatPublished(item.publishedAt)}
+								</Text>
+							</View>
+
+							{item.excerpt ? (
+								<Text
+									variant='standfirst'
+									style={{ marginTop: spacing.sm }}
+								>
+									{item.excerpt}
+								</Text>
+							) : null}
+
+							<View
 								style={{
-									color: colour.textFaint,
-									fontSize: typography.size.small
+									gap: spacing.sm,
+									marginTop: spacing.md
 								}}
 							>
-								By {item.author}
-							</Text>
-						) : null}
-					</View>
-
-					{item.excerpt ? (
-						<Text
-							style={{
-								color: colour.text,
-								fontSize: typography.size.body * textScale,
-								lineHeight:
-									typography.size.body *
-									textScale *
-									typography.leading.relaxed
-							}}
-						>
-							{item.excerpt}
-						</Text>
-					) : null}
-
-					{item.audioUrl ? (
-						<Pressable
-							accessibilityRole='button'
-							onPress={() => {
-								if (isPlaying) {
-									void player.toggle();
-									return;
-								}
-								void player.play(item);
-							}}
-							style={{
-								flexDirection: 'row',
-								alignItems: 'center',
-								justifyContent: 'center',
-								gap: spacingX.sm,
-								backgroundColor: colour.primary,
-								borderRadius: radius.pill,
-								paddingVertical: spacingY.md
-							}}
-						>
-							{isPlaying ? (
-								<PauseIcon
-									size={18}
-									color={colour.onPrimary}
-									weight='fill'
-								/>
-							) : (
-								<PlayIcon
-									size={18}
-									color={colour.onPrimary}
-									weight='fill'
-								/>
-							)}
-							<Text
-								style={{
-									color: colour.onPrimary,
-									fontSize: typography.size.body,
-									fontWeight: typography.weight.semibold
-								}}
-							>
-								{isPlaying ? 'Pause episode' : 'Play episode'}
-							</Text>
-						</Pressable>
-					) : null}
-
-					<View
-						style={[
-							styles.actions,
-							{
-								borderTopColor: colour.border,
-								paddingTop: spacingY.lg
-							}
-						]}
-					>
-						<CardAction
-							label={isSpeaking ? 'Stop' : 'Read aloud'}
-							active={isSpeaking}
-							icon={
-								isSpeaking ? (
-									<PauseIcon
-										size={20}
-										color={colour.accent}
+								{isEpisode ? (
+									<Button
+										label={
+											isPlaying
+												? 'Pause episode'
+												: 'Play episode'
+										}
+										icon={
+											isPlaying ? (
+												<PauseIcon
+													size={20}
+													color={colour.onPrimary}
+													weight='fill'
+												/>
+											) : (
+												<PlayIcon
+													size={20}
+													color={colour.onPrimary}
+													weight='fill'
+												/>
+											)
+										}
+										onPress={() => {
+											if (isPlaying) {
+												void player.toggle();
+												return;
+											}
+											void player.play(item);
+										}}
 									/>
-								) : (
-									<SpeakerHighIcon
-										size={20}
-										color={colour.textMuted}
-									/>
-								)
-							}
-							onPress={() => {
-								if (isSpeaking) {
-									stop();
-									return;
-								}
-								speak(
-									item.id,
-									`${item.title}. ${item.excerpt ?? ''}`
-								);
-							}}
-						/>
+								) : null}
 
-						<CardAction
-							label='Share'
-							icon={
-								<ShareNetworkIcon
-									size={20}
-									color={colour.textMuted}
-								/>
-							}
-							onPress={() => {
-								void shareItem(item);
-							}}
-						/>
-
-						<CardAction
-							label={isSaved ? 'Saved' : 'Save'}
-							active={isSaved}
-							icon={
-								<BookmarkSimpleIcon
-									size={20}
-									color={
-										isSaved
-											? colour.accent
-											: colour.textMuted
+								<Button
+									label={readLabel}
+									variant={
+										isEpisode ? 'secondary' : 'primary'
 									}
-									weight={isSaved ? 'fill' : 'regular'}
+									icon={
+										<ArrowSquareOutIcon
+											size={20}
+											color={
+												isEpisode
+													? colour.text
+													: colour.onPrimary
+											}
+										/>
+									}
+									onPress={openSource}
 								/>
-							}
-							onPress={() => toggle(item)}
-						/>
 
-						<CardAction
-							label='Open'
-							icon={
-								<ArrowSquareOutIcon
-									size={20}
-									color={colour.textMuted}
+								{!isEpisode ? (
+									<Button
+										label={
+											isSpeaking
+												? 'Stop reading'
+												: 'Listen to summary'
+										}
+										variant='quiet'
+										icon={
+											isSpeaking ? (
+												<StopIcon
+													size={20}
+													color={colour.accent}
+													weight='fill'
+												/>
+											) : (
+												<SpeakerHighIcon
+													size={20}
+													color={colour.accent}
+												/>
+											)
+										}
+										onPress={() => {
+											if (isSpeaking) {
+												stop();
+												return;
+											}
+											speak(
+												item.id,
+												`${item.title}. ${item.excerpt ?? ''}`
+											);
+										}}
+									/>
+								) : null}
+							</View>
+
+							<Text
+								variant='meta'
+								tone='faint'
+								style={{ marginTop: spacing.sm }}
+							>
+								{isJudgment
+									? 'Judgments are published by the court. NewzCrime links to the full text and does not summarise or interpret it.'
+									: `Summary and link from ${sourceName ?? 'the publisher'}. Statements are the publisher's reporting; read the full story for context and sourcing.`}
+							</Text>
+						</View>
+
+						{relatedItems.length > 0 ? (
+							<View style={{ marginTop: spacing.xl }}>
+								<SectionHeader
+									title={
+										sourceName
+											? `More from ${sourceName}`
+											: 'More from this source'
+									}
 								/>
-							}
-							onPress={() => {
-								void openExternalUrl(item.url);
-							}}
-						/>
-					</View>
+								{relatedItems.map(entry => (
+									<StoryRow
+										key={entry.id}
+										item={entry}
+										compact
+										sourceName={sourceName}
+										onPress={() =>
+											router.push({
+												pathname: '/detail/ItemDetail',
+												params: { itemId: entry.id }
+											})
+										}
+									/>
+								))}
+							</View>
+						) : null}
+					</Column>
 				</ScrollView>
 			) : null}
 		</Screen>
@@ -297,10 +319,10 @@ export default function ItemDetailScreen(): ReactElement {
 }
 
 const styles = StyleSheet.create({
-	actions: {
+	topBar: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-between',
-		borderTopWidth: StyleSheet.hairlineWidth
-	}
+		justifyContent: 'space-between'
+	},
+	topActions: { flexDirection: 'row', alignItems: 'center' }
 });

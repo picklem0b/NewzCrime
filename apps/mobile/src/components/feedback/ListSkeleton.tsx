@@ -1,68 +1,69 @@
-/** Loading placeholder whose block sizes match the rows it stands in for. */
-
 import type { ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
+import Skeleton from '@/components/ui/Skeleton';
+import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/hooks/useTheme';
 
 export interface ListSkeletonProps {
-  rows?: number;
+	rows?: number;
+	lead?: boolean;
 }
 
-export function ListSkeleton({ rows = 6 }: ListSkeletonProps): ReactElement {
-  const { colour, radius, spacingX, spacingY } = useTheme();
+export function ListSkeleton({
+	rows = 5,
+	lead = false
+}: ListSkeletonProps): ReactElement {
+	const { colour, layout, spacing } = useTheme();
+	const { gutter } = useLayout();
 
-  return (
-    <View
-      style={{ paddingHorizontal: spacingX.lg, gap: spacingY.lg }}
-      accessibilityLabel='Loading'
-    >
-      {Array.from({ length: rows }, (_unused, index) => (
-        <View key={index} style={styles.row}>
-          <View style={styles.text}>
-            <View
-              style={{
-                height: 10,
-                width: '40%',
-                borderRadius: 4,
-                backgroundColor: colour.surfaceRaised,
-              }}
-            />
-            <View
-              style={{
-                height: 16,
-                width: '95%',
-                borderRadius: 4,
-                backgroundColor: colour.surfaceRaised,
-              }}
-            />
-            <View
-              style={{
-                height: 16,
-                width: '70%',
-                borderRadius: 4,
-                backgroundColor: colour.surfaceRaised,
-              }}
-            />
-          </View>
+	return (
+		<View
+			accessible
+			accessibilityLabel='Loading'
+			accessibilityRole='progressbar'
+			style={{ paddingHorizontal: gutter, gap: spacing.lg }}
+		>
+			{lead ? (
+				<View style={{ gap: spacing.md, paddingBottom: spacing.sm }}>
+					<Skeleton width='100%' height={200} rounded='md' />
+					<Skeleton width='35%' height={12} />
+					<Skeleton width='95%' height={22} />
+					<Skeleton width='70%' height={22} />
+				</View>
+			) : null}
 
-          <View
-            style={{
-              width: 96,
-              height: 96,
-              borderRadius: radius.card,
-              backgroundColor: colour.surfaceRaised,
-            }}
-          />
-        </View>
-      ))}
-    </View>
-  );
+			{Array.from({ length: rows }, (_unused, index) => (
+				<View
+					key={index}
+					style={{
+						flexDirection: 'row',
+						gap: spacing.md,
+						paddingBottom: spacing.lg,
+						borderBottomWidth: 1,
+						borderBottomColor: colour.border
+					}}
+				>
+					<View
+						style={{
+							flex: 1,
+							gap: spacing.sm,
+							justifyContent: 'center'
+						}}
+					>
+						<Skeleton width='40%' height={10} />
+						<Skeleton width='95%' height={16} />
+						<Skeleton width='70%' height={16} />
+					</View>
+					<Skeleton
+						width={layout.rowThumb.width}
+						height={layout.rowThumb.height}
+						rounded='md'
+					/>
+				</View>
+			))}
+		</View>
+	);
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 12 },
-  text: { flex: 1, gap: 8, justifyContent: 'center' },
-});
 
 export default ListSkeleton;

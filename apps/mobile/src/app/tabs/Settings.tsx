@@ -1,20 +1,15 @@
 import type { ReactElement } from 'react';
 
-import TabScreen from '@/components/layout/TabScreen';
 import SettingsScreen from '@/settings/SettingsScreen';
 
 /**
- * Settings tab route. The implementation lives in `src/settings`; every file
- * under `src/app` is a screen, so route files stay thin.
+ * Settings, reachable from the tab group.
  *
- * `TabScreen` is what supplies the safe-area insets and the player bar, and
- * every other tab goes through it. Without it the settings list ran under the
- * status bar on a device with a notch.
+ * Registered with `href: null` in `tabs/_layout.tsx`, so it is a valid route
+ * without taking a seat in the tab bar — the Library tab links to it. It
+ * renders the same screen as `app/settings/Settings`, and the screen supplies
+ * its own container, so this route adds none of its own.
  */
-export default function SettingsTab(): ReactElement {
-  return (
-    <TabScreen>
-      <SettingsScreen />
-    </TabScreen>
-  );
+export default function SettingsRoute(): ReactElement {
+	return <SettingsScreen />;
 }
