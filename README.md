@@ -9,13 +9,13 @@ and true-life shows, with background audio and lock-screen controls.
 
 ## What works
 
-| Area | State |
-|---|---|
-| Ingestion | 10 live outlets and 6 podcast shows, fetched on a 15-minute schedule |
-| Database | `sources` and `content_items`, with full-text and trigram search indexes |
-| API | Feed, item, source, podcast, search and health endpoints under `/v1` |
-| Cache | Redis with an in-process fallback; feed and search invalidated on ingest |
-| Mobile | Home, Discover, Saved, Podcasts and Settings, with TTS and sharing |
+| Area      | State                                                                    |
+| --------- | ------------------------------------------------------------------------ |
+| Ingestion | 10 live outlets and 6 podcast shows, fetched on a 15-minute schedule     |
+| Database  | `sources` and `content_items`, with full-text and trigram search indexes |
+| API       | Feed, item, source, podcast, search and health endpoints under `/v1`     |
+| Cache     | Redis with an in-process fallback; feed and search invalidated on ingest |
+| Mobile    | Today, Search, Podcasts and Library, with Settings, TTS and sharing      |
 
 Two publishers (Daily Maverick, News24) are seeded but switched off: their feeds
 refuse this host. Turn them on where they are reachable.
@@ -29,14 +29,14 @@ streams, audiobooks and newsletters — is recorded in
 
 ## Repository layout
 
-| Path | Purpose |
-|---|---|
-| `apps/mobile` | Expo (React Native) app, expo-router, TypeScript |
-| `services/api` | Express REST API |
-| `services/worker` | Ingestion worker, adapters and pg-boss queue |
-| `packages/shared` | Domain types, constants and the API client |
-| `packages/db` | Database pool, repositories and migrations |
-| `packages/cache` | Redis client with a memory fallback |
+| Path              | Purpose                                          |
+| ----------------- | ------------------------------------------------ |
+| `apps/mobile`     | Expo (React Native) app, expo-router, TypeScript |
+| `services/api`    | Express REST API                                 |
+| `services/worker` | Ingestion worker, adapters and pg-boss queue     |
+| `packages/shared` | Domain types, constants and the API client       |
+| `packages/db`     | Database pool, repositories and migrations       |
+| `packages/cache`  | Redis client with a memory fallback              |
 
 ## Running it
 
@@ -72,20 +72,19 @@ does need the Android SDK or Xcode.
 
 ## Documentation
 
-| Document | Contents |
-|---|---|
-| [`docs/PRODUCT.md`](docs/PRODUCT.md) | What the product does and the scope of the release |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System shape, services and data flow |
-| [`docs/API.md`](docs/API.md) | HTTP endpoint contracts |
-| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Database tables and indexes |
-| [`docs/SOURCES.md`](docs/SOURCES.md) | The outlets and shows that are ingested |
-| [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md) | Local development setup |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Technical decisions and their rationale |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phase history and deferred work |
-| [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) | File naming, code organisation, commits and tags |
-| [`docs/DESIGN.md`](docs/DESIGN.md) | Visual system and the artwork brief |
+| Document                                       | Contents                                           |
+| ---------------------------------------------- | -------------------------------------------------- |
+| [`docs/PRODUCT.md`](docs/PRODUCT.md)           | What the product does and the scope of the release |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System shape, services and data flow               |
+| [`docs/API.md`](docs/API.md)                   | HTTP endpoint contracts                            |
+| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)     | Database tables and indexes                        |
+| [`docs/SOURCES.md`](docs/SOURCES.md)           | The outlets and shows that are ingested            |
+| [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)   | Local development setup                            |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md)       | Technical decisions and their rationale            |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md)           | Phase history and deferred work                    |
+| [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)   | File naming, code organisation, commits and tags   |
+| [`docs/DESIGN.md`](docs/DESIGN.md)             | Visual system and the artwork brief                |
 
 ## Creator
 
 Lethabo KHEDAMA
-

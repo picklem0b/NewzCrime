@@ -296,8 +296,11 @@ asserts that a prefix delete reaches a key written under the same prefix.
 ## Testing: vitest, one config per workspace
 
 Every workspace runs `vitest` through its own `test` script, so `pnpm test` at
-the root covers the whole repo. Tests sit beside the code as
-`something.test.ts`, matching the file conventions.
+the root covers the whole repo. Tests sit in a sibling `__tests__/` directory
+named for the file they cover — `src/utils/time.ts` is covered by
+`src/utils/__tests__/time.test.ts`. A directory of tests is easier to skip over
+when reading a module folder than a module and its test interleaved, and the
+mirrored path keeps a test one hop from its subject.
 
 What is covered, and why each one earns its place:
 
@@ -334,6 +337,50 @@ request timed out, not that it was aborted.
 Each attempt owns its own `AbortController`, so the timeout and the caller's
 `AbortSignal` can both stop it and a retry starts from a clean one. A timeout is
 never retried, because the caller has already waited once.
+
+## Design tokens are the single source of truth
+
+Every colour, type size, spacing, radius, elevation and duration lives in
+`apps/mobile/src/constants/theme.ts`. `useTheme` hands out the tokens and no
+other file declares a raw value — a check for a hex literal or `rgba()` outside
+that file returns nothing.
+
+A token rename is a breaking change to every consumer, not a local edit. An
+earlier pass replaced `spacingX`/`spacingY`/`typography` with `spacing` and
+`textVariants`, and the radius scale with `sm`/`md`/`lg`/`xl`, without moving the
+files that read them. That left 55 compile errors and, worse, reads that return
+`undefined` — `spacingX.xl` throws at render rather than failing quietly. Bad
+tokens are not a type error at runtime; they are a crash. `pnpm typecheck` is
+what catches them, and it is run before a token change counts as finished.
+
+## Screens live beside their feature; routes stay thin
+
+`src/app` holds routes and nothing else. Each route returns a screen from
+`src/<feature>/<Feature>Screen.tsx`:
+
+```
+app/tabs/Home.tsx            ->  src/home/HomeScreen.tsx
+app/tabs/Search.tsx          ->  src/search/SearchScreen.tsx
+app/settings/Settings.tsx    ->  src/settings/SettingsScreen.tsx
+```
+
+The router decides the file name, so the route keeps the framework's spelling
+and the screen keeps a name worth reading. It also gives each screen a directory
+to grow into, rather than one `app/tabs` folder holding every tab's logic.
+
+Hooks, components and constants do not live inside a feature module. `settings/`
+went through this: its hook moved to `src/hooks/useApplySetting.ts`, its rows and
+sections to `src/components/settings/`, and its values to
+`src/constants/settings.ts`. What is left is the screen. A module is named for
+its domain, not made a home for whatever its feature happens to need.
+
+## Every route is registered, or it becomes a tab
+
+expo-router turns every file in a Tabs directory into a tab, whether or not the
+layout mentions it. `tabs/Discover.tsx` and `tabs/Settings.tsx` therefore draw
+two tabs that the design does not have unless they are declared, and the fix is
+`href: null` rather than deleting the route. That keeps them reachable by
+navigation while the tab bar stays at four: **Today, Search, Podcasts, Library**.
 
 ## Tags: `v1.phase.step`
 
