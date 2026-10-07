@@ -66,32 +66,39 @@ export const CACHE_TTL = {
 
 /**
  * Release metadata served by `GET /v1/app/version` and shown by the app's
- * update check. Edit `RELEASE_NOTES` when the app version changes.
+ * update check.
+ *
+ * The version line matches the repository's `v1.PHASE.STEP` tags, so the app
+ * version, the release notes and the git tag all name the same thing. Edit this
+ * block, `RELEASE_NOTES` and `apps/mobile/app.json` together when a release
+ * ships; `CHANGELOG.md` is the long-form record of the same history.
  */
 export const APP_RELEASE = {
-  latestVersion: '1.0.0',
-  minimumVersion: '0.1.0',
+  latestVersion: '1.12.6',
+  minimumVersion: '1.0.0',
+  downloadUrl:
+    'https://expo.dev/accounts/the_devi/projects/newzcrime/builds',
 } as const;
 
+/**
+ * What the app shows under "What's new".
+ *
+ * Only the newest release is listed: the app renders this as a single panel,
+ * and the full history lives in `CHANGELOG.md`. Newest first, so `[0]` is
+ * always `APP_RELEASE.latestVersion`.
+ */
 export const RELEASE_NOTES: ReadonlyArray<{
   version: string;
   highlights: ReadonlyArray<string>;
 }> = [
   {
-    version: '1.0.0',
+    version: '1.12.6',
     highlights: [
-      'First installable Android build',
-      'Court judgments from SAFLII ingest as their own topic',
-      'Podcast playback that keeps going with the screen off',
-    ],
-  },
-  {
-    version: '0.2.0',
-    highlights: [
-      'Live news feed from South African outlets',
-      'Court, crime, politics and world filters',
-      'Read headlines aloud and share stories',
-      'Curated crime and true-life podcasts with background playback',
+      'A calmer, faster reading layout with a lead story and topic sections',
+      'Search across stories, judgments and episodes, and filter the results',
+      'One place to browse every outlet and show',
+      'Podcast playback says why it failed instead of staying silent',
+      'Light and dark palettes, with text that follows your size setting',
     ],
   },
 ];

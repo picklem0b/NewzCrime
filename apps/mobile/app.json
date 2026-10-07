@@ -4,7 +4,7 @@
 		"slug": "newzcrime",
 		"scheme": "newzcrime",
 		"owner": "the_devi",
-		"version": "1.0.0",
+		"version": "1.12.6",
 		"orientation": "portrait",
 		"userInterfaceStyle": "automatic",
 		"newArchEnabled": true,
@@ -18,7 +18,7 @@
 		},
 		"android": {
 			"package": "za.co.newzcrime.app",
-			"versionCode": 2,
+			"versionCode": 3,
 			"permissions": [
 				"FOREGROUND_SERVICE",
 				"FOREGROUND_SERVICE_MEDIA_PLAYBACK",
