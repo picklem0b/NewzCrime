@@ -2,30 +2,45 @@ import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 
+import { SettingGroup, SettingRow } from '@/components/settings/SettingRow';
+import Button from '@/components/ui/Button';
 import Text from '@/components/ui/Text';
 import { brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
-import { SettingGroup, SettingRow } from '@/components/settings/SettingRow';
 import {
 	checkForUpdates,
 	currentVersion,
-	fetchReleaseNotes
+	fetchReleaseNotes,
+	isUpdateAvailable,
+	latestRelease
 } from '@/services/updateService';
-import type { ReleaseNotes } from '@/services/updateService';
+import type { ReleaseInfo } from '@/services/updateService';
 import type { UpdateCheckResult } from '@/types';
+import { openExternalUrl } from '@/utils/external';
 
+/**
+ * About: version, the update check, and what changed in this release.
+ *
+ * Release metadata comes from `GET /v1/app/version`. Only the newest release is
+ * shown — the panel renders one release and `CHANGELOG.md` holds the history —
+ * and when the server reports a newer version the reader gets a button that
+ * opens the build rather than a version number to act on themselves.
+ *
+ * Installing still happens outside the app: this is an internal-distribution
+ * build, so there is no store to hand the request to.
+ */
 export function AboutSection(): ReactElement {
 	const { colour, spacing } = useTheme();
 	const [check, setCheck] = useState<UpdateCheckResult>({ status: 'idle' });
-	const [notes, setNotes] = useState<ReleaseNotes[]>([]);
+	const [release, setRelease] = useState<ReleaseInfo | null>(null);
 	const [showNotes, setShowNotes] = useState(false);
 
 	useEffect(() => {
 		let isActive = true;
 
 		fetchReleaseNotes()
-			.then(release => {
-				if (isActive) setNotes(release.notes);
+			.then(info => {
+				if (isActive) setRelease(info);
 			})
 			.catch(() => undefined);
 
@@ -34,7 +49,9 @@ export function AboutSection(): ReactElement {
 		};
 	}, []);
 
-	const latest = notes[0];
+	const version = currentVersion();
+	const latest = latestRelease(release?.notes ?? []);
+	const canUpdate = release ? isUpdateAvailable(version, release) : false;
 
 	const updateValue =
 		check.status === 'checking'
@@ -49,7 +66,7 @@ export function AboutSection(): ReactElement {
 
 	return (
 		<SettingGroup title='About'>
-			<SettingRow label='Version' value={`v${currentVersion()}`} />
+			<SettingRow label='Version' value={`v${version}`} />
 
 			<SettingRow
 				label='Check for updates'
@@ -85,6 +102,27 @@ export function AboutSection(): ReactElement {
 							{`• ${highlight}`}
 						</Text>
 					))}
+				</View>
+			) : null}
+
+			{canUpdate && release ? (
+				<View
+					style={{
+						padding: spacing.lg,
+						gap: spacing.md,
+						borderTopWidth: 1,
+						borderTopColor: colour.border
+					}}
+				>
+					<Text variant='body'>
+						{`Version ${release.latestVersion} is available.`}
+					</Text>
+					<Button
+						label='Get the update'
+						onPress={() => {
+							void openExternalUrl(release.downloadUrl);
+						}}
+					/>
 				</View>
 			) : null}
 		</SettingGroup>
