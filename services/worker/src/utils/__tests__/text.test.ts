@@ -12,7 +12,7 @@ import {
   firstImageUrl,
   stripHtml,
   toExcerpt,
-} from './text';
+} from '.././text';
 
 describe('decodeEntities', () => {
   it('resolves named entities', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decodeCursor, encodeCursor } from './cursor';
+import { decodeCursor, encodeCursor } from '.././cursor';
 
 describe('encodeCursor', () => {
   it('produces a URL-safe token with no padding', () => {

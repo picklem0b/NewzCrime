@@ -12,7 +12,7 @@ import {
   RELEASE_NOTES,
   SOURCE_TYPE,
   TOPIC,
-} from './constants';
+} from '.././constants';
 
 describe('content and source types', () => {
   it('names the three content kinds the release ships', () => {

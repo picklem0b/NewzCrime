@@ -14,7 +14,7 @@ import type { NormalizedItem, Source } from '@newzcrime/shared';
 import type { Logger } from 'pino';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { SourceAdapter } from '../types';
+import type { SourceAdapter } from '../../types';
 
 vi.mock('@newzcrime/db', () => ({
   getSourceById: vi.fn(),
@@ -22,7 +22,7 @@ vi.mock('@newzcrime/db', () => ({
 }));
 
 const { createIngestSourceJob, ingestSource } = await import(
-  './ingestSourceJob'
+  '.././ingestSourceJob'
 );
 
 type IngestSourceDeps = Parameters<typeof ingestSource>[0];

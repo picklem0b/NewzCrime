@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createCache } from './redisClient';
-import type { Cache } from './types';
+import { createCache } from '.././redisClient';
+import type { Cache } from '.././types';
 
 /**
  * An address nothing listens on, so the connection fails immediately and the

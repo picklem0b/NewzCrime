@@ -15,15 +15,15 @@ import {
   ATOM_PODCAST_FEED,
   NOT_A_FEED,
   RSS_NEWS_FEED,
-} from './rssAdapter.fixture';
+} from '.././rssAdapter.fixture';
 
 const fetchXml = vi.fn();
 
-vi.mock('../utils/fetchXml', () => ({
+vi.mock('../../utils/fetchXml', () => ({
   fetchXml: (url: string, options: unknown) => fetchXml(url, options),
 }));
 
-const { createRssAdapter } = await import('./rssAdapter');
+const { createRssAdapter } = await import('.././rssAdapter');
 
 const options = {
   userAgent: 'NewzCrimeBot/1.0 (+https://newzcrime.app)',

@@ -1,7 +1,7 @@
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@newzcrime/shared';
 import { describe, expect, it } from 'vitest';
 
-import { searchQuerySchema } from './searchQuery.schema';
+import { searchQuerySchema } from '.././searchQuery.schema';
 
 describe('searchQuerySchema', () => {
   it('accepts a query of two characters, the minimum the app sends', () => {

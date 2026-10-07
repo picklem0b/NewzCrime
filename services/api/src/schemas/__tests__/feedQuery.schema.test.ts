@@ -1,7 +1,7 @@
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@newzcrime/shared';
 import { describe, expect, it } from 'vitest';
 
-import { feedQuerySchema, toFeedQuery, toItemTopic } from './feedQuery.schema';
+import { feedQuerySchema, toFeedQuery, toItemTopic } from '.././feedQuery.schema';
 
 describe('feedQuerySchema', () => {
   it('defaults to every topic at the default page size', () => {

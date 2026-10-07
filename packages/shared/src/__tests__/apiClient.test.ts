@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, createApiClient, isTimeoutError } from './apiClient';
+import { ApiError, createApiClient, isTimeoutError } from '.././apiClient';
 
 const abortError = (): Error => {
   const error = new Error('The operation was aborted');

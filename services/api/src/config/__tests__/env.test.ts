@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatIssues, loadApiConfig } from './env';
+import { formatIssues, loadApiConfig } from '.././env';
 
 const minimal = { DATABASE_URL: 'postgres://user:pass@127.0.0.1:5432/newzcrime' };
 

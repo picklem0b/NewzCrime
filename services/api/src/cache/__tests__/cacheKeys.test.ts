@@ -8,7 +8,7 @@ import {
   sourceCacheKey,
   sourceItemsCacheKey,
   sourcesCacheKey,
-} from './cacheKeys';
+} from '.././cacheKeys';
 
 describe('feedCacheKey', () => {
   it('uses the shared feed prefix so the worker can invalidate the namespace', () => {
