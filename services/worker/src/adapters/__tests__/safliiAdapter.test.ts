@@ -12,11 +12,11 @@ import {
   courtCodeFromFeedUrl,
   courtNameFromCode,
   parseSafliiFeed,
-} from './safliiAdapter';
+} from '.././safliiAdapter';
 import {
   SAFLII_FEED_WITH_UNDATED_ITEM,
   SAFLII_ZACC_FEED,
-} from './safliiAdapter.fixture';
+} from '.././safliiAdapter.fixture';
 
 const options = { courtName: courtNameFromCode('ZACC') };
 

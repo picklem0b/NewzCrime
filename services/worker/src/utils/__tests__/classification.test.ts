@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { classifyTopic } from './classification';
+import { classifyTopic } from '.././classification';
 
 describe('classifyTopic', () => {
   it('classifies crime from the title', () => {
