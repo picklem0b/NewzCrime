@@ -1,101 +1,54 @@
-import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import {
 	BookmarkSimpleIcon,
-	CompassIcon,
-	GearSixIcon,
-	HouseIcon,
-	MicrophoneIcon
+	MagnifyingGlassIcon,
+	MicrophoneIcon,
+	NewspaperIcon
 } from 'phosphor-react-native';
 import type { ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+
 import { useTheme } from '@/hooks/useTheme';
+
 export default function TabsLayout(): ReactElement {
-	const { colour, scheme, tabBar } = useTheme();
+	const { colour } = useTheme();
+
 	return (
 		<Tabs
 			screenOptions={{
 				headerShown: false,
 				tabBarActiveTintColor: colour.accent,
-				tabBarInactiveTintColor: colour.textFaint,
+				tabBarInactiveTintColor: colour.textMuted,
 				tabBarStyle: {
-					position: 'absolute',
-					left: 12,
-					right: 12,
-					bottom: tabBar.offset,
-					height: tabBar.height,
-					paddingTop: 8,
-					paddingBottom: 10,
-					borderTopWidth: 0,
-					borderRadius: 26,
-					backgroundColor: 'transparent',
-					elevation: 0,
-					shadowColor: '#000',
-					shadowOpacity: scheme === 'light' ? 0.12 : 0.25,
-					shadowRadius: 18,
-					shadowOffset: { width: 0, height: 8 }
+					backgroundColor: colour.background,
+					borderTopColor: colour.border,
+					borderTopWidth: StyleSheet.hairlineWidth
 				},
-				tabBarBackground: () => (
-					<View
-						style={[
-							StyleSheet.absoluteFill,
-							{
-								overflow: 'hidden',
-								borderRadius: 26,
-								borderWidth: 1,
-								borderColor: colour.border
-							}
-						]}
-					>
-						<BlurView
-							intensity={scheme === 'light' ? 80 : 55}
-							tint={scheme}
-							style={StyleSheet.absoluteFill}
-						/>
-						<View
-							style={[
-								StyleSheet.absoluteFill,
-								{
-									backgroundColor:
-										scheme === 'light'
-											? 'rgba(255,255,255,0.72)'
-											: 'rgba(20,24,28,0.8)'
-								}
-							]}
-						/>
-					</View>
-				),
-				tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-				tabBarItemStyle: { minHeight: 50 }
+				tabBarLabelStyle: { fontSize: 12, fontWeight: '600' }
 			}}
 		>
 			<Tabs.Screen
 				name='Home'
 				options={{
-					title: 'Home',
-					tabBarIcon: ({ color, size }) => (
-						<HouseIcon size={size} color={color} weight='fill' />
-					)
-				}}
-			/>
-			<Tabs.Screen
-				name='Discover'
-				options={{
-					title: 'Discover',
-					tabBarIcon: ({ color, size }) => (
-						<CompassIcon size={size} color={color} weight='fill' />
-					)
-				}}
-			/>
-			<Tabs.Screen
-				name='Saved'
-				options={{
-					title: 'Saved',
-					tabBarIcon: ({ color, size }) => (
-						<BookmarkSimpleIcon
+					title: 'Today',
+					tabBarIcon: ({ color, size, focused }) => (
+						<NewspaperIcon
 							size={size}
 							color={color}
-							weight='fill'
+							weight={focused ? 'fill' : 'regular'}
+						/>
+					)
+				}}
+			/>
+			<Tabs.Screen
+				name='Search'
+				options={{
+					title: 'Search',
+					tabBarIcon: ({ color, size, focused }) => (
+						<MagnifyingGlassIcon
+							size={size}
+							color={color}
+							weight={focused ? 'bold' : 'regular'}
 						/>
 					)
 				}}
@@ -104,24 +57,36 @@ export default function TabsLayout(): ReactElement {
 				name='Podcasts'
 				options={{
 					title: 'Podcasts',
-					tabBarIcon: ({ color, size }) => (
+					tabBarIcon: ({ color, size, focused }) => (
 						<MicrophoneIcon
 							size={size}
 							color={color}
-							weight='fill'
+							weight={focused ? 'fill' : 'regular'}
 						/>
 					)
 				}}
 			/>
 			<Tabs.Screen
-				name='Settings'
+				name='Saved'
 				options={{
-					title: 'Settings',
-					tabBarIcon: ({ color, size }) => (
-						<GearSixIcon size={size} color={color} weight='fill' />
+					title: 'Library',
+					tabBarIcon: ({ color, size, focused }) => (
+						<BookmarkSimpleIcon
+							size={size}
+							color={color}
+							weight={focused ? 'fill' : 'regular'}
+						/>
 					)
 				}}
 			/>
+			{/*
+			 * Registered but hidden. expo-router turns every file in this directory
+			 * into a tab, so a route that is not declared here still draws a tab.
+			 * `href: null` keeps both reachable by navigation without spending two
+			 * slots of the bar; turning Discover into a tab is then a one-line change.
+			 */}
+			<Tabs.Screen name='Discover' options={{ href: null }} />
+			<Tabs.Screen name='Settings' options={{ href: null }} />
 		</Tabs>
 	);
 }

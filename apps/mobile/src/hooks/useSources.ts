@@ -1,48 +1,58 @@
-/** Outlets and shows for Discover, and a single source for its detail screen. */
-
 import type { ContentItem, Paginated, Source } from '@newzcrime/shared';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { contentService } from '@/services/contentService';
+import { useSourcesStore } from '@/stores/sources.store';
 
 import { useAsync } from './useAsync';
 import type { UseAsyncResult } from './useAsync';
 
-export function useSources(): UseAsyncResult<Source[]> {
-  return useAsync<Source[]>((signal) => contentService.sources(signal), []);
+export function useSources() {
+	const sources = useSourcesStore(state => state.sources);
+	const status = useSourcesStore(state => state.status);
+	const error = useSourcesStore(state => state.error);
+	const load = useSourcesStore(state => state.load);
+
+	useEffect(() => {
+		void load();
+	}, [load]);
+
+	const reload = () => {
+		void load(true);
+	};
+
+	return { sources, status, error, reload };
 }
 
-/**
- * Lookup from source id to source. Feed items carry only `sourceId`, so rows
- * need this to show the outlet name.
- */
 export function useSourceIndex(): Map<string, Source> {
-  const { state } = useSources();
+	const sources = useSourcesStore(state => state.sources);
+	const load = useSourcesStore(state => state.load);
 
-  return useMemo(() => {
-    const index = new Map<string, Source>();
-    if (state.status === 'success') {
-      for (const source of state.data) index.set(source.id, source);
-    }
-    return index;
-  }, [state]);
+	useEffect(() => {
+		void load();
+	}, [load]);
+
+	return useMemo(() => {
+		const index = new Map<string, Source>();
+		for (const source of sources) index.set(source.id, source);
+		return index;
+	}, [sources]);
 }
 
 export function useSource(sourceId: string): UseAsyncResult<Source> {
-  return useAsync<Source>(
-    (signal) => contentService.source(sourceId, signal),
-    [sourceId],
-    { enabled: sourceId.length > 0 }
-  );
+	return useAsync<Source>(
+		signal => contentService.source(sourceId, signal),
+		[sourceId],
+		{ enabled: sourceId.length > 0 }
+	);
 }
 
-/** The latest items from one source, for its detail screen. */
 export function useSourceItems(
-  sourceId: string
+	sourceId: string
 ): UseAsyncResult<Paginated<ContentItem>> {
-  return useAsync<Paginated<ContentItem>>(
-    (signal) => contentService.sourceItems(sourceId, { signal }),
-    [sourceId],
-    { enabled: sourceId.length > 0 }
-  );
+	return useAsync<Paginated<ContentItem>>(
+		signal => contentService.sourceItems(sourceId, { signal }),
+		[sourceId],
+		{ enabled: sourceId.length > 0 }
+	);
 }
