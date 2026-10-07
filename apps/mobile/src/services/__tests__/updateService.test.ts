@@ -25,7 +25,8 @@ vi.mock('expo-constants', () => ({
   },
 }));
 
-const { checkForUpdates, currentVersion } = await import('.././updateService');
+const { checkForUpdates, currentVersion, isUpdateAvailable, latestRelease } =
+  await import('.././updateService');
 
 beforeEach(() => {
   get.mockReset();
@@ -48,6 +49,7 @@ describe('checkForUpdates', () => {
   const release = (latestVersion: string) => ({
     latestVersion,
     minimumVersion: '1.0.0',
+    downloadUrl: 'https://example.test/builds',
     notes: [],
   });
 
@@ -91,5 +93,42 @@ describe('checkForUpdates', () => {
       status: 'error',
       message: 'Could not reach the update service',
     });
+  });
+});
+
+describe('latestRelease', () => {
+  it('returns the newest note, which the server sends first', () => {
+    const newest = { version: '1.12.6', highlights: ['Newest'] };
+    const older = { version: '1.0.0', highlights: ['Older'] };
+    expect(latestRelease([newest, older])).toBe(newest);
+  });
+
+  it('returns null rather than undefined when there are no notes', () => {
+    expect(latestRelease([])).toBeNull();
+  });
+});
+
+describe('isUpdateAvailable', () => {
+  const info = (latestVersion: string) => ({
+    latestVersion,
+    minimumVersion: '1.0.0',
+    downloadUrl: 'https://example.test/builds',
+    notes: [],
+  });
+
+  it('is true when the running build is older than the server release', () => {
+    expect(isUpdateAvailable('1.2.0', info('1.3.0'))).toBe(true);
+  });
+
+  it('is false when the running build is the server release', () => {
+    expect(isUpdateAvailable('1.2.0', info('1.2.0'))).toBe(false);
+  });
+
+  it('is false when the running build is ahead of the server release', () => {
+    expect(isUpdateAvailable('1.3.0', info('1.2.0'))).toBe(false);
+  });
+
+  it('is false rather than throwing on a version it cannot parse', () => {
+    expect(isUpdateAvailable('not-a-version', info('1.2.0'))).toBe(false);
   });
 });
