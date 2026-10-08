@@ -74,7 +74,7 @@ export const CACHE_TTL = {
  * ships; `CHANGELOG.md` is the long-form record of the same history.
  */
 export const APP_RELEASE = {
-  latestVersion: '1.12.6',
+  latestVersion: '1.14.5',
   minimumVersion: '1.0.0',
   downloadUrl:
     'https://expo.dev/accounts/the_devi/projects/newzcrime/builds',
@@ -92,13 +92,13 @@ export const RELEASE_NOTES: ReadonlyArray<{
   highlights: ReadonlyArray<string>;
 }> = [
   {
-    version: '1.12.6',
+    version: '1.14.5',
     highlights: [
-      'A calmer, faster reading layout with a lead story and topic sections',
-      'Search across stories, judgments and episodes, and filter the results',
-      'One place to browse every outlet and show',
-      'Podcast playback says why it failed instead of staying silent',
-      'Light and dark palettes, with text that follows your size setting',
+      'Search and settings now sit at the top of every screen',
+      'Podcast playback works, and says why when it cannot',
+      'Listening to an article uses a real device voice, not a robotic fallback',
+      'The date line is gone: stories are aged the way a feed row is — “2 hours ago”',
+      'The app opens on its own, with nothing to connect to',
     ],
   },
 ];

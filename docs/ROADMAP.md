@@ -81,7 +81,7 @@ One artefact is worth knowing about: `expo export` cannot finish on this host
 because the Hermes compiler shipped with React Native is a prebuilt x86-64 Linux
 binary and this host is ARM, so it exits with `SIGILL`. It is a local limitation
 only — EAS compiles on x86-64 runners — and it does not affect the development
-bundle, which is what a dev client loads.
+bundle, which is what `expo start` serves.
 
 ### The audit before the first install
 

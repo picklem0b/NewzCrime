@@ -11,6 +11,61 @@ EAS profile configuration, Kotlin pins, single-ABI trimming — is deliberately
 left out; the tags remain the complete record. Dates are omitted because the
 tags already order the work.
 
+## 1.14 — an app that installs itself, plays, and keeps search within reach
+
+**1.14.4** — Search and settings sit at the top of every screen, and the date
+line is gone.
+
+- Both moved out of the tab bar and into a top bar that every tab renders, so
+they are one tap away from wherever you are instead of somewhere you have to
+leave to reach. Each opens as a screen with a back button. The tab bar holds
+content only now: Today, Discover, Podcasts, Library — Discover takes the seat
+Search gave up.
+- Today no longer shows a dateline, and an article is aged the way a feed row is
+— “2 hours ago” — rather than stamped with a date and a clock time.
+- Two hidden routes existed only to keep search and settings out of the tab bar.
+They are deleted rather than hidden, so there is one way into each screen.
+
+**1.14.3** — Listening to an article uses a real device voice.
+
+- Nothing named a voice before, so the platform picked one, and it picked a
+robotic fallback. The app now resolves a voice when it starts — South African
+English first, and the enhanced version of a voice over the plain one — and
+reads slightly under the default speed.
+
+**1.14.2** — Podcasts play.
+
+- The player could never load. React Native's New Architecture reads a native
+module's method annotations before the module exists, and the player's `add()`
+returns a Kotlin coroutine, which it refuses to parse — so the app gave up on
+the player before any podcast code ran. The app now runs the old architecture,
+which the player supports.
+- Upgrading was not the fix: 4.1.2 is already the newest stable release, and New
+Architecture support is only in the 5.0 alpha line.
+- The install is still arm64 only. That trim was previously applied by a code
+path the New Architecture alone runs, so it is now written twice and no longer
+depends on that setting.
+
+**1.14.1** — The app opens and renders on its own.
+
+- It had been built as a development client, which waits for a server on a
+computer before showing anything — so an installed copy opened to a connection
+prompt instead of the app. A development client in the project makes *every*
+build one, however it is configured. Without it the app compiles its JavaScript
+into itself and opens directly.
+
+## 1.13 — production readiness
+
+**1.13.1** — A saved setting could take the app down.
+
+- The stored colour choice was used without being checked. A value the app does
+not offer resolved to no palette at all, and because every screen reads a
+colour, that crashed all of them. Each saved field is now validated before use,
+and the tab that Search replaced is migrated rather than discarded.
+- The API also stopped trusting a network proxy that may not be there — which
+let a caller bypass the rate limit for free — and stopped answering
+cross-origin requests by default in production.
+
 ## 1.12 — one design system, and screens that say what went wrong
 
 **1.12.6** — Rebuilt the app on a single set of design tokens.
