@@ -4,18 +4,32 @@
  * The reason this store exists is the recycled feed row: the native layer fires
  * the previous utterance's `onStopped` *after* a new utterance has started, so
  * the guard that ignores a stale callback is the behaviour under test.
+ *
+ * The other half is the voice: `pickVoice` decides which device voice reads
+ * the article, so its ordering rules are tested directly rather than through a
+ * device.
  */
 
+import { VoiceQuality } from 'expo-speech';
+import type { Voice } from 'expo-speech';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { speak, stop } = vi.hoisted(() => ({
+const { speak, stop, getAvailableVoicesAsync } = vi.hoisted(() => ({
   speak: vi.fn(),
   stop: vi.fn(),
+  getAvailableVoicesAsync: vi.fn(),
 }));
 
-vi.mock('expo-speech', () => ({ speak, stop }));
+vi.mock('expo-speech', () => ({
+  speak,
+  stop,
+  getAvailableVoicesAsync,
+  VoiceQuality: { Default: 'Default', Enhanced: 'Enhanced' },
+}));
 
-const { useSpeechStore } = await import('.././speech.store');
+const { pickVoice, useSpeechStore, warmSpeechVoice } = await import(
+  '.././speech.store'
+);
 
 /** The `onDone`/`onStopped`/`onError` callbacks handed to the native layer. */
 const callbacksFor = (call: number) =>
@@ -25,10 +39,69 @@ const callbacksFor = (call: number) =>
     onError: () => void;
   };
 
+const voice = (
+  identifier: string,
+  language: string,
+  quality: VoiceQuality = VoiceQuality.Default
+): Voice => ({ identifier, language, name: identifier, quality });
+
 beforeEach(() => {
   useSpeechStore.setState({ speakingId: null });
   speak.mockReset();
   stop.mockReset();
+  getAvailableVoicesAsync.mockReset();
+  getAvailableVoicesAsync.mockResolvedValue([]);
+});
+
+describe('pickVoice', () => {
+  it('prefers South African English over other English voices', () => {
+    const chosen = pickVoice([
+      voice('gb', 'en-GB'),
+      voice('za', 'en-ZA'),
+      voice('us', 'en-US'),
+    ]);
+
+    expect(chosen?.identifier).toBe('za');
+  });
+
+  it('prefers the enhanced voice within a language', () => {
+    const chosen = pickVoice([
+      voice('za-default', 'en-ZA'),
+      voice('za-enhanced', 'en-ZA', VoiceQuality.Enhanced),
+    ]);
+
+    expect(chosen?.identifier).toBe('za-enhanced');
+  });
+
+  it('takes a plainer preferred language over an enhanced fallback', () => {
+    const chosen = pickVoice([
+      voice('us-enhanced', 'en-US', VoiceQuality.Enhanced),
+      voice('za', 'en-ZA'),
+    ]);
+
+    expect(chosen?.identifier).toBe('za');
+  });
+
+  it('accepts a voice tagged with an underscore locale', () => {
+    const chosen = pickVoice([voice('gb', 'en-GB'), voice('za', 'en_ZA')]);
+
+    expect(chosen?.identifier).toBe('za');
+  });
+
+  it('falls back to any English voice on a device without en-ZA', () => {
+    const chosen = pickVoice([
+      voice('af', 'af-ZA'),
+      voice('en', 'en-IN'),
+    ]);
+
+    expect(chosen?.identifier).toBe('en');
+  });
+
+  it('returns undefined when the device has no English voice', () => {
+    expect(pickVoice([voice('af', 'af-ZA'), voice('zu', 'zu-ZA')])).toBe(
+      undefined
+    );
+  });
 });
 
 describe('speech store', () => {
@@ -87,5 +160,20 @@ describe('speech store', () => {
     callbacksFor(0).onStopped();
 
     expect(useSpeechStore.getState().speakingId).toBeNull();
+  });
+
+  it('hands the resolved device voice to the native layer', async () => {
+    getAvailableVoicesAsync.mockResolvedValue([
+      voice('gb', 'en-GB'),
+      voice('za', 'en-ZA', VoiceQuality.Enhanced),
+    ]);
+
+    await warmSpeechVoice();
+    useSpeechStore.getState().speak('c', 'Read this out');
+
+    expect(speak).toHaveBeenCalledWith(
+      'Read this out',
+      expect.objectContaining({ voice: 'za' })
+    );
   });
 });

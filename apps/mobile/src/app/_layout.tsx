@@ -13,6 +13,7 @@ import { loadPlayer } from '@/services/playerService';
 import { useSavedStore } from '@/stores/saved.store';
 import { useRecentSearchesStore } from '@/stores/search.store';
 import { useSettingsStore } from '@/stores/settings.store';
+import { warmSpeechVoice } from '@/stores/speech.store';
 
 /**
  * Root navigator.
@@ -20,7 +21,9 @@ import { useSettingsStore } from '@/stores/settings.store';
  * The player's background service is registered on the first effect, which
  * still runs before any screen can start a track, and only when this build
  * actually ships the native player. Stored settings and bookmarks are read on
- * mount; screens render defaults until that finishes.
+ * mount; screens render defaults until that finishes. The speech voice is
+ * resolved here as well, because choosing it means reading the device's voice
+ * list and `Speech.speak` cannot wait for that.
  */
 export default function RootLayout(): ReactElement {
 	const { colour, scheme } = useTheme();
@@ -32,6 +35,12 @@ export default function RootLayout(): ReactElement {
 		void loadPlayer().then(handle => {
 			handle?.player.registerPlaybackService(() => playbackService);
 		});
+	}, []);
+
+	useEffect(() => {
+		// Resolving a voice takes a tick, and `Speech.speak` cannot await it, so
+		// it is done at startup rather than on the first tap of Listen.
+		void warmSpeechVoice();
 	}, []);
 
 	useEffect(() => {
