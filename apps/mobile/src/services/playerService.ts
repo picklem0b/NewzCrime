@@ -24,7 +24,7 @@ export interface PlayerHandle {
 
 /** Shown when the running build has no native player to drive. */
 export const PLAYER_UNAVAILABLE =
-  'Audio playback needs the NewzCrime development build';
+  'Audio playback is unavailable in this build of the app';
 
 let handle: PlayerHandle | null = null;
 let hasAttempted = false;
