@@ -16,7 +16,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 	default: { getItem, setItem }
 }));
 
-const { useSettingsStore } = await import('.././settings.store');
+const { useSettingsStore, withDefaults } = await import('.././settings.store');
 const { defaultSettings } = await import('@/constants/settings');
 
 const STORAGE_KEY = 'newzcrime.settings.v1';
@@ -162,5 +162,67 @@ describe('stored start tab migration', () => {
 		const { withDefaults } = await import('.././settings.store');
 
 		expect(withDefaults({}).startTab).toBe('home');
+	});
+});
+
+describe('stored values are checked, not trusted', () => {
+	/**
+	 * `colourMode` indexes the palettes, so an unrecognised value resolves to
+	 * `undefined` and every screen that reads a colour throws. Storage can hold
+	 * a value from an older build, or one a reader edited on a rooted device.
+	 */
+	it('falls back for a colour mode that is not one of the offered values', () => {
+		expect(withDefaults({ colourMode: 'System' as never }).colourMode).toBe(
+			defaultSettings.colourMode
+		);
+		expect(withDefaults({ colourMode: 'sepia' as never }).colourMode).toBe(
+			defaultSettings.colourMode
+		);
+	});
+
+	it('falls back for a text size that is not one of the offered values', () => {
+		expect(withDefaults({ textSize: 'LARGE' as never }).textSize).toBe(
+			defaultSettings.textSize
+		);
+	});
+
+	it('falls back for a start tab that is not one of the offered values', () => {
+		expect(withDefaults({ startTab: 'bogus' as never }).startTab).toBe(
+			defaultSettings.startTab
+		);
+	});
+
+	it('falls back for a flag that is not a boolean', () => {
+		const loaded = withDefaults({ autoplayNext: 'yes' as never });
+		expect(loaded.autoplayNext).toBe(defaultSettings.autoplayNext);
+	});
+
+	it('keeps every valid value it is given', () => {
+		const loaded = withDefaults({
+			colourMode: 'light',
+			textSize: 'large',
+			startTab: 'saved',
+			autoplayNext: true
+		});
+
+		expect(loaded).toMatchObject({
+			colourMode: 'light',
+			textSize: 'large',
+			startTab: 'saved',
+			autoplayNext: true
+		});
+	});
+
+	it('leaves no key undefined for a document of junk', () => {
+		const loaded = withDefaults({
+			colourMode: null as never,
+			textSize: 42 as never,
+			startTab: [] as never,
+			breakingNews: 'nope' as never
+		});
+
+		for (const [key, value] of Object.entries(loaded)) {
+			expect(value, `${key} must not be undefined`).toBeDefined();
+		}
 	});
 });

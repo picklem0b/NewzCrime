@@ -30,17 +30,25 @@ import type { ApiDependencies } from './types';
 
 export function createApp(deps: ApiDependencies): Express {
   const app = express();
+  const { corsOrigins, nodeEnv, trustProxy } = deps.config;
+  const isProduction = nodeEnv === 'production';
 
   app.disable('x-powered-by');
-  // Behind a proxy — Supabase and any host — the client IP is in a header.
-  app.set('trust proxy', 1);
+
+  // Only trust a proxy that is actually in front of us. Trusting one that is
+  // not lets a caller set `X-Forwarded-For` and get a fresh rate-limit bucket
+  // per request, which removes the limit without touching a config value.
+  app.set('trust proxy', trustProxy);
 
   app.use(helmet());
   app.use(
     cors({
-      // An empty allow-list reflects the caller, which is what local Expo
-      // development needs. Production sets CORS_ORIGINS explicitly.
-      origin: deps.config.corsOrigins.length > 0 ? deps.config.corsOrigins : true,
+      // An explicit list always wins. With none, production blocks cross-origin
+      // reads rather than reflecting whatever origin asks, so a deployment that
+      // forgets CORS_ORIGINS is closed rather than open. Development reflects,
+      // because the Expo dev server is a different origin on the same machine.
+      origin:
+        corsOrigins.length > 0 ? corsOrigins : isProduction ? false : true,
       methods: ['GET', 'POST'],
     })
   );

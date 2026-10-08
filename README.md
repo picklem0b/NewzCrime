@@ -84,6 +84,7 @@ does need the Android SDK or Xcode.
 | [`docs/ROADMAP.md`](docs/ROADMAP.md)           | Phase history and deferred work                    |
 | [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)   | File naming, code organisation, commits and tags   |
 | [`docs/DESIGN.md`](docs/DESIGN.md)             | Visual system and the artwork brief                |
+| [`docs/audit/`](docs/audit/)                   | Production-readiness audit and its findings        |
 
 ## Creator
 

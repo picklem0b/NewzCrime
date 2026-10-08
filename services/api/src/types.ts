@@ -12,7 +12,13 @@ import type { Logger } from 'pino';
 export interface ApiConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
-  /** Allowed CORS origins. Empty means same-origin only. */
+  /**
+   * Allowed CORS origins.
+   *
+   * A non-empty list is used as the allow-list. An empty list blocks
+   * cross-origin reads in production and reflects the caller in development,
+   * where the Expo dev server is a different origin on the same machine.
+   */
   corsOrigins: string[];
   /** Pooled Postgres connection — port 6543 on Supabase. */
   databaseUrl: string;
@@ -22,6 +28,14 @@ export interface ApiConfig {
   /** Requests per window per IP for the public API. */
   rateLimitMax: number;
   rateLimitWindowMs: number;
+  /**
+   * Proxy hops to trust when resolving the client IP.
+   *
+   * `false` when the API is reached directly, which is what local development
+   * and a bare container are. Set to the hop count (often `1`) when a host or
+   * Supabase sits in front, or rate limiting keys on the wrong address.
+   */
+  trustProxy: boolean | number;
 }
 
 /** What the read services need: data and cache. */
