@@ -1,4 +1,11 @@
-/** Time formatting for feed rows and the audio player. */
+/**
+ * Time formatting for feed rows and the audio player.
+ *
+ * Ages are relative — "2 hours ago" — and only fall back to a calendar date
+ * once an item is over a week old. There is deliberately no absolute dateline:
+ * the app dates a story by how long ago it landed, not by the publication
+ * calendar.
+ */
 
 const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
@@ -56,41 +63,3 @@ export function isFresh(isoDate: string, now: number = Date.now()): boolean {
 	return elapsed >= 0 && elapsed < HOUR;
 }
 
-const REGION = 'en-ZA';
-const TIME_ZONE = 'Africa/Johannesburg';
-
-export function formatDateline(now: number = Date.now()): string {
-	try {
-		return new Date(now).toLocaleDateString(REGION, {
-			weekday: 'long',
-			day: 'numeric',
-			month: 'long',
-			timeZone: TIME_ZONE
-		});
-	} catch {
-		return new Date(now).toDateString();
-	}
-}
-
-export function formatPublished(isoDate: string): string {
-	const timestamp = Date.parse(isoDate);
-	if (Number.isNaN(timestamp)) return '';
-
-	try {
-		const date = new Date(timestamp).toLocaleDateString(REGION, {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric',
-			timeZone: TIME_ZONE
-		});
-		const time = new Date(timestamp).toLocaleTimeString(REGION, {
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: false,
-			timeZone: TIME_ZONE
-		});
-		return `${date}, ${time}`;
-	} catch {
-		return new Date(timestamp).toISOString();
-	}
-}

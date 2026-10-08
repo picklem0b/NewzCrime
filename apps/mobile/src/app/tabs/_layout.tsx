@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import {
 	BookmarkSimpleIcon,
-	MagnifyingGlassIcon,
+	CompassIcon,
 	MicrophoneIcon,
 	NewspaperIcon
 } from 'phosphor-react-native';
@@ -10,6 +10,14 @@ import { StyleSheet } from 'react-native';
 
 import { useTheme } from '@/hooks/useTheme';
 
+/**
+ * The four content tabs.
+ *
+ * Search and Settings are not here: both live in the top bar that every tab
+ * renders, so they are one tap away without occupying a seat. A file in this
+ * directory becomes a tab whether or not it is declared, which is why the
+ * routes they used to have are gone rather than hidden.
+ */
 export default function TabsLayout(): ReactElement {
 	const { colour } = useTheme();
 
@@ -41,14 +49,14 @@ export default function TabsLayout(): ReactElement {
 				}}
 			/>
 			<Tabs.Screen
-				name='Search'
+				name='Discover'
 				options={{
-					title: 'Search',
+					title: 'Discover',
 					tabBarIcon: ({ color, size, focused }) => (
-						<MagnifyingGlassIcon
+						<CompassIcon
 							size={size}
 							color={color}
-							weight={focused ? 'bold' : 'regular'}
+							weight={focused ? 'fill' : 'regular'}
 						/>
 					)
 				}}
@@ -79,14 +87,6 @@ export default function TabsLayout(): ReactElement {
 					)
 				}}
 			/>
-			{/*
-			 * Registered but hidden. expo-router turns every file in this directory
-			 * into a tab, so a route that is not declared here still draws a tab.
-			 * `href: null` keeps both reachable by navigation without spending two
-			 * slots of the bar; turning Discover into a tab is then a one-line change.
-			 */}
-			<Tabs.Screen name='Discover' options={{ href: null }} />
-			<Tabs.Screen name='Settings' options={{ href: null }} />
 		</Tabs>
 	);
 }
