@@ -122,8 +122,9 @@ item. Audio is streamed from the publisher and never copied.
 control callbacks. A podcast app that cannot be paused from the lock screen does
 not meet the requirement, so the app uses `react-native-track-player`.
 
-The cost is a native module: Expo Go no longer runs the app, so development
-happens in a development build.
+The cost is a native module: Expo Go no longer runs the app, so the app is
+installed as its own binary. That binary also has to run the old architecture,
+which is the next entry but one.
 
 ## Database: Postgres, Supabase in production
 
@@ -156,7 +157,7 @@ so file names follow the naming convention in
 The app compares its installed version against the release the API reports, and
 offers the update when a newer one exists. The version constants live in
 `@newzcrime/shared`, so the client and server cannot disagree. Installing still
-happens through the store or the development build.
+happens through the store, or by installing a newer binary over the old one.
 
 ## Monorepo: pnpm with a hoisted `node_modules`
 
@@ -179,12 +180,18 @@ without declaring it as a dependency, so it is absent from the tree entirely;
 it is now a direct dependency of the app, pinned to `^7.1.3`. Version 8 and later
 of `query-string` are ESM-only, which Metro's CommonJS bundling does not load.
 
-## Development builds, not Expo Go
+## The app installs as its own binary, not as a development client
 
 `react-native-track-player` is a native module. Expo Go ships a fixed set of
 native modules and cannot load it, so **Expo Go cannot play audio in this app**.
-Development happens in a development build, which EAS compiles in the cloud on
-the free plan.
+The app is therefore installed as its own binary, which EAS compiles in the
+cloud on the free plan.
+
+That binary compiles the JavaScript into itself, so it opens and renders without
+a Metro server. `expo-dev-client` was removed from the app's dependencies to
+make that true: while it is a dependency, **every** build is a development
+client, whatever the EAS profile says, and an installed copy opens to a
+connection prompt instead of the app.
 
 ***Caveat.*** Guarding the player's *calls* is not enough, and the first attempt
 at this was wrong. Track Player builds its `Capability` enum by reading the
@@ -200,7 +207,7 @@ the module on first use and returns `null` when it is absent. The progress poll
 is local to `usePlayer` rather than borrowed from the library's `useProgress`,
 for the same reason: importing that hook is what evaluates the module. A
 matching Expo Go now renders every screen, and attempting to play reports that
-playback needs a development build. This is a convenience for reviewing layout,
+audio is unavailable in that build. This is a convenience for reviewing layout,
 not a supported target.
 
 ## Android: Kotlin and the Compose compiler agree by declaration
@@ -264,8 +271,12 @@ from the SDK version.
 
 The plugin writes `reactNativeArchitectures` to `android/gradle.properties`,
 which the React Native Gradle plugin reads through `PropertyUtils` and applies
-as `ndk { abiFilters }` in `NdkConfiguratorUtils`. That path only runs when the
-New Architecture is enabled, which `app.json` sets, so the setting is live.
+as `ndk { abiFilters }` in `NdkConfiguratorUtils`. **That path only runs under
+the New Architecture**, because `configureReactNativeNdk` returns before it
+otherwise — and this app runs the old architecture. The plugin therefore writes
+the filter a second time, as an `abiFilters.addAll` block appended to
+`app/build.gradle`, so the trim holds either way. `abiFilters` is a set, so the
+two writes agree rather than replace each other.
 
 The list stays in `app.json`, so widening it is a one-line edit:
 
@@ -374,13 +385,43 @@ sections to `src/components/settings/`, and its values to
 `src/constants/settings.ts`. What is left is the screen. A module is named for
 its domain, not made a home for whatever its feature happens to need.
 
-## Every route is registered, or it becomes a tab
+## Search and settings are chrome, not destinations
 
-expo-router turns every file in a Tabs directory into a tab, whether or not the
-layout mentions it. `tabs/Discover.tsx` and `tabs/Settings.tsx` therefore draw
-two tabs that the design does not have unless they are declared, and the fix is
-`href: null` rather than deleting the route. That keeps them reachable by
-navigation while the tab bar stays at four: **Today, Search, Podcasts, Library**.
+Every tab renders the same top bar: the brand, then search and settings. Both
+open as pushed screens with a back button.
+
+Both were tab routes before, and the tab bar paid for it — a seat each, and a
+reader who wanted to search had to leave the story they were on. The tab bar now
+holds content only: **Today, Discover, Podcasts, Library**, with Discover taking
+the seat Search gave up.
+
+This also removed the reason those routes needed `href: null`. expo-router turns
+every file in a Tabs directory into a tab whether or not the layout mentions it,
+so an undeclared route draws a tab the design does not have, and registering it
+hidden was the way to keep it reachable without one. Neither route is a tab now,
+so both are simply gone and `tabs/` is the four tabs.
+
+## The New Architecture is off
+
+`react-native-track-player` 4.1.2 has no New Architecture support. Its
+`TrackPlayerModule.add()` returns a Kotlin coroutine, and the New Architecture's
+TurboModule interop gives up parsing the module's method annotations before the
+module can be registered:
+
+```
+Unable to parse @ReactMethod annotation from native module method:
+TrackPlayerModule.add(). Detected unsupported return class: kotlinx.coroutines.Job
+```
+
+The failure is total rather than partial: the module is never registered, so
+everything built on it is dead. Upgrading is not the fix — 4.1.2 is already the
+newest stable release, and support for the New Architecture is in the 5.0 alpha
+line. `app.json` therefore sets `newArchEnabled: false`.
+
+Two consequences are handled rather than inherited: the ABI trim above, which
+the React Native Gradle plugin only applies under the New Architecture, and a
+note to revisit this when the player has a stable release on the new
+architecture, since SDKs after 52 push towards it.
 
 ## Tags: `v1.phase.step`
 

@@ -15,7 +15,7 @@ and true-life shows, with background audio and lock-screen controls.
 | Database  | `sources` and `content_items`, with full-text and trigram search indexes |
 | API       | Feed, item, source, podcast, search and health endpoints under `/v1`     |
 | Cache     | Redis with an in-process fallback; feed and search invalidated on ingest |
-| Mobile    | Today, Search, Podcasts and Library, with Settings, TTS and sharing      |
+| Mobile    | Today, Discover, Podcasts and Library, with search and settings on top   |
 
 Two publishers (Daily Maverick, News24) are seeded but switched off: their feeds
 refuse this host. Turn them on where they are reachable.
@@ -58,12 +58,13 @@ Postgres and Redis must be reachable at the addresses in `.env`.
 
 Podcast playback uses `react-native-track-player`, a native module, so the app
 needs its own binary rather than Expo Go. EAS compiles it in Expo's cloud, on
-the free plan, so no Android SDK is needed locally:
+the free plan, so no Android SDK is needed locally. The binary compiles the
+JavaScript into itself, so it opens on its own — there is no development client
+and nothing to connect to:
 
 ```bash
 pnpm exec expo login
-pnpm --filter ./apps/mobile build:preview:android   # standalone APK, no Metro
-pnpm --filter ./apps/mobile build:dev:android       # dev client, reloads from Metro
+pnpm --filter ./apps/mobile build:apk:android       # standalone APK, no Metro
 ```
 
 `pnpm exec` matters: `expo` and `eas` are project dependencies, not global

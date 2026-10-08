@@ -1,18 +1,19 @@
 # 03 — Mobile App Audit
 
-Scope: `apps/mobile`. Expo SDK 52, React Native 0.76.5, new architecture
-enabled, Expo Router with typed routes, zustand stores, FlashList.
+Scope: `apps/mobile`. Expo SDK 52, React Native 0.76.5, Expo Router with typed
+routes, zustand stores, FlashList. Audited with the New Architecture enabled; it
+was turned off in 1.14.2, because the audio player cannot load under it.
 
 ## Configuration
 
 | Item | Value | Assessment |
 |---|---|---|
-| `version` | `1.12.6` | matches `APP_RELEASE.latestVersion` and `RELEASE_NOTES[0]` |
-| `android.versionCode` | `3` | increments per build |
+| `version` | `1.14.5` | matches `APP_RELEASE.latestVersion` and `RELEASE_NOTES[0]` |
+| `android.versionCode` | `4` | increments per build |
 | `android.package` | `za.co.newzcrime.app` | stable |
-| `newArchEnabled` | `true` | required by RN 0.76 toolchain here |
+| `newArchEnabled` | `false` | the player cannot load under the New Architecture |
 | `userInterfaceStyle` | `automatic` | paired with the theme hook |
-| ABI filter | `withAndroidBuildArchs` → `arm64-v8a` only | verified in the built APK (single ABI) |
+| ABI filter | `withAndroidBuildArchs` → `arm64-v8a` only | verified in the built APK; written to `app/build.gradle` too since 1.14.2 |
 | `expo-notifications` plugin | present | no runtime scheduling code found |
 | `icon` / `splash` | **absent** | see M1 |
 

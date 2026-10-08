@@ -95,8 +95,11 @@ Podcast playback uses `react-native-track-player`. `expo-audio` can play in the
 background but does not expose lock-screen control callbacks, and lock-screen
 controls are a requirement for the podcast feature.
 
-Track Player is a native module, so the app runs in a development build rather
-than Expo Go. Platform configuration already in `app.json`:
+Track Player is a native module, so the app is installed as its own binary
+rather than run in Expo Go, and that binary runs the old architecture: version
+4.1.2 predates New Architecture support, and its `TrackPlayerModule.add()`
+returns a Kotlin coroutine the New Architecture's interop layer will not parse.
+Platform configuration already in `app.json`:
 
 - iOS: `UIBackgroundModes: ["audio"]`
 - Android: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`,
