@@ -1,6 +1,6 @@
 import type { ContentItem } from '@newzcrime/shared';
 import { useRouter } from 'expo-router';
-import { BookmarkSimpleIcon, GearSixIcon } from 'phosphor-react-native';
+import { BookmarkSimpleIcon } from 'phosphor-react-native';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -13,7 +13,6 @@ import EpisodeRow from '@/components/podcast/EpisodeRow';
 import Button from '@/components/ui/Button';
 import Chip from '@/components/ui/Chip';
 import Column from '@/components/ui/Column';
-import IconButton from '@/components/ui/IconButton';
 import Text from '@/components/ui/Text';
 import { useLayout } from '@/hooks/useLayout';
 import { useSaved } from '@/hooks/useSaved';
@@ -67,20 +66,6 @@ export default function SavedScreen(): ReactElement {
 								: undefined
 						}
 						large
-						actions={
-							<IconButton
-								label='Settings'
-								onPress={() =>
-									router.push('/settings/Settings')
-								}
-								icon={
-									<GearSixIcon
-										size={24}
-										color={colour.text}
-									/>
-								}
-							/>
-						}
 					/>
 
 					{items.length === 0 ? (

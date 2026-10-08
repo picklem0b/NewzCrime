@@ -30,7 +30,7 @@ import { useSpeech, useStopSpeechOnUnmount } from '@/hooks/useSpeech';
 import { useSourceIndex, useSourceItems } from '@/hooks/useSources';
 import { useTheme } from '@/hooks/useTheme';
 import { openExternalUrl, shareItem } from '@/utils/external';
-import { formatPublished } from '@/utils/time';
+import { formatRelativeTime } from '@/utils/time';
 
 export default function ItemDetailScreen(): ReactElement {
 	const { itemId } = useLocalSearchParams<{ itemId?: string }>();
@@ -170,7 +170,7 @@ export default function ItemDetailScreen(): ReactElement {
 									{item.author && sourceName
 										? `${sourceName} · `
 										: ''}
-									{formatPublished(item.publishedAt)}
+									{formatRelativeTime(item.publishedAt)}
 								</Text>
 							</View>
 

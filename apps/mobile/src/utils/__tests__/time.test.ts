@@ -3,9 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-	formatDateline,
 	formatDuration,
-	formatPublished,
 	formatRelativeTime,
 	isFresh
 } from '.././time';
@@ -87,27 +85,5 @@ describe('isFresh', () => {
 	it('is false for a future or invalid date', () => {
 		expect(isFresh('2026-10-05T11:00:00.000Z', now)).toBe(false);
 		expect(isFresh('not a date', now)).toBe(false);
-	});
-});
-
-describe('formatPublished', () => {
-	it('writes the date and 24-hour time in South African time', () => {
-		const text = formatPublished('2026-10-05T06:15:00.000Z');
-
-		expect(text).toContain('2026');
-		expect(text).toContain('08:15');
-	});
-
-	it('returns an empty string for an invalid date', () => {
-		expect(formatPublished('nope')).toBe('');
-	});
-});
-
-describe('formatDateline', () => {
-	it('names the weekday and month', () => {
-		const text = formatDateline(Date.parse('2026-10-05T10:00:00.000Z'));
-
-		expect(text).toMatch(/Monday/);
-		expect(text).toMatch(/October/);
 	});
 });

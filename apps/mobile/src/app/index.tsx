@@ -7,7 +7,7 @@ export default function SplashScreen() {
 
 	const target =
 		startTab === 'search'
-			? '/tabs/Search'
+			? '/search/Search'
 			: startTab === 'saved'
 				? '/tabs/Saved'
 				: '/tabs/Home';

@@ -27,9 +27,7 @@ import { useFeed } from '@/hooks/useFeed';
 import { useLayout } from '@/hooks/useLayout';
 import { useSourceIndex } from '@/hooks/useSources';
 import { useTheme } from '@/hooks/useTheme';
-import { brand } from '@/constants/theme';
 import type { FeedEntry } from '@/types';
-import { formatDateline } from '@/utils/time';
 
 type HomeRow =
 	| { kind: 'topics'; key: string }
@@ -197,27 +195,6 @@ export default function HomeScreen(): ReactElement {
 				estimatedItemSize={132}
 				stickyHeaderIndices={[0]}
 				showsVerticalScrollIndicator={false}
-				ListHeaderComponent={
-					<Column>
-						<View
-							style={[
-								styles.masthead,
-								{
-									paddingHorizontal: gutter,
-									paddingTop: spacing.md,
-									paddingBottom: spacing.sm
-								}
-							]}
-						>
-							<Text variant='masthead' accessibilityRole='header'>
-								{brand.name}
-							</Text>
-							<Text variant='meta' tone='faint'>
-								{formatDateline()}
-							</Text>
-						</View>
-					</Column>
-				}
 				ListFooterComponent={
 					feed.isLoadingMore ? (
 						<ActivityIndicator
@@ -255,11 +232,6 @@ export default function HomeScreen(): ReactElement {
 }
 
 const styles = StyleSheet.create({
-	masthead: {
-		flexDirection: 'row',
-		alignItems: 'baseline',
-		justifyContent: 'space-between'
-	},
 	notice: {
 		flexDirection: 'row',
 		alignItems: 'center',

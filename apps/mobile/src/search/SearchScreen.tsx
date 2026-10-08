@@ -78,6 +78,19 @@ export default function SearchScreen(): ReactElement {
 
 	const isSearching = query.trim().length >= MIN_QUERY_LENGTH;
 
+	/**
+	 * Search is reached from the top bar, so this is usually a step back. The
+	 * fallback covers a cold start on Search, which the start-tab setting can
+	 * produce, where there is nothing to go back to.
+	 */
+	const goBack = (): void => {
+		if (router.canGoBack()) {
+			router.back();
+			return;
+		}
+		router.replace('/tabs/Home');
+	};
+
 	useEffect(() => {
 		setScope('all');
 	}, [search.term]);
@@ -341,7 +354,7 @@ export default function SearchScreen(): ReactElement {
 
 	return (
 		<TabScreen>
-			<ScreenHeader title='Search' large />
+			<ScreenHeader title='Search' large onBack={goBack} />
 
 			<Column>
 				<View
