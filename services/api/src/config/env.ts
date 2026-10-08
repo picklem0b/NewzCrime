@@ -31,7 +31,29 @@ const schema = z.object({
   LOG_LEVEL: z.enum(logLevels).default('info'),
   API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
   API_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+  /**
+   * How many proxy hops to trust for the client IP.
+   *
+   * `false` when the API is reached directly. Rate limiting keys on the client
+   * IP, and Express reads `X-Forwarded-For` when a proxy is trusted — so
+   * trusting one that is not there lets a caller mint a fresh rate-limit bucket
+   * with a header and bypass the limit entirely.
+   */
+  TRUST_PROXY: z
+    .string()
+    .default('false')
+    .refine((value) => /^(true|false|\d+)$/.test(value.trim()), {
+      message: 'must be true, false, or a number of proxy hops',
+    }),
 });
+
+/** `true`, `false`, or a hop count, from the string form the environment holds. */
+function parseTrustProxy(value: string): boolean | number {
+  const trimmed = value.trim();
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
+  return Number.parseInt(trimmed, 10);
+}
 
 /** Render zod issues as one indented line each, for the startup log. */
 export function formatIssues(error: z.ZodError): string {
@@ -72,5 +94,6 @@ export function loadApiConfig(
     logLevel: values.LOG_LEVEL,
     rateLimitMax: values.API_RATE_LIMIT_MAX,
     rateLimitWindowMs: values.API_RATE_LIMIT_WINDOW_MS,
+    trustProxy: parseTrustProxy(values.TRUST_PROXY),
   };
 }

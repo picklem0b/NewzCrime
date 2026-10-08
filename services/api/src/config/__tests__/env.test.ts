@@ -15,6 +15,27 @@ describe('loadApiConfig', () => {
     expect(config.rateLimitMax).toBe(300);
     expect(config.rateLimitWindowMs).toBe(60_000);
     expect(config.corsOrigins).toEqual([]);
+    expect(config.trustProxy).toBe(false);
+  });
+
+  it('trusts no proxy unless one is configured', () => {
+    // Trusting a proxy that is not there lets a caller spoof the client IP and
+    // mint a fresh rate-limit bucket with each request.
+    expect(loadApiConfig(minimal).trustProxy).toBe(false);
+  });
+
+  it('accepts an explicit true', () => {
+    expect(loadApiConfig({ ...minimal, TRUST_PROXY: 'true' }).trustProxy).toBe(true);
+  });
+
+  it('accepts a hop count as a number, not a string', () => {
+    expect(loadApiConfig({ ...minimal, TRUST_PROXY: '2' }).trustProxy).toBe(2);
+  });
+
+  it('rejects a trust-proxy value it cannot interpret', () => {
+    expect(() => loadApiConfig({ ...minimal, TRUST_PROXY: 'yes' })).toThrowError(
+      /TRUST_PROXY/
+    );
   });
 
   it('coerces numeric strings, because the environment only holds strings', () => {

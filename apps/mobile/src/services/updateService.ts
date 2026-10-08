@@ -76,7 +76,9 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
   try {
     const info = await apiClient.get<ReleaseInfo>('/v1/app/version');
 
-    if (compareVersions(current, info.latestVersion) >= 0) {
+    // Uses the same guard as the update button, so the check and the button
+    // cannot disagree about whether this build is behind.
+    if (!isUpdateAvailable(current, info)) {
       return { status: 'up_to_date', currentVersion: current };
     }
 

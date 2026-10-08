@@ -9,13 +9,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-import { defaultSettings } from '@/constants/settings';
-import type {
-	SettingsKey,
-	SettingsState,
-	SettingsStore,
-	StartTab
-} from '@/types';
+import {
+	colourModes,
+	defaultSettings,
+	startTabs,
+	textSizes
+} from '@/constants/settings';
+import type { Option, SettingsKey, SettingsState, SettingsStore } from '@/types';
 
 const STORAGE_KEY = 'newzcrime.settings.v1';
 
@@ -24,19 +24,58 @@ const diff = (saved: SettingsState, draft: SettingsState): SettingsKey[] =>
 		key => draft[key] !== saved[key]
 	);
 
-/** Fills in anything a newer build added since the document was stored. */
-const migrateStartTab = (value: unknown): StartTab =>
-	value === 'discover' ? 'search' : (value as StartTab);
+/** The ids a picker offers, so the store accepts exactly what the UI can set. */
+const idsOf = <TId extends string>(
+	options: readonly Option<TId>[]
+): readonly TId[] => options.map(option => option.id);
 
-export const withDefaults = (
-	stored: Partial<SettingsState>
-): SettingsState => ({
-	...defaultSettings,
-	...stored,
-	startTab: stored.startTab
-		? migrateStartTab(stored.startTab)
-		: defaultSettings.startTab
-});
+const isOneOf = <TId extends string>(
+	options: readonly Option<TId>[],
+	value: unknown
+): value is TId => idsOf(options).includes(value as TId);
+
+const asBoolean = (value: unknown, fallback: boolean): boolean =>
+	typeof value === 'boolean' ? value : fallback;
+
+/** `discover` was a start tab before Search replaced it as the browse entry. */
+const migrateStartTab = (value: unknown): unknown =>
+	value === 'discover' ? 'search' : value;
+
+/**
+ * Brings a stored document up to date and rejects anything unreadable.
+ *
+ * Stored values are checked, not trusted. They come from a build that may be
+ * older, and a reader with a rooted device can edit them; `colourMode` in
+ * particular is used to index the palettes, so an unrecognised value would
+ * resolve to `undefined` and take down every screen that reads a colour. Each
+ * field therefore falls back to its default rather than being cast.
+ */
+export const withDefaults = (stored: Partial<SettingsState>): SettingsState => {
+	const startTab = migrateStartTab(stored.startTab);
+
+	return {
+		...defaultSettings,
+		colourMode: isOneOf(colourModes, stored.colourMode)
+			? stored.colourMode
+			: defaultSettings.colourMode,
+		textSize: isOneOf(textSizes, stored.textSize)
+			? stored.textSize
+			: defaultSettings.textSize,
+		startTab: isOneOf(startTabs, startTab)
+			? startTab
+			: defaultSettings.startTab,
+		breakingNews: asBoolean(stored.breakingNews, defaultSettings.breakingNews),
+		podcastNotifications: asBoolean(
+			stored.podcastNotifications,
+			defaultSettings.podcastNotifications
+		),
+		downloadOnWifi: asBoolean(
+			stored.downloadOnWifi,
+			defaultSettings.downloadOnWifi
+		),
+		autoplayNext: asBoolean(stored.autoplayNext, defaultSettings.autoplayNext)
+	};
+};
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
 	saved: defaultSettings,
