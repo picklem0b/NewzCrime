@@ -74,7 +74,7 @@ export const CACHE_TTL = {
  * ships; `CHANGELOG.md` is the long-form record of the same history.
  */
 export const APP_RELEASE = {
-  latestVersion: '1.14.5',
+  latestVersion: '1.14.6',
   minimumVersion: '1.0.0',
   downloadUrl:
     'https://expo.dev/accounts/the_devi/projects/newzcrime/builds',
@@ -92,15 +92,15 @@ export const RELEASE_NOTES: ReadonlyArray<{
   highlights: ReadonlyArray<string>;
 }> = [
   {
-    version: '1.14.5',
+    version: '1.14.6',
     highlights: [
-      'Search and settings now sit at the top of every screen',
-      'Podcast playback works, and says why when it cannot',
-      'Listening to an article uses a real device voice, not a robotic fallback',
-      'The date line is gone: stories are aged the way a feed row is — “2 hours ago”',
-      'The app opens on its own, with nothing to connect to',
+      'Deep linking in share: recipients can copy-paste newzcrime://detail/ItemDetail?itemId=... to open items directly in the app',
+      'Updated deployment config: Render.yaml for API + worker services',
+      'Production APK build: eas.json profile now compiles standalone APKs',
+      'Version bump and release tag: v1.14.6',
     ],
   },
+
 ];
 
 /** Prefixes for every cached key, so the worker can invalidate in bulk. */
