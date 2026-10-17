@@ -5,12 +5,14 @@
  * enough for migrations. Usage: `pnpm --filter @newzcrime/db migrate [up|down] [count]`.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
 
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { runner } from 'node-pg-migrate';
+
+dotenv.config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 
 async function main(): Promise<void> {
   const direction = (process.argv[2] ?? 'up') as 'up' | 'down';

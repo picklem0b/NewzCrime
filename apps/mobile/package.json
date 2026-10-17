@@ -14,6 +14,7 @@
     "lint": "expo lint",
     "build:apk:android": "npx eas-cli build --profile preview --platform android",
     "build:store:android": "npx eas-cli build --profile production --platform android",
+
     "test": "vitest run"
   },
   "dependencies": {
