@@ -1,45 +1,86 @@
 services:
-  - type: web
-    name: newzcrime-api
-    env: node
-    plan: free
-    runtime: nodejs20
-    buildCommand: |
-      cd packages/api && pnpm install
-    startCommand: |
-      cd packages/api && pnpm start
-    envVars:
-      NODE_ENV: production
-      DATABASE_URL_DIRECT: postgres://newzcrime:newzcrime@localhost:5432/newzcrime
-      REDIS_URL: redis://localhost:6379
-      API_PORT: 4000
-      CORS_ORIGINS: https://newzcrime.app,http://localhost:8081,http://localhost:19006
-      LOG_LEVEL: info
-      API_RATE_LIMIT_MAX: 300
-      API_RATE_LIMIT_WINDOW_MS: 60000
-      TRUST_PROXY: false
-    # Auto-deploy on push
-    autoDeploy: true
+    - type: web
+      name: newzcrime-api
+      runtime: node
+      plan: free
+      region: frankfurt
+      buildCommand: corepack prepare pnpm@9.12.0 --activate && pnpm install --frozen-lockfile --prod=false
+      startCommand: pnpm --filter @newzcrime/api start
+      healthCheckPath: /health
+      autoDeploy: true
+      envVars:
+          - key: NODE_VERSION
+            value: '22'
+          - key: NODE_ENV
+            value: production
+          - key: DATABASE_URL_DIRECT
+            fromDatabase:
+                name: newzcrime-db
+                property: connectionString
+          - key: REDIS_URL
+            fromService:
+                name: newzcrime-redis
+                type: keyvalue
+                property: connectionString
+          - key: CORS_ORIGINS
+            value: https://newzcrime.app,http://localhost:8081,http://localhost:19006
+          - key: LOG_LEVEL
+            value: info
+          - key: API_RATE_LIMIT_MAX
+            value: '300'
+          - key: API_RATE_LIMIT_WINDOW_MS
+            value: '60000'
+          - key: TRUST_PROXY
+            value: 'false'
 
-  - type: worker
-    name: newzcrime-worker
-    env: node
-    plan: free
-    runtime: nodejs20
-    buildCommand: |
-      cd packages/worker && pnpm install
-    startCommand: |
-      cd packages/worker && pnpm start
-    envVars:
-      NODE_ENV: production
-      DATABASE_URL_DIRECT: postgres://newzcrime:newzcrime@localhost:5432/newzcrime
-      REDIS_URL: redis://localhost:6379
-      LOG_LEVEL: info
-      WORKER_USER_AGENT: NewzCrimeBot/1.0 (+https://newzcrime.app)
-      WORKER_FETCH_TIMEOUT_MS: 25000
-      PODCAST_INDEX_API_KEY: ${PODCAST_INDEX_API_KEY}
-      PODCAST_INDEX_API_SECRET: ${PODCAST_INDEX_API_SECRET}
-      INGEST_CRON: */15 * * * *
-      WORKER_INGEST_ON_START: true
-    # Auto-deploy on push
-    autoDeploy: true
+    - type: worker
+      name: newzcrime-worker
+      runtime: node
+      # Render does not provide a free plan for background workers.
+      plan: 0.5c-512mb
+      region: frankfurt
+      buildCommand: corepack prepare pnpm@9.12.0 --activate && pnpm install --frozen-lockfile --prod=false
+      startCommand: pnpm --filter @newzcrime/worker start
+      autoDeploy: true
+      envVars:
+          - key: NODE_VERSION
+            value: '22'
+          - key: NODE_ENV
+            value: production
+          - key: DATABASE_URL_DIRECT
+            fromDatabase:
+                name: newzcrime-db
+                property: connectionString
+          - key: REDIS_URL
+            fromService:
+                name: newzcrime-redis
+                type: keyvalue
+                property: connectionString
+          - key: LOG_LEVEL
+            value: info
+          - key: WORKER_USER_AGENT
+            value: 'NewzCrimeBot/1.0 (+https://newzcrime.app)'
+          - key: WORKER_FETCH_TIMEOUT_MS
+            value: '25000'
+          - key: PODCAST_INDEX_API_KEY
+            sync: false
+          - key: PODCAST_INDEX_API_SECRET
+            sync: false
+          - key: INGEST_CRON
+            value: '*/15 * * * *'
+          - key: WORKER_INGEST_ON_START
+            value: 'true'
+
+    - type: keyvalue
+      name: newzcrime-redis
+      region: frankfurt
+      plan: free
+      ipAllowList: []
+      maxmemoryPolicy: allkeys-lru
+
+databases:
+    - name: newzcrime-db
+      databaseName: newzcrime
+      user: newzcrime
+      plan: free
+      region: frankfurt
