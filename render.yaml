@@ -5,7 +5,7 @@ services:
       plan: free
       region: frankfurt
       buildCommand: corepack prepare pnpm@9.12.0 --activate && pnpm install --frozen-lockfile --prod=false
-      startCommand: pnpm --filter @newzcrime/api start
+      startCommand: pnpm --filter @newzcrime/db migrate && pnpm --filter @newzcrime/api start
       healthCheckPath: /health
       autoDeploy: true
       envVars:
