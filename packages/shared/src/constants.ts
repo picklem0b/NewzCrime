@@ -82,9 +82,9 @@ export const APP_RELEASE = {
    * Point these at the GitHub Releases produced by the android-build workflow.
    */
   downloadUrl:
-    'https://github.com/LethaboK/NewzCrime/releases/latest/download/newzcrime.apk',
+    'https://github.com/picklem0b/NewzCrime/releases/latest/download/newzcrime.apk',
   betaDownloadUrl:
-    'https://github.com/LethaboK/NewzCrime/releases/download/beta/newzcrime-beta.apk',
+    'https://github.com/picklem0b/NewzCrime/releases/download/beta/newzcrime-beta.apk',
 } as const;
 
 /**
