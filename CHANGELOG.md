@@ -11,6 +11,31 @@ EAS profile configuration, Kotlin pins, single-ABI trimming — is deliberately
 left out; the tags remain the complete record. Dates are omitted because the
 tags already order the work.
 
+## 1.15 — more control, a faster read, and updates that install themselves
+
+**1.15.0** — Six settings sections, a rebuilt search, and in-app updates.
+
+- Settings grows from 7 to 49 values: 42 new ones, seven in each of Appearance,
+  General and About, plus three new sections — Reading & audio, Notifications,
+  and Data & privacy. Accent colour, headline face, density, quiet hours, text
+  alignment, playback speed and the rest are applied immediately and validated
+  on read, so a stored value from an older build cannot reach a component.
+- The update button now downloads the APK and then asks whether to install it,
+  with a banner when a build is waiting and a notification when alerts are
+  allowed. "Later" snoozes that version for a day. The release URL is a direct
+  APK, produced by the new Android build workflow rather than EAS.
+- Search has the same back header as Settings, an animated field and results,
+  recent searches as a list, suggested queries and the outlet directory.
+  Search history can be turned off, and turning it off clears what was stored.
+- Today caches its page in memory and on disk, so a tab switch is instant and a
+  cold start with no network shows the last page instead of an error. The API
+  sends `stale-while-revalidate`, keeps a five-connection pool and recycles
+  keep-alive connections, which is what the free instance can sustain.
+- CI typechecks and tests every workspace, ingestion runs on a schedule from
+  GitHub Actions (the Render worker is paid-only), and the API deploys with
+  Supabase as the primary database and Render Postgres as a documented
+  fallback.
+
 ## 1.14 — an app that installs itself, plays, and keeps search within reach
 
 **1.14.4** — Search and settings sit at the top of every screen, and the date

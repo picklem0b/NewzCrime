@@ -71,6 +71,13 @@ pnpm --filter ./apps/mobile build:apk:android       # standalone APK, no Metro
 commands. `pnpm --filter ./apps/mobile android` compiles locally instead, and
 does need the Android SDK or Xcode.
 
+EAS build credits are limited, so routine releases do not use EAS at all. The
+`Android APK` GitHub Actions workflow runs `expo prebuild` and Gradle on a free
+runner, signs with the release keystore, and attaches the APK to a GitHub
+Release. Pushing a `v*` tag triggers it, and the app's update check downloads
+that asset. Secrets and the Supabase-first setup are in
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 ## Documentation
 
 | Document                                       | Contents                                           |
@@ -81,6 +88,7 @@ does need the Android SDK or Xcode.
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)     | Database tables and indexes                        |
 | [`docs/SOURCES.md`](docs/SOURCES.md)           | The outlets and shows that are ingested            |
 | [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)   | Local development setup                            |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)     | Free Supabase + Render + Actions deployment        |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md)       | Technical decisions and their rationale            |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md)           | Phase history and deferred work                    |
 | [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)   | File naming, code organisation, commits and tags   |

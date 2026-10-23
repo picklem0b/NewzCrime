@@ -1,0 +1,133 @@
+name: Android APK
+
+# Builds the APK on GitHub's runner with Gradle, so an installable build costs
+# no EAS build credits. `expo prebuild` generates the native project, the
+# signing script points it at the keystore from secrets, and the APK is attached
+# to a GitHub Release. The app's update check downloads exactly that file.
+#
+# Required secrets for a signed (installable-over-the-old-version) build:
+#   ANDROID_KEYSTORE_BASE64     base64 of the release .keystore
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_ALIAS
+#   ANDROID_KEY_PASSWORD
+#
+# Optional repository variable:
+#   API_URL    inlined as EXPO_PUBLIC_API_URL (defaults to the Render URL)
+
+on:
+    workflow_dispatch:
+        inputs:
+            mode:
+                description: Build a signed release or a debug APK
+                type: choice
+                options: [release, debug]
+                default: release
+    push:
+        tags: ['v*']
+
+concurrency:
+    group: android-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    apk:
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+
+        env:
+            EXPO_PUBLIC_API_URL: ${{ vars.API_URL || 'https://newzcrime-api.onrender.com' }}
+            GRADLE_OPTS: -Xmx4g -Dorg.gradle.daemon=false
+            CI: '1'
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 9.12.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
+            - uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: 17
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Cache Gradle
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.gradle/caches
+                      ~/.gradle/wrapper
+                  key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+                  restore-keys: gradle-${{ runner.os }}-
+
+            - name: Generate the native Android project
+              working-directory: apps/mobile
+              run: npx expo prebuild --platform android --clean --no-install
+
+            - name: Decode the release keystore
+              if: github.event_name != 'workflow_dispatch' || inputs.mode == 'release'
+              env:
+                  ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+              run: |
+                  if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+                    echo "::error::ANDROID_KEYSTORE_BASE64 is not set. A debug-signed APK cannot be installed over the released one."
+                    exit 1
+                  fi
+                  echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/newzcrime-release.keystore"
+                  echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/newzcrime-release.keystore" >> "$GITHUB_ENV"
+
+            - name: Configure release signing
+              if: github.event_name != 'workflow_dispatch' || inputs.mode == 'release'
+              working-directory: apps/mobile
+              env:
+                  ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+                  ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+                  ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+              run: node scripts/configure-release-signing.js
+
+            - name: Build release APK
+              if: github.event_name != 'workflow_dispatch' || inputs.mode == 'release'
+              working-directory: apps/mobile/android
+              env:
+                  ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+                  ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+                  ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+              run: ./gradlew assembleRelease --no-daemon
+
+            - name: Build debug APK
+              if: github.event_name == 'workflow_dispatch' && inputs.mode == 'debug'
+              working-directory: apps/mobile/android
+              run: ./gradlew assembleDebug --no-daemon
+
+            - name: Collect the APK
+              run: |
+                  mkdir -p dist
+                  if [ -f apps/mobile/android/app/build/outputs/apk/release/app-release.apk ]; then
+                    cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk dist/newzcrime.apk
+                  else
+                    cp apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk dist/newzcrime-debug.apk
+                  fi
+                  ls -lh dist
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: newzcrime-apk
+                  path: dist/*.apk
+                  if-no-files-found: error
+
+            - name: Attach the APK to the release
+              if: startsWith(github.ref, 'refs/tags/v')
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: dist/newzcrime.apk
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,56 @@
+name: Ingest feeds
+
+# Replaces the Render background worker, which is only available on a paid
+# plan. GitHub Actions runs the one-shot ingest on a schedule, so the free
+# deployment keeps receiving stories without a second host.
+#
+# Every two hours, not every fifteen minutes: a run costs a couple of minutes
+# of the free 2,000 monthly minutes, and a two-hour cadence leaves ample room.
+# Tighten the cron if the account has minutes to spare.
+#
+# Required repository secrets:
+#   DATABASE_URL_DIRECT        Supabase direct connection (port 5432)
+#   REDIS_URL                  Upstash TCP endpoint (optional)
+#   PODCAST_INDEX_API_KEY      optional; discovery is skipped without it
+#   PODCAST_INDEX_API_SECRET
+
+on:
+    schedule:
+        - cron: '0 */2 * * *'
+    workflow_dispatch:
+
+concurrency:
+    group: ingest
+    cancel-in-progress: false
+
+jobs:
+    ingest:
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 9.12.0
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Ingest every active source
+              run: pnpm --filter @newzcrime/worker ingest
+              env:
+                  NODE_ENV: production
+                  DATABASE_URL: ${{ secrets.DATABASE_URL_DIRECT }}
+                  DATABASE_URL_DIRECT: ${{ secrets.DATABASE_URL_DIRECT }}
+                  REDIS_URL: ${{ secrets.REDIS_URL }}
+                  PODCAST_INDEX_API_KEY: ${{ secrets.PODCAST_INDEX_API_KEY }}
+                  PODCAST_INDEX_API_SECRET: ${{ secrets.PODCAST_INDEX_API_SECRET }}
+                  WORKER_USER_AGENT: NewzCrimeBot/1.0 (+https://newzcrime.app)
+                  LOG_LEVEL: info
