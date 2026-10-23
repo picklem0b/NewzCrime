@@ -27,6 +27,14 @@ const schema = z.object({
   API_PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGINS: z.string().default(''),
   DATABASE_URL: z.string().min(1, 'is required'),
+  /**
+   * Pool size.
+   *
+   * Deliberately small: the API is deployed on a free instance with a handful
+   * of connections available, and a larger pool would queue against the
+   * database's own limit rather than serving more requests.
+   */
+  DB_POOL_MAX: z.coerce.number().int().positive().max(50).default(5),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
   LOG_LEVEL: z.enum(logLevels).default('info'),
   API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
@@ -90,6 +98,7 @@ export function loadApiConfig(
     port: values.API_PORT,
     corsOrigins: toList(values.CORS_ORIGINS),
     databaseUrl: values.DATABASE_URL,
+    databasePoolMax: values.DB_POOL_MAX,
     redisUrl: values.REDIS_URL,
     logLevel: values.LOG_LEVEL,
     rateLimitMax: values.API_RATE_LIMIT_MAX,

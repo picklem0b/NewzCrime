@@ -22,6 +22,8 @@ export interface ApiConfig {
   corsOrigins: string[];
   /** Pooled Postgres connection — port 6543 on Supabase. */
   databaseUrl: string;
+  /** Small pool, sized for the free hosting tier. */
+  databasePoolMax: number;
   /** TCP Redis endpoint, e.g. `redis://127.0.0.1:6379`. */
   redisUrl: string;
   logLevel: LogLevel;

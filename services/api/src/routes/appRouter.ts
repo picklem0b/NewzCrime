@@ -2,6 +2,7 @@ import { APP_RELEASE, RELEASE_NOTES } from '@newzcrime/shared';
 import { Router } from 'express';
 
 import { asyncHandler } from '../utils/asyncHandler';
+import { publicCache } from '../utils/cacheControl';
 
 /**
  * `/v1/app/version` — release metadata for the update check.
@@ -16,7 +17,7 @@ export function createAppRouter(): Router {
   router.get(
     '/version',
     asyncHandler(async (_req, res) => {
-      res.set('Cache-Control', 'public, max-age=600');
+      res.set('Cache-Control', publicCache(600));
       res.json({ ...APP_RELEASE, notes: RELEASE_NOTES });
     })
   );

@@ -20,6 +20,7 @@ async function main(): Promise<void> {
 
   const db = createDatabase({
     connectionString: config.databaseUrl,
+    maxConnections: config.databasePoolMax,
     onError: (error) =>
       logger.error({ err: error.message }, 'database pool error'),
   });
@@ -38,6 +39,13 @@ async function main(): Promise<void> {
       'api listening'
     );
   });
+
+  // Render's free instance is single and slow to restart, so a half-open
+  // keep-alive connection is expensive: these bounds recycle it before the
+  // platform's proxy does, and a stuck request cannot hold the only worker.
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
+  server.requestTimeout = 30_000;
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'shutting down');

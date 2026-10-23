@@ -5,6 +5,7 @@ import { itemParamsSchema } from '../schemas/resourceParams.schema';
 import { getItem } from '../services/itemService';
 import type { ApiDependencies } from '../types';
 import { asyncHandler } from '../utils/asyncHandler';
+import { publicCache } from '../utils/cacheControl';
 import { HttpError } from '../utils/httpError';
 
 /** `/v1/items` — a single content item by id. */
@@ -21,7 +22,7 @@ export function createItemRouter(deps: ApiDependencies): Router {
         throw new HttpError(404, 'not_found', 'No item with that id');
       }
 
-      res.set('Cache-Control', `public, max-age=${CACHE_TTL.ITEM}`);
+      res.set('Cache-Control', publicCache(CACHE_TTL.ITEM));
       res.json(item);
     })
   );

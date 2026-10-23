@@ -10,6 +10,7 @@ import {
 } from '../services/sourceService';
 import type { ApiDependencies } from '../types';
 import { asyncHandler } from '../utils/asyncHandler';
+import { publicCache } from '../utils/cacheControl';
 import { HttpError } from '../utils/httpError';
 
 const pageQuerySchema = z.object({
@@ -30,7 +31,7 @@ export function createSourceRouter(deps: ApiDependencies): Router {
     '/',
     asyncHandler(async (_req, res) => {
       const sources = await listAllSources(deps);
-      res.set('Cache-Control', `public, max-age=${CACHE_TTL.SOURCES}`);
+      res.set('Cache-Control', publicCache(CACHE_TTL.SOURCES));
       res.json(sources);
     })
   );
@@ -43,7 +44,7 @@ export function createSourceRouter(deps: ApiDependencies): Router {
 
       const result = await listSourceItems(deps, sourceId, page);
 
-      res.set('Cache-Control', `public, max-age=${CACHE_TTL.FEED}`);
+      res.set('Cache-Control', publicCache(CACHE_TTL.FEED));
       res.json(result);
     })
   );
@@ -58,7 +59,7 @@ export function createSourceRouter(deps: ApiDependencies): Router {
         throw new HttpError(404, 'not_found', 'No source with that id');
       }
 
-      res.set('Cache-Control', `public, max-age=${CACHE_TTL.SOURCES}`);
+      res.set('Cache-Control', publicCache(CACHE_TTL.SOURCES));
       res.json(source);
     })
   );
