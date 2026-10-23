@@ -1,9 +1,9 @@
 import type { ContentItem } from '@newzcrime/shared';
 import { useRouter } from 'expo-router';
-import { BookmarkSimpleIcon } from 'phosphor-react-native';
+import { BookmarkSimpleIcon, TrashIcon } from 'phosphor-react-native';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 
 import EmptyState from '@/components/feedback/EmptyState';
 import StoryRow from '@/components/feed/StoryRow';
@@ -13,9 +13,11 @@ import EpisodeRow from '@/components/podcast/EpisodeRow';
 import Button from '@/components/ui/Button';
 import Chip from '@/components/ui/Chip';
 import Column from '@/components/ui/Column';
+import IconButton from '@/components/ui/IconButton';
 import Text from '@/components/ui/Text';
 import { useLayout } from '@/hooks/useLayout';
 import { useSaved } from '@/hooks/useSaved';
+import { useSetting } from '@/hooks/useSettings';
 import { useSourceIndex } from '@/hooks/useSources';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -31,9 +33,26 @@ export default function SavedScreen(): ReactElement {
 	const router = useRouter();
 	const { colour, spacing } = useTheme();
 	const { gutter } = useLayout();
-	const { items } = useSaved();
+	const { items, clear } = useSaved();
 	const sourceIndex = useSourceIndex();
 	const [scope, setScope] = useState<LibraryScope>('all');
+	const confirmBeforeClearing = useSetting('confirmBeforeClearing');
+
+	const clearLibrary = (): void => {
+		if (!confirmBeforeClearing) {
+			clear();
+			return;
+		}
+
+		Alert.alert(
+			'Clear the library?',
+			'Every saved story and episode is removed from this device.',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{ text: 'Clear', style: 'destructive', onPress: clear }
+			]
+		);
+	};
 
 	const isEpisode = (item: ContentItem) => Boolean(item.audioUrl);
 	const visible = items.filter(item =>
@@ -66,6 +85,15 @@ export default function SavedScreen(): ReactElement {
 								: undefined
 						}
 						large
+						actions={
+							items.length > 0 ? (
+								<IconButton
+									label='Clear the library'
+									onPress={clearLibrary}
+									icon={<TrashIcon size={20} color={colour.textMuted} />}
+								/>
+							) : undefined
+						}
 					/>
 
 					{items.length === 0 ? (

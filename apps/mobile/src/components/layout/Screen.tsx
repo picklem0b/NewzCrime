@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import MiniPlayer from '@/components/player/MiniPlayer';
+import { useSetting } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 
 export interface ScreenProps {
@@ -19,6 +20,7 @@ export function Screen({
 }: ScreenProps): ReactElement {
 	const { colour } = useTheme();
 	const router = useRouter();
+	const showMiniPlayer = useSetting('showMiniPlayer');
 
 	return (
 		<SafeAreaView
@@ -30,7 +32,7 @@ export function Screen({
 			}
 		>
 			<View style={styles.fill}>{children}</View>
-			{showPlayer ? (
+			{showPlayer && showMiniPlayer ? (
 				<MiniPlayer onOpen={() => router.push('/player/Player')} />
 			) : null}
 		</SafeAreaView>

@@ -74,10 +74,17 @@ export const CACHE_TTL = {
  * ships; `CHANGELOG.md` is the long-form record of the same history.
  */
 export const APP_RELEASE = {
-  latestVersion: '1.14.6',
+  latestVersion: '1.15.0',
   minimumVersion: '1.0.0',
+  /**
+   * Direct APK, not a page. The app downloads this itself and hands it to the
+   * Android package installer, so a link to a builds dashboard would fail.
+   * Point these at the GitHub Releases produced by the android-build workflow.
+   */
   downloadUrl:
-    'https://expo.dev/accounts/the_devi/projects/newzcrime/builds',
+    'https://github.com/LethaboK/NewzCrime/releases/latest/download/newzcrime.apk',
+  betaDownloadUrl:
+    'https://github.com/LethaboK/NewzCrime/releases/download/beta/newzcrime-beta.apk',
 } as const;
 
 /**
@@ -92,12 +99,12 @@ export const RELEASE_NOTES: ReadonlyArray<{
   highlights: ReadonlyArray<string>;
 }> = [
   {
-    version: '1.14.6',
+    version: '1.15.0',
     highlights: [
-      'Deep linking in share: recipients can copy-paste newzcrime://detail/ItemDetail?itemId=... to open items directly in the app',
-      'Updated deployment config: Render.yaml for API + worker services',
-      'Production APK build: eas.json profile now compiles standalone APKs',
-      'Version bump and release tag: v1.14.6',
+      '42 new settings across Appearance, General, About, Reading & audio, Notifications, and Data & privacy',
+      'Updates now download in the app and prompt to install, with an in-app banner when one is ready',
+      'Search rebuilt with a back header, animated results and faster filtering',
+      'Lighter requests and a cache-first feed for the free hosting tier',
     ],
   },
 

@@ -18,9 +18,9 @@ export type AsyncState<TData> =
 	| { status: 'success'; data: TData }
 	| { status: 'error'; error: string };
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Theme
- * ------------------------------------------------------------------ */
+ * ================================================================== */
 
 /** Which palette is active after the setting and the OS are resolved. */
 export type ColourScheme = 'light' | 'dark';
@@ -83,11 +83,11 @@ export interface TextVariantSpec {
 	scalable: boolean;
 }
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Settings
  *
- * Defaults and option lists live in `src/settings/constants.ts`.
- * ------------------------------------------------------------------ */
+ * Defaults and option lists live in `src/constants/settings.ts`.
+ * ================================================================== */
 
 /** How the app follows the OS appearance. */
 export type ColourMode = 'system' | 'light' | 'dark';
@@ -98,15 +98,109 @@ export type TextSize = 'small' | 'default' | 'large';
 /** Which tab the app opens on. */
 export type StartTab = 'home' | 'search' | 'saved';
 
-/** The whole persisted settings document. */
+/** The accent colour used for highlights, chips and the play button. */
+export type AccentColour = 'orange' | 'blue' | 'green' | 'violet';
+
+/** Headline typeface: the editorial serif or the plain sans. */
+export type FontStyle = 'serif' | 'sans';
+
+/** Row and card spacing, independent of the device's font scale. */
+export type Density = 'comfortable' | 'compact';
+
+/** Leading for the standfirst and article copy. */
+export type LineHeight = 'tight' | 'normal' | 'loose';
+
+/** Alignment for standfirst copy; body text stays left aligned. */
+export type TextAlign = 'left' | 'justify';
+
+/** Playback rate for podcast episodes. */
+export type PlaybackSpeed = '0.8' | '1' | '1.2' | '1.5';
+
+/** Seconds the player's skip buttons move. */
+export type SkipInterval = '10' | '15' | '30';
+
+/** Minutes between automatic feed refreshes, or `off`. */
+export type RefreshInterval = 'off' | '5' | '15' | '30';
+
+/** Topic the Home feed opens on. */
+export type DefaultTopic =
+	| 'all'
+	| 'court'
+	| 'crime'
+	| 'politics'
+	| 'world';
+
+/** When the daily briefing notification is delivered. */
+export type BriefingTime = '06:00' | '07:00' | '12:00' | '18:00';
+
+/** Quiet-hours window in which alerts are silenced. */
+export type QuietHours = 'off' | 'night' | 'late';
+
+/** Release channel the update check follows. */
+export type UpdateChannel = 'stable' | 'beta';
+
+/** The whole persisted settings document — 49 keys across six sections. */
 export interface SettingsState {
+	// Appearance
 	colourMode: ColourMode;
 	textSize: TextSize;
+	accentColour: AccentColour;
+	fontStyle: FontStyle;
+	boldHeadlines: boolean;
+	reduceMotion: boolean;
+	density: Density;
+	showThumbnails: boolean;
+	highContrast: boolean;
+
+	// General
 	startTab: StartTab;
+	defaultTopic: DefaultTopic;
+	haptics: boolean;
+	openLinksInApp: boolean;
+	autoRefresh: boolean;
+	refreshInterval: RefreshInterval;
+	confirmBeforeClearing: boolean;
+	showMiniPlayer: boolean;
+
+	// Reading
+	lineHeight: LineHeight;
+	textAlign: TextAlign;
+	readingProgress: boolean;
+	keepAwake: boolean;
+	playbackSpeed: PlaybackSpeed;
+	skipInterval: SkipInterval;
+	resumePlayback: boolean;
+	autoplayNext: boolean;
+
+	// Notifications
 	breakingNews: boolean;
 	podcastNotifications: boolean;
+	dailyBriefing: boolean;
+	briefingTime: BriefingTime;
+	courtRulings: boolean;
+	quietHours: QuietHours;
+	soundAlerts: boolean;
+	vibrateAlerts: boolean;
+	savedOutlets: boolean;
+
+	// Privacy and data
 	downloadOnWifi: boolean;
-	autoplayNext: boolean;
+	analytics: boolean;
+	crashReports: boolean;
+	personaliseFeed: boolean;
+	keepHistory: boolean;
+	dataSaver: boolean;
+	offlineImages: boolean;
+	clearCacheOnExit: boolean;
+
+	// About
+	autoCheckUpdates: boolean;
+	updateChannel: UpdateChannel;
+	showVersionBadge: boolean;
+	showReleaseNotes: boolean;
+	includeDiagnostics: boolean;
+	showBuildInfo: boolean;
+	confirmBeforeInstall: boolean;
 }
 
 /** A key that can be changed, used by the store's `set`. */
@@ -137,9 +231,9 @@ export interface SettingsStore {
 	hydrate: () => Promise<void>;
 }
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Saved items
- * ------------------------------------------------------------------ */
+ * ================================================================== */
 
 /** The bookmarks store, implemented in `src/stores/saved.store.ts`. */
 export interface SavedStore {
@@ -151,9 +245,9 @@ export interface SavedStore {
 	hydrate: () => Promise<void>;
 }
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Audio player
- * ------------------------------------------------------------------ */
+ * ================================================================== */
 
 /** What the player is doing, in terms the UI cares about. */
 export type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused';
@@ -177,9 +271,9 @@ export interface PlayerStore {
 	previous: () => Promise<void>;
 }
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Text to speech
- * ------------------------------------------------------------------ */
+ * ================================================================== */
 
 /**
  * The speech store, implemented in `src/stores/speech.store.ts`.
@@ -195,9 +289,9 @@ export interface SpeechStore {
 	stop: () => void;
 }
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Feed
- * ------------------------------------------------------------------ */
+ * ================================================================== */
 
 /** Result of the paginated feed hook. */
 export interface FeedResult {
@@ -214,9 +308,9 @@ export interface FeedResult {
 	loadMore: () => void;
 }
 
-/* ------------------------------------------------------------------ *
+/* ================================================================== *
  * Sources and recent searches
- * ------------------------------------------------------------------ */
+ * ================================================================== */
 
 /** The outlet and show directory, loaded once and shared by every screen. */
 export interface SourcesStore {

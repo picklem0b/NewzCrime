@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Text from '@/components/ui/Text';
 import Thumb from '@/components/ui/Thumb';
 import { useLayout } from '@/hooks/useLayout';
+import { useSetting } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 
 import StoryKicker from './StoryKicker';
@@ -23,8 +24,9 @@ export function LeadStory({
 }: LeadStoryProps): ReactElement {
 	const { colour, layout, spacing } = useTheme();
 	const { isWide, gutter } = useLayout();
+	const thumbnails = useSetting('showThumbnails');
 
-	const image = item.imageUrl ? (
+	const image = thumbnails && item.imageUrl ? (
 		<Thumb
 			uri={item.imageUrl}
 			label={sourceName}

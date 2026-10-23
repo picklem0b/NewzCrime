@@ -8,6 +8,7 @@
  * the first play, so a reader who never opens a podcast never pays for it.
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ContentItem } from '@newzcrime/shared';
 import type { Track } from 'react-native-track-player';
 import { create } from 'zustand';
@@ -18,9 +19,59 @@ import {
   PLAYER_UNAVAILABLE,
 } from '@/services/playerService';
 import type { PlayerHandle } from '@/services/playerService';
+import { readSettings } from '@/stores/settings.store';
 import type { PlayerStore } from '@/types';
 
 let isPlayerReady = false;
+
+/** Positions are kept per episode id so resuming survives a restart. */
+const POSITION_KEY = 'newzcrime.playback.v1';
+const POSITION_LIMIT = 50;
+
+interface StoredPosition {
+  position: number;
+  updatedAt: number;
+}
+
+type StoredPositions = Record<string, StoredPosition>;
+
+async function readPositions(): Promise<StoredPositions> {
+  try {
+    const raw = await AsyncStorage.getItem(POSITION_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    return parsed !== null && typeof parsed === 'object'
+      ? (parsed as StoredPositions)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+async function readPosition(itemId: string): Promise<number> {
+  const positions = await readPositions();
+  return positions[itemId]?.position ?? 0;
+}
+
+async function writePosition(itemId: string, position: number): Promise<void> {
+  if (!Number.isFinite(position) || position < 1) return;
+
+  try {
+    const positions = await readPositions();
+    positions[itemId] = { position, updatedAt: Date.now() };
+
+    // Keep the newest entries only; an unbounded map would grow forever.
+    const trimmed = Object.entries(positions)
+      .sort(([, a], [, b]) => b.updatedAt - a.updatedAt)
+      .slice(0, POSITION_LIMIT);
+
+    await AsyncStorage.setItem(
+      POSITION_KEY,
+      JSON.stringify(Object.fromEntries(trimmed))
+    );
+  } catch {
+    // A lost position costs one restart; it is not worth surfacing.
+  }
+}
 
 /** Sets up the native player the first time audio is requested. */
 async function ensurePlayer(): Promise<PlayerHandle['player']> {
@@ -87,11 +138,25 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         throw new Error('This episode has no audio source');
       }
 
+      const settings = readSettings();
+
       await player.reset();
       await player.add(playable.map(toTrack));
 
       const index = playable.findIndex((item) => item.id === episode.id);
       await player.skip(index >= 0 ? index : 0);
+
+      if (settings.resumePlayback) {
+        const saved = await readPosition(episode.id);
+        if (saved > 5) {
+          // Ignore a position at the very end: it would look like a finished
+          // episode and the reader would wonder why nothing plays.
+          const duration = await player.getDuration().catch(() => 0);
+          if (duration <= 0 || saved < duration - 5) await player.seekTo(saved);
+        }
+      }
+
+      await player.setRate(Number(settings.playbackSpeed));
       await player.play();
 
       set({ current: episode, queue: playable, status: 'playing' });
@@ -112,6 +177,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     try {
       if (status === 'playing') {
+        const progress = await player.getProgress().catch(() => null);
+        if (progress && current) {
+          void writePosition(current.id, progress.position);
+        }
         await player.pause();
         set({ status: 'paused' });
       } else {
@@ -125,6 +194,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   stop: async () => {
     const player = await activePlayer();
+    const { current } = get();
+
+    if (current) {
+      const progress = await player?.getProgress().catch(() => null);
+      if (progress) void writePosition(current.id, progress.position);
+    }
 
     try {
       await player?.stop();

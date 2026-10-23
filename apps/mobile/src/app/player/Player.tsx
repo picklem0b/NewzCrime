@@ -23,19 +23,20 @@ import Thumb from '@/components/ui/Thumb';
 import { useItem } from '@/hooks/useItem';
 import { useLayout } from '@/hooks/useLayout';
 import { usePlayer } from '@/hooks/usePlayer';
+import { useSetting } from '@/hooks/useSettings';
 import { useSourceIndex } from '@/hooks/useSources';
 import { useTheme } from '@/hooks/useTheme';
 import { usePlayerStore } from '@/stores/player.store';
 import { openExternalUrl } from '@/utils/external';
 import { formatDuration } from '@/utils/time';
 
-const SKIP_SECONDS = 15;
-
 export default function PlayerScreen(): ReactElement {
 	const { itemId } = useLocalSearchParams<{ itemId?: string }>();
 	const router = useRouter();
 	const { colour, radius, spacing } = useTheme();
 	const { gutter } = useLayout();
+	const skipSetting = useSetting('skipInterval');
+	const skipSeconds = Number(skipSetting);
 	const [barWidth, setBarWidth] = useState(0);
 
 	const { state: requested } = useItem(itemId ?? '');
@@ -135,19 +136,19 @@ export default function PlayerScreen(): ReactElement {
 								accessibilityActions={[
 									{
 										name: 'increment',
-										label: 'Forward 15 seconds'
+										label: `Forward ${skipSeconds} seconds`
 									},
 									{
 										name: 'decrement',
-										label: 'Back 15 seconds'
+										label: `Back ${skipSeconds} seconds`
 									}
 								]}
 								onAccessibilityAction={event => {
 									void player.skipBy(
 										event.nativeEvent.actionName ===
 											'increment'
-											? SKIP_SECONDS
-											: -SKIP_SECONDS
+											? skipSeconds
+											: -skipSeconds
 									);
 								}}
 								onLayout={onLayoutBar}
@@ -211,9 +212,9 @@ export default function PlayerScreen(): ReactElement {
 
 							<Pressable
 								accessibilityRole='button'
-								accessibilityLabel={`Back ${SKIP_SECONDS} seconds`}
+								accessibilityLabel={`Back ${skipSeconds} seconds`}
 								onPress={() => {
-									void player.skipBy(-SKIP_SECONDS);
+									void player.skipBy(-skipSeconds);
 								}}
 								style={styles.skip}
 							>
@@ -221,7 +222,7 @@ export default function PlayerScreen(): ReactElement {
 									variant='small'
 									style={{ fontWeight: '700' }}
 								>
-									−{SKIP_SECONDS}s
+									−{skipSeconds}s
 								</Text>
 							</Pressable>
 
@@ -260,9 +261,9 @@ export default function PlayerScreen(): ReactElement {
 
 							<Pressable
 								accessibilityRole='button'
-								accessibilityLabel={`Forward ${SKIP_SECONDS} seconds`}
+								accessibilityLabel={`Forward ${skipSeconds} seconds`}
 								onPress={() => {
-									void player.skipBy(SKIP_SECONDS);
+									void player.skipBy(skipSeconds);
 								}}
 								style={styles.skip}
 							>
@@ -270,7 +271,7 @@ export default function PlayerScreen(): ReactElement {
 									variant='small'
 									style={{ fontWeight: '700' }}
 								>
-									+{SKIP_SECONDS}s
+									+{skipSeconds}s
 								</Text>
 							</Pressable>
 

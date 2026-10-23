@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { DimensionValue } from 'react-native';
 
+import { useSetting } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 
 import Text from './Text';
@@ -26,6 +27,8 @@ export function Thumb({
 	rounded = true
 }: ThumbProps): ReactElement {
 	const { colour, radius } = useTheme();
+	const offlineImages = useSetting('offlineImages');
+	const dataSaver = useSetting('dataSaver');
 	const [failedUri, setFailedUri] = useState<string | null>(null);
 	const failed = failedUri === uri;
 
@@ -62,7 +65,9 @@ export function Thumb({
 			accessible={false}
 			style={box}
 			contentFit='cover'
-			transition={120}
+			cachePolicy={offlineImages ? 'memory-disk' : 'memory'}
+			allowDownscaling={dataSaver}
+			transition={dataSaver ? 0 : 120}
 			onError={() => setFailedUri(uri)}
 		/>
 	);

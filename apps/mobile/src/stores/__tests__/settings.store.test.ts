@@ -17,7 +17,9 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 const { useSettingsStore, withDefaults } = await import('.././settings.store');
-const { defaultSettings } = await import('@/constants/settings');
+const { choiceOptions, defaultSettings, SETTINGS_KEY_COUNT } = await import(
+	'@/constants/settings'
+);
 
 const STORAGE_KEY = 'newzcrime.settings.v1';
 
@@ -224,5 +226,186 @@ describe('stored values are checked, not trusted', () => {
 		for (const [key, value] of Object.entries(loaded)) {
 			expect(value, `${key} must not be undefined`).toBeDefined();
 		}
+	});
+});
+
+describe('the full 49-key document', () => {
+	/** The keys added by the 1.15 settings release, seven per section. */
+	const NEW_KEYS = {
+		Appearance: [
+			'accentColour',
+			'fontStyle',
+			'boldHeadlines',
+			'reduceMotion',
+			'density',
+			'showThumbnails',
+			'highContrast'
+		],
+		General: [
+			'defaultTopic',
+			'haptics',
+			'openLinksInApp',
+			'autoRefresh',
+			'refreshInterval',
+			'confirmBeforeClearing',
+			'showMiniPlayer'
+		],
+		Reading: [
+			'lineHeight',
+			'textAlign',
+			'readingProgress',
+			'keepAwake',
+			'playbackSpeed',
+			'skipInterval',
+			'resumePlayback'
+		],
+		Notifications: [
+			'dailyBriefing',
+			'briefingTime',
+			'courtRulings',
+			'quietHours',
+			'soundAlerts',
+			'vibrateAlerts',
+			'savedOutlets'
+		],
+		Privacy: [
+			'analytics',
+			'crashReports',
+			'personaliseFeed',
+			'keepHistory',
+			'dataSaver',
+			'offlineImages',
+			'clearCacheOnExit'
+		],
+		About: [
+			'autoCheckUpdates',
+			'updateChannel',
+			'showVersionBadge',
+			'showReleaseNotes',
+			'includeDiagnostics',
+			'showBuildInfo',
+			'confirmBeforeInstall'
+		]
+	} as const;
+
+	it('holds 49 keys: seven existing plus 42 new', () => {
+		expect(SETTINGS_KEY_COUNT).toBe(49);
+	});
+
+	it('adds exactly seven settings to each of the six sections', () => {
+		const added = Object.values(NEW_KEYS).flat();
+		expect(added).toHaveLength(42);
+		for (const key of added) {
+			expect(defaultSettings, key).toHaveProperty(key);
+		}
+	});
+
+	it('has a validator for every choice key and a boolean for the rest', () => {
+		for (const [key, value] of Object.entries(defaultSettings)) {
+			if (typeof value === 'boolean') continue;
+			expect(choiceOptions, `${key} needs options`).toHaveProperty(key);
+		}
+	});
+
+	it('accepts every default value unchanged', () => {
+		expect(withDefaults(defaultSettings)).toEqual(defaultSettings);
+	});
+
+	it('rejects a value outside each new choice list', () => {
+		const cases = [
+			['accentColour', 'pink'],
+			['fontStyle', 'mono'],
+			['density', 'airy'],
+			['defaultTopic', 'sport'],
+			['refreshInterval', '60'],
+			['lineHeight', 'double'],
+			['textAlign', 'right'],
+			['playbackSpeed', '3'],
+			['skipInterval', '45'],
+			['briefingTime', '05:00'],
+			['quietHours', 'always'],
+			['updateChannel', 'nightly']
+		] as const;
+
+		for (const [key, value] of cases) {
+			const loaded = withDefaults({ [key]: value } as never);
+			expect(loaded[key], key).toBe(defaultSettings[key]);
+		}
+	});
+
+	it('rejects a non-boolean for each new toggle', () => {
+		const toggles = [
+			'boldHeadlines',
+			'reduceMotion',
+			'showThumbnails',
+			'highContrast',
+			'haptics',
+			'openLinksInApp',
+			'autoRefresh',
+			'confirmBeforeClearing',
+			'showMiniPlayer',
+			'readingProgress',
+			'keepAwake',
+			'resumePlayback',
+			'dailyBriefing',
+			'courtRulings',
+			'soundAlerts',
+			'vibrateAlerts',
+			'savedOutlets',
+			'analytics',
+			'crashReports',
+			'personaliseFeed',
+			'keepHistory',
+			'dataSaver',
+			'offlineImages',
+			'clearCacheOnExit',
+			'autoCheckUpdates',
+			'showVersionBadge',
+			'showReleaseNotes',
+			'includeDiagnostics',
+			'showBuildInfo',
+			'confirmBeforeInstall'
+		] as const;
+
+		for (const key of toggles) {
+			const loaded = withDefaults({ [key]: 'yes' } as never);
+			expect(loaded[key], key).toBe(defaultSettings[key]);
+		}
+	});
+
+	it('keeps every valid new value it is given', () => {
+		const loaded = withDefaults({
+			accentColour: 'violet',
+			fontStyle: 'sans',
+			density: 'compact',
+			defaultTopic: 'court',
+			refreshInterval: '5',
+			lineHeight: 'loose',
+			textAlign: 'justify',
+			playbackSpeed: '1.5',
+			skipInterval: '30',
+			briefingTime: '18:00',
+			quietHours: 'night',
+			updateChannel: 'beta',
+			highContrast: true,
+			dataSaver: true
+		} as never);
+
+		expect(loaded).toMatchObject({
+			accentColour: 'violet',
+			fontStyle: 'sans',
+			density: 'compact',
+			defaultTopic: 'court',
+			refreshInterval: '5',
+			lineHeight: 'loose',
+			textAlign: 'justify',
+			playbackSpeed: '1.5',
+			skipInterval: '30',
+			briefingTime: '18:00',
+			quietHours: 'night',
+			updateChannel: 'beta',
+			highContrast: true,
+			dataSaver: true
+		});
 	});
 });

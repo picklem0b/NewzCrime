@@ -1,6 +1,6 @@
 import { CaretRightIcon } from 'phosphor-react-native';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import Text from '@/components/ui/Text';
 import { useTheme } from '@/hooks/useTheme';
@@ -89,6 +89,65 @@ export function SettingRow({
 			{onPress ? (
 				<CaretRightIcon size={16} color={colour.textFaint} />
 			) : null}
+		</Pressable>
+	);
+}
+
+export interface ToggleRowProps {
+	label: string;
+	description?: string;
+	value: boolean;
+	onChange: (next: boolean) => void;
+	last?: boolean;
+}
+
+/** A boolean setting, with the whole row tappable as well as the switch. */
+export function ToggleRow({
+	label,
+	description,
+	value,
+	onChange,
+	last = false
+}: ToggleRowProps): ReactElement {
+	const { colour, spacing } = useTheme();
+
+	return (
+		<Pressable
+			accessibilityRole='switch'
+			accessibilityLabel={label}
+			accessibilityState={{ checked: value }}
+			accessibilityHint={description}
+			onPress={() => onChange(!value)}
+			style={({ pressed }) => [
+				styles.row,
+				{
+					minHeight: 56,
+					paddingHorizontal: spacing.lg,
+					paddingVertical: spacing.md,
+					gap: spacing.md,
+					backgroundColor: pressed ? colour.pressed : 'transparent',
+					borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
+					borderBottomColor: colour.border
+				}
+			]}
+		>
+			<View style={styles.flex}>
+				<Text variant='body'>{label}</Text>
+				{description ? (
+					<Text variant='meta' tone='faint'>
+						{description}
+					</Text>
+				) : null}
+			</View>
+			<Switch
+				accessibilityElementsHidden
+				importantForAccessibility='no-hide-descendants'
+				value={value}
+				onValueChange={onChange}
+				trackColor={{ false: colour.borderStrong, true: colour.accent }}
+				thumbColor={colour.surfaceRaised}
+				ios_backgroundColor={colour.borderStrong}
+			/>
 		</Pressable>
 	);
 }

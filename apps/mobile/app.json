@@ -4,7 +4,7 @@
 		"slug": "newzcrime",
 		"scheme": "newzcrime",
 		"owner": "the_devi",
-		"version": "1.14.5",
+		"version": "1.15.0",
 		"orientation": "portrait",
 		"userInterfaceStyle": "automatic",
 		"newArchEnabled": false,
@@ -18,11 +18,12 @@
 		},
 		"android": {
 			"package": "za.co.newzcrime.app",
-			"versionCode": 4,
+			"versionCode": 5,
 			"permissions": [
 				"FOREGROUND_SERVICE",
 				"FOREGROUND_SERVICE_MEDIA_PLAYBACK",
-				"WAKE_LOCK"
+				"WAKE_LOCK",
+				"REQUEST_INSTALL_PACKAGES"
 			],
 			"adaptiveIcon": {
 				"backgroundColor": "#0B0B0B"

@@ -3,9 +3,20 @@ import { Text as NativeText } from 'react-native';
 import type { TextProps as NativeTextProps } from 'react-native';
 
 import { maxFontSizeMultiplier, textVariants } from '@/constants/theme';
+import { useSetting } from '@/hooks/useSettings';
 import { useTextScale } from '@/hooks/useTextScale';
 import { useTheme } from '@/hooks/useTheme';
 import type { TextTone, TextVariant } from '@/types';
+
+/** Variants rendered in the headline face, so the font setting applies to them. */
+const HEADLINE_VARIANTS: ReadonlySet<TextVariant> = new Set([
+	'masthead',
+	'display',
+	'h1',
+	'h2',
+	'h3',
+	'h4'
+]);
 
 export interface TextProps extends NativeTextProps {
 	variant?: TextVariant;
@@ -20,8 +31,11 @@ export function Text({
 }: TextProps): ReactElement {
 	const { colour } = useTheme();
 	const textScale = useTextScale();
+	const fontStyle = useSetting('fontStyle');
+	const boldHeadlines = useSetting('boldHeadlines');
 	const spec = textVariants[variant];
 	const scale = spec.scalable ? textScale : 1;
+	const isHeadline = HEADLINE_VARIANTS.has(variant);
 
 	const colours: Record<TextTone, string> = {
 		default: colour.text,
@@ -34,6 +48,13 @@ export function Text({
 	};
 
 	const { scalable: _scalable, ...typeStyle } = spec;
+
+	// The font and weight settings only touch headlines: body copy keeps the
+	// platform sans, which is what long-form reading is tuned for.
+	if (isHeadline) {
+		if (fontStyle === 'sans') typeStyle.fontFamily = undefined;
+		if (!boldHeadlines) typeStyle.fontWeight = '600';
+	}
 
 	return (
 		<NativeText

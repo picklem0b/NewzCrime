@@ -3,6 +3,12 @@ import type { ContentItem, Topic } from '@newzcrime/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { contentService } from '@/services/contentService';
+import {
+	feedCacheKey,
+	readDiskFeed,
+	readMemoryFeed,
+	writeFeed
+} from '@/services/feedCache';
 import type { AsyncState, FeedResult } from '@/types';
 
 export interface UseFeedOptions {
@@ -36,14 +42,24 @@ export function useFeed({
 		const controller = new AbortController();
 		const current = ++generation.current;
 		const isRefresh = refreshRequested.current && hasItems.current;
+		const cacheKey = feedCacheKey(topic, includePodcasts);
 		refreshRequested.current = false;
 
 		if (isRefresh) {
 			setIsRefreshing(true);
 		} else {
-			setState({ status: 'loading' });
-			setItems([]);
-			setCursor(null);
+			// Paint the cached page first: it is already in memory on a tab
+			// switch, so Today appears without a skeleton and without a request.
+			const cached = readMemoryFeed(cacheKey);
+			if (cached) {
+				setItems(cached.items);
+				setCursor(cached.nextCursor);
+				setState({ status: 'success', data: cached.items });
+			} else {
+				setState({ status: 'loading' });
+				setItems([]);
+				setCursor(null);
+			}
 		}
 		setRefreshFailed(false);
 		setIsLoadingMore(false);
@@ -61,15 +77,31 @@ export function useFeed({
 				setCursor(page.nextCursor);
 				setState({ status: 'success', data: page.items });
 				setIsRefreshing(false);
+				writeFeed(cacheKey, page.items, page.nextCursor);
 			})
-			.catch((error: unknown) => {
+			.catch(async (error: unknown) => {
 				if (generation.current !== current || controller.signal.aborted)
 					return;
+
 				setIsRefreshing(false);
+
 				if (isRefresh) {
 					setRefreshFailed(true);
 					return;
 				}
+
+				// A cold start with no network can still show the last page.
+				const cached = await readDiskFeed(cacheKey);
+				if (generation.current !== current) return;
+
+				if (cached) {
+					setItems(cached.items);
+					setCursor(cached.nextCursor);
+					setState({ status: 'success', data: cached.items });
+					setRefreshFailed(true);
+					return;
+				}
+
 				setState({ status: 'error', error: messageOf(error) });
 			});
 

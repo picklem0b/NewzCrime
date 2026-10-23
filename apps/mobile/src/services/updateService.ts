@@ -2,8 +2,8 @@
  * Update check.
  *
  * The app version is compared against the latest release the API reports.
- * Installing an update still happens through the store or the development
- * client; this only tells the reader whether one exists.
+ * This service answers "is there a newer build"; downloading and installing it
+ * is `updateInstaller`.
  */
 
 import Constants from 'expo-constants';
@@ -21,8 +21,10 @@ export interface ReleaseNotes {
 export interface ReleaseInfo {
   latestVersion: string;
   minimumVersion: string;
-  /** Where the reader goes to install the newer build. */
+  /** Direct APK for the stable channel. */
   downloadUrl: string;
+  /** Direct APK for the beta channel, when that channel has a build. */
+  betaDownloadUrl?: string;
   notes: ReleaseNotes[];
 }
 
@@ -69,6 +71,7 @@ export function isUpdateAvailable(
 export function fetchReleaseNotes(): Promise<ReleaseInfo> {
   return apiClient.get<ReleaseInfo>('/v1/app/version');
 }
+
 
 export async function checkForUpdates(): Promise<UpdateCheckResult> {
   const current = currentVersion();

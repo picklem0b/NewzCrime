@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { GearSixIcon, MagnifyingGlassIcon } from 'phosphor-react-native';
 import type { ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import IconButton from '@/components/ui/IconButton';
 import Text from '@/components/ui/Text';
@@ -22,8 +22,8 @@ import { useTheme } from '@/hooks/useTheme';
  */
 export function AppBar(): ReactElement {
 	const router = useRouter();
-	const { colour, spacing } = useTheme();
-	const { gutter } = useLayout();
+	const { colour, radius, spacing } = useTheme();
+	const { gutter, isWide } = useLayout();
 
 	return (
 		<View
@@ -45,13 +45,36 @@ export function AppBar(): ReactElement {
 				{brand.name}
 			</Text>
 
-			<IconButton
-				label='Search'
-				onPress={() => router.push('/search/Search')}
-				icon={
-					<MagnifyingGlassIcon size={22} color={colour.text} />
-				}
-			/>
+			{isWide ? (
+				<Pressable
+					accessibilityRole='button'
+					accessibilityLabel='Search NewzCrime'
+					onPress={() => router.push('/search/Search')}
+					style={({ pressed }) => [
+						styles.pill,
+						{
+							borderRadius: radius.pill,
+							borderColor: colour.border,
+							backgroundColor: pressed ? colour.pressed : colour.surface,
+							paddingHorizontal: spacing.md,
+							gap: spacing.sm
+						}
+					]}
+				>
+					<MagnifyingGlassIcon size={18} color={colour.textMuted} />
+					<Text variant='small' tone='faint'>
+						Search NewzCrime
+					</Text>
+				</Pressable>
+			) : (
+				<IconButton
+					label='Search'
+					onPress={() => router.push('/search/Search')}
+					icon={
+						<MagnifyingGlassIcon size={22} color={colour.text} />
+					}
+				/>
+			)}
 			<IconButton
 				label='Settings'
 				onPress={() => router.push('/settings/Settings')}
@@ -68,7 +91,13 @@ const styles = StyleSheet.create({
 		minHeight: 52,
 		borderBottomWidth: StyleSheet.hairlineWidth
 	},
-	brand: { flex: 1 }
+	brand: { flex: 1 },
+	pill: {
+		height: 36,
+		flexDirection: 'row',
+		alignItems: 'center',
+		borderWidth: StyleSheet.hairlineWidth
+	}
 });
 
 export default AppBar;

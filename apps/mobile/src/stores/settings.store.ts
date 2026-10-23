@@ -9,13 +9,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-import {
-	colourModes,
-	defaultSettings,
-	startTabs,
-	textSizes
-} from '@/constants/settings';
-import type { Option, SettingsKey, SettingsState, SettingsStore } from '@/types';
+import { choiceOptions, defaultSettings } from '@/constants/settings';
+import type { SettingsKey, SettingsState, SettingsStore } from '@/types';
 
 const STORAGE_KEY = 'newzcrime.settings.v1';
 
@@ -23,19 +18,6 @@ const diff = (saved: SettingsState, draft: SettingsState): SettingsKey[] =>
 	(Object.keys(draft) as SettingsKey[]).filter(
 		key => draft[key] !== saved[key]
 	);
-
-/** The ids a picker offers, so the store accepts exactly what the UI can set. */
-const idsOf = <TId extends string>(
-	options: readonly Option<TId>[]
-): readonly TId[] => options.map(option => option.id);
-
-const isOneOf = <TId extends string>(
-	options: readonly Option<TId>[],
-	value: unknown
-): value is TId => idsOf(options).includes(value as TId);
-
-const asBoolean = (value: unknown, fallback: boolean): boolean =>
-	typeof value === 'boolean' ? value : fallback;
 
 /** `discover` was a start tab before Search replaced it as the browse entry. */
 const migrateStartTab = (value: unknown): unknown =>
@@ -47,34 +29,46 @@ const migrateStartTab = (value: unknown): unknown =>
  * Stored values are checked, not trusted. They come from a build that may be
  * older, and a reader with a rooted device can edit them; `colourMode` in
  * particular is used to index the palettes, so an unrecognised value would
- * resolve to `undefined` and take down every screen that reads a colour. Each
- * field therefore falls back to its default rather than being cast.
+ * resolve to `undefined` and take down every screen that reads a colour.
+ *
+ * Both checks are driven by the defaults: a boolean key must be a boolean and a
+ * choice key must be one of the ids the picker offers. Adding a setting to
+ * `defaultSettings` therefore adds its validation at the same time.
  */
-export const withDefaults = (stored: Partial<SettingsState>): SettingsState => {
-	const startTab = migrateStartTab(stored.startTab);
+export const withDefaults = (stored: unknown): SettingsState => {
+	const source =
+		stored !== null && typeof stored === 'object'
+			? (stored as Record<string, unknown>)
+			: {};
 
-	return {
-		...defaultSettings,
-		colourMode: isOneOf(colourModes, stored.colourMode)
-			? stored.colourMode
-			: defaultSettings.colourMode,
-		textSize: isOneOf(textSizes, stored.textSize)
-			? stored.textSize
-			: defaultSettings.textSize,
-		startTab: isOneOf(startTabs, startTab)
-			? startTab
-			: defaultSettings.startTab,
-		breakingNews: asBoolean(stored.breakingNews, defaultSettings.breakingNews),
-		podcastNotifications: asBoolean(
-			stored.podcastNotifications,
-			defaultSettings.podcastNotifications
-		),
-		downloadOnWifi: asBoolean(
-			stored.downloadOnWifi,
-			defaultSettings.downloadOnWifi
-		),
-		autoplayNext: asBoolean(stored.autoplayNext, defaultSettings.autoplayNext)
+	const migrated: Record<string, unknown> = {
+		...source,
+		startTab: migrateStartTab(source.startTab)
 	};
+
+	// `choiceOptions` is declared with `satisfies`, so it knows exactly which
+	// keys are choices; this view lets the loop index it by any settings key.
+	const choices: Partial<Record<SettingsKey, readonly string[]>> = choiceOptions;
+
+	const next: Record<string, unknown> = {};
+
+	for (const key of Object.keys(defaultSettings) as SettingsKey[]) {
+		const fallback = defaultSettings[key];
+		const value = migrated[key];
+
+		if (typeof fallback === 'boolean') {
+			next[key] = typeof value === 'boolean' ? value : fallback;
+			continue;
+		}
+
+		const allowed = choices[key] ?? [];
+		next[key] =
+			typeof value === 'string' && allowed.includes(value)
+				? value
+				: fallback;
+	}
+
+	return next as unknown as SettingsState;
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -100,9 +94,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 	hydrate: async () => {
 		try {
 			const raw = await AsyncStorage.getItem(STORAGE_KEY);
-			const saved = raw
-				? withDefaults(JSON.parse(raw) as Partial<SettingsState>)
-				: defaultSettings;
+			const saved = raw ? withDefaults(JSON.parse(raw)) : defaultSettings;
 			set({ saved, draft: saved, changed: [], isHydrated: true });
 		} catch {
 			// Corrupt storage is not worth crashing over; defaults are safe.
@@ -110,3 +102,6 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 		}
 	}
 }));
+
+/** Reads the committed settings outside React, for services and utilities. */
+export const readSettings = (): SettingsState => useSettingsStore.getState().saved;

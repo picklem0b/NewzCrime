@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import ErrorScreen from '@/components/feedback/ErrorScreen';
+import UpdateGate from '@/components/update/UpdateGate';
 import { useTheme } from '@/hooks/useTheme';
 import { playbackService } from '@/services/playbackService';
 import { loadPlayer } from '@/services/playerService';
@@ -14,6 +15,7 @@ import { useSavedStore } from '@/stores/saved.store';
 import { useRecentSearchesStore } from '@/stores/search.store';
 import { useSettingsStore } from '@/stores/settings.store';
 import { warmSpeechVoice } from '@/stores/speech.store';
+import { useUpdateStore } from '@/stores/update.store';
 
 /**
  * Root navigator.
@@ -30,6 +32,7 @@ export default function RootLayout(): ReactElement {
 	const hydrateSettings = useSettingsStore(state => state.hydrate);
 	const hydrateSaved = useSavedStore(state => state.hydrate);
 	const hydrateRecents = useRecentSearchesStore(state => state.hydrate);
+	const hydrateUpdates = useUpdateStore(state => state.hydrate);
 
 	useEffect(() => {
 		void loadPlayer().then(handle => {
@@ -47,7 +50,8 @@ export default function RootLayout(): ReactElement {
 		void hydrateSettings();
 		void hydrateSaved();
 		void hydrateRecents();
-	}, [hydrateSettings, hydrateSaved, hydrateRecents]);
+		void hydrateUpdates();
+	}, [hydrateSettings, hydrateSaved, hydrateRecents, hydrateUpdates]);
 
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
@@ -56,9 +60,12 @@ export default function RootLayout(): ReactElement {
 				<Stack
 					screenOptions={{
 						headerShown: false,
-						contentStyle: { backgroundColor: colour.background }
+						contentStyle: { backgroundColor: colour.background },
+						animation: 'slide_from_right',
+						gestureEnabled: true
 					}}
 				/>
+				<UpdateGate />
 			</SafeAreaProvider>
 		</GestureHandlerRootView>
 	);

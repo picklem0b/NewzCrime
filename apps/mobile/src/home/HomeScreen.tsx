@@ -23,8 +23,10 @@ import Column from '@/components/ui/Column';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Text from '@/components/ui/Text';
 import { buildFeedEntries } from '@/feed/layout';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { useFeed } from '@/hooks/useFeed';
 import { useLayout } from '@/hooks/useLayout';
+import { useSetting } from '@/hooks/useSettings';
 import { useSourceIndex } from '@/hooks/useSources';
 import { useTheme } from '@/hooks/useTheme';
 import type { FeedEntry } from '@/types';
@@ -39,11 +41,20 @@ export default function HomeScreen(): ReactElement {
 	const router = useRouter();
 	const { colour, spacing } = useTheme();
 	const { gutter } = useLayout();
-	const [topic, setTopic] = useState<Topic>('all');
+	const defaultTopic = useSetting('defaultTopic');
+	const autoRefresh = useSetting('autoRefresh');
+	const refreshInterval = useSetting('refreshInterval');
+	const [topic, setTopic] = useState<Topic>(defaultTopic);
 	const listRef = useRef<FlashList<HomeRow>>(null);
 
 	const feed = useFeed({ topic });
 	const sourceIndex = useSourceIndex();
+
+	useAutoRefresh(feed.refresh, autoRefresh, refreshInterval);
+
+	useEffect(() => {
+		setTopic(defaultTopic);
+	}, [defaultTopic]);
 
 	useEffect(() => {
 		listRef.current?.scrollToOffset({ offset: 0, animated: false });

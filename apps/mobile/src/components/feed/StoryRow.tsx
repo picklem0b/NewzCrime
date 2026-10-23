@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Text from '@/components/ui/Text';
 import Thumb from '@/components/ui/Thumb';
 import { useLayout } from '@/hooks/useLayout';
+import { useSetting } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
 
 import StoryKicker from './StoryKicker';
@@ -23,9 +24,10 @@ export function StoryRow({
 	onPress,
 	compact = false
 }: StoryRowProps): ReactElement {
-	const { colour, layout, spacing } = useTheme();
+	const { colour, layout, spacing, rowSpacing } = useTheme();
 	const { gutter } = useLayout();
-	const showThumb = !compact && Boolean(item.imageUrl);
+	const thumbnails = useSetting('showThumbnails');
+	const showThumb = thumbnails && !compact && Boolean(item.imageUrl);
 
 	return (
 		<View
@@ -42,7 +44,7 @@ export function StoryRow({
 				style={({ pressed }) => [
 					styles.row,
 					{
-						paddingTop: spacing.md,
+						paddingTop: rowSpacing,
 						gap: spacing.md,
 						backgroundColor: pressed
 							? colour.pressed

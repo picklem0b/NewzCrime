@@ -8,8 +8,10 @@ import {
 	SpeakerHighIcon,
 	StopIcon
 } from 'phosphor-react-native';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import ErrorState from '@/components/feedback/ErrorState';
 import ListSkeleton from '@/components/feedback/ListSkeleton';
@@ -26,9 +28,12 @@ import Thumb from '@/components/ui/Thumb';
 import { useItem } from '@/hooks/useItem';
 import { useLayout } from '@/hooks/useLayout';
 import { usePlayer } from '@/hooks/usePlayer';
+import { useReaderType } from '@/hooks/useReaderType';
 import { useSpeech, useStopSpeechOnUnmount } from '@/hooks/useSpeech';
 import { useSourceIndex, useSourceItems } from '@/hooks/useSources';
+import { useTextScale } from '@/hooks/useTextScale';
 import { useTheme } from '@/hooks/useTheme';
+import { textVariants } from '@/constants/theme';
 import { openExternalUrl, shareItem } from '@/utils/external';
 import { formatRelativeTime } from '@/utils/time';
 
@@ -42,8 +47,40 @@ export default function ItemDetailScreen(): ReactElement {
 	const sourceIndex = useSourceIndex();
 	const { speakingId, speak, stop } = useSpeech();
 	const player = usePlayer();
+	const reader = useReaderType();
+	const textScale = useTextScale();
+	const [scrollProgress, setScrollProgress] = useState(0);
 
 	useStopSpeechOnUnmount();
+
+	/** Reader settings: hold the screen awake only while they are reading. */
+	useEffect(() => {
+		if (!reader.keepAwake) return undefined;
+
+		let active = true;
+		const tag = 'newzcrime-reader';
+
+		void import('expo-keep-awake')
+			.then(module => (active ? module.activateKeepAwakeAsync(tag) : undefined))
+			.catch(() => undefined);
+
+		return () => {
+			active = false;
+			void import('expo-keep-awake')
+				.then(module => module.deactivateKeepAwake(tag))
+				.catch(() => undefined);
+		};
+	}, [reader.keepAwake]);
+
+	const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+		const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+		const scrollable = contentSize.height - layoutMeasurement.height;
+		setScrollProgress(
+			scrollable > 0
+				? Math.min(1, Math.max(0, contentOffset.y / scrollable))
+				: 0
+		);
+	};
 
 	const item = state.status === 'success' ? state.data : null;
 	const source = item ? sourceIndex.get(item.sourceId) : undefined;
@@ -117,6 +154,23 @@ export default function ItemDetailScreen(): ReactElement {
 				</View>
 			</View>
 
+			{reader.showProgress && item ? (
+				<View
+					accessibilityRole='progressbar'
+					accessibilityLabel='Reading progress'
+					accessibilityValue={{ min: 0, max: 100, now: Math.round(scrollProgress * 100) }}
+					style={{ height: 2, backgroundColor: colour.border }}
+				>
+					<View
+						style={{
+							width: `${Math.round(scrollProgress * 100)}%`,
+							height: '100%',
+							backgroundColor: colour.accent
+						}}
+					/>
+				</View>
+			) : null}
+
 			{state.status === 'loading' || state.status === 'idle' ? (
 				<ListSkeleton rows={3} />
 			) : null}
@@ -128,6 +182,8 @@ export default function ItemDetailScreen(): ReactElement {
 			{item ? (
 				<ScrollView
 					showsVerticalScrollIndicator={false}
+					onScroll={onScroll}
+					scrollEventThrottle={32}
 					contentContainerStyle={{ paddingBottom: spacing.xxxl }}
 				>
 					<Column max={layout.readingMax + gutter * 2}>
@@ -177,7 +233,14 @@ export default function ItemDetailScreen(): ReactElement {
 							{item.excerpt ? (
 								<Text
 									variant='standfirst'
-									style={{ marginTop: spacing.sm }}
+									style={{
+										marginTop: spacing.sm,
+										textAlign: reader.textAlign,
+										lineHeight:
+											textVariants.standfirst.lineHeight *
+											textScale *
+											reader.lineHeight
+									}}
 								>
 									{item.excerpt}
 								</Text>

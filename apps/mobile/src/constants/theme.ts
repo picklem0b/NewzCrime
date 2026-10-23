@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 import type {
+	AccentColour,
 	ColourScheme,
 	ColourTokens,
 	TextVariant,
@@ -56,6 +57,99 @@ export const palettes: Record<ColourScheme, ColourTokens> = {
 		live: '#B42318'
 	}
 };
+
+/**
+ * Accent families. Each one replaces `accent`, `primary`, `accentSoft` and
+ * `onAccent` on the base palette, so a setting can recolour the app without
+ * every component carrying its own conditional.
+ */
+export const accentPalettes: Record<
+	AccentColour,
+	Record<
+		ColourScheme,
+		Pick<ColourTokens, 'accent' | 'primary' | 'accentSoft' | 'onAccent'>
+	>
+> = {
+	orange: {
+		dark: {
+			accent: '#E58A3A',
+			primary: '#C34B00',
+			accentSoft: 'rgba(229,138,58,0.16)',
+			onAccent: '#0B0B0B'
+		},
+		light: {
+			accent: '#B45309',
+			primary: '#C34B00',
+			accentSoft: 'rgba(180,83,9,0.10)',
+			onAccent: '#FFFFFF'
+		}
+	},
+	blue: {
+		dark: {
+			accent: '#6CB6FF',
+			primary: '#1D6FD0',
+			accentSoft: 'rgba(108,182,255,0.16)',
+			onAccent: '#06121F'
+		},
+		light: {
+			accent: '#0B5CAD',
+			primary: '#0B5CAD',
+			accentSoft: 'rgba(11,92,173,0.10)',
+			onAccent: '#FFFFFF'
+		}
+	},
+	green: {
+		dark: {
+			accent: '#5BD68B',
+			primary: '#1F7A45',
+			accentSoft: 'rgba(91,214,139,0.16)',
+			onAccent: '#06170D'
+		},
+		light: {
+			accent: '#1A7F37',
+			primary: '#1A7F37',
+			accentSoft: 'rgba(26,127,55,0.10)',
+			onAccent: '#FFFFFF'
+		}
+	},
+	violet: {
+		dark: {
+			accent: '#B79CFF',
+			primary: '#6D4BD8',
+			accentSoft: 'rgba(183,156,255,0.16)',
+			onAccent: '#0B0718'
+		},
+		light: {
+			accent: '#5B3BC4',
+			primary: '#5B3BC4',
+			accentSoft: 'rgba(91,59,196,0.10)',
+			onAccent: '#FFFFFF'
+		}
+	}
+};
+
+/** Border and text overrides applied when high contrast is on. */
+export const contrastTweaks: Record<ColourScheme, Partial<ColourTokens>> = {
+	dark: {
+		border: '#4A4A4A',
+		borderStrong: '#6B6B6B',
+		textMuted: '#CFCFCF',
+		textFaint: '#B0B0B0'
+	},
+	light: {
+		border: '#B8B8B8',
+		borderStrong: '#8A8A8A',
+		textMuted: '#3F3F3F',
+		textFaint: '#545454'
+	}
+};
+
+/** Multipliers applied to standfirst leading by the reading settings. */
+export const readerLineHeight = {
+	tight: 0.92,
+	normal: 1,
+	loose: 1.16
+} as const;
 
 export const radius = {
 	sm: 4,
@@ -198,8 +292,24 @@ export const motion = {
 		instant: 100,
 		fast: 160,
 		base: 220,
+		slow: 320,
 		pulse: 1100
+	},
+	scale: {
+		pressed: 0.97,
+		enter: 0.98
+	},
+	spring: {
+		damping: 18,
+		stiffness: 220,
+		mass: 0.6
 	}
+} as const;
+
+/** Extra vertical breathing room inside rows, by density. */
+export const densitySpacing = {
+	comfortable: 12,
+	compact: 6
 } as const;
 
 export const elevation: Record<'floating', ViewStyle> = {
