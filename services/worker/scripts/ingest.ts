@@ -6,7 +6,10 @@
  * `pnpm --filter @newzcrime/worker ingest [sourceId]`.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { createCache } from '@newzcrime/cache';
 import { createDatabase, listActiveSources } from '@newzcrime/db';
@@ -15,6 +18,12 @@ import { createAdapters } from '../src/adapters';
 import { loadWorkerConfig } from '../src/config/env';
 import { ingestSource } from '../src/jobs/ingestSourceJob';
 import { createLogger } from '../src/logger';
+
+// pnpm runs this from services/worker; the connection string lives in the
+// repository's .env, which is also what `db:setup` reads.
+dotenv.config({
+  path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env'),
+});
 
 async function main(): Promise<void> {
   const config = loadWorkerConfig();

@@ -329,6 +329,42 @@ export const brand = {
 	timeZone: 'Africa/Johannesburg'
 } as const;
 
+/**
+ * First-run introduction.
+ *
+ * The supplied illustrations have no background of their own, so they sit on a
+ * paper disc over a three-stop warm gradient. `iconInk` is the cream used for
+ * the floating icons and captions on that gradient.
+ */
+export const onboardingTheme = {
+	gradient: ['#C34B00', '#E58A3A', '#D29922'],
+	root: '#C34B00',
+	paper: '#FFF7EE',
+	iconInk: '#FFF6EA',
+	ink: '#3B1900',
+	scrim: 'rgba(28, 10, 2, 0.52)',
+	shade: 'rgba(42, 12, 0, 0.30)',
+	wash: 'rgba(255, 255, 255, 0.16)',
+	clear: 'rgba(255, 255, 255, 0)',
+	swirlWarm: 'rgba(210, 153, 34, 0.24)',
+	swirlDeep: 'rgba(108, 32, 0, 0.26)',
+	swirlLight: 'rgba(255, 246, 234, 0.07)',
+	glass: 'rgba(255, 247, 238, 0.14)',
+	glassBorder: 'rgba(255, 247, 238, 0.34)',
+	dotIdle: 'rgba(255, 247, 238, 0.38)',
+	glow: 'rgba(255, 247, 238, 0.13)',
+	glowBorder: 'rgba(255, 247, 238, 0.30)',
+	discBorder: 'rgba(255, 247, 238, 0.85)',
+	orbit: 'rgba(255, 246, 234, 0.16)',
+	orbitBorder: 'rgba(255, 246, 234, 0.36)',
+	shadow: '#2B0D00',
+	captionShadow: 'rgba(40, 14, 0, 0.32)',
+	slogan: 'rgba(255, 247, 238, 0.82)',
+	spinner: 'rgba(255, 247, 238, 0.85)',
+	mark: 'rgba(255, 247, 238, 0.16)',
+	markBorder: 'rgba(255, 247, 238, 0.42)'
+} as const;
+
 export type RadiusToken = keyof typeof radius;
 export type SpacingToken = keyof typeof spacing;
 

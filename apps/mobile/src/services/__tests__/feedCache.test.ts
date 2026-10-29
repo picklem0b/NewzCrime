@@ -2,22 +2,28 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { setItem, getItem, getAllKeys, multiRemove } = vi.hoisted(() => ({
-	setItem: vi.fn(),
-	getItem: vi.fn(),
-	getAllKeys: vi.fn(),
-	multiRemove: vi.fn()
-}));
+const { setItem, getItem, getAllKeys, multiRemove, removeItem } = vi.hoisted(
+	() => ({
+		setItem: vi.fn(),
+		getItem: vi.fn(),
+		getAllKeys: vi.fn(),
+		multiRemove: vi.fn(),
+		removeItem: vi.fn()
+	})
+);
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
-	default: { setItem, getItem, getAllKeys, multiRemove }
+	default: { setItem, getItem, getAllKeys, multiRemove, removeItem }
 }));
 
 const {
 	FEED_CACHE_TTL_MS,
+	FEED_STALE_PAINT_MS,
+	clearFeed,
 	clearFeedCache,
 	feedCacheKey,
 	isFresh,
+	primeFeedFromDisk,
 	readDiskFeed,
 	readMemoryFeed,
 	writeFeed
@@ -42,6 +48,7 @@ beforeEach(() => {
 	getItem.mockReset();
 	getAllKeys.mockReset().mockResolvedValue([]);
 	multiRemove.mockReset();
+	removeItem.mockReset().mockResolvedValue(undefined);
 });
 
 describe('feed cache keys', () => {
@@ -87,6 +94,16 @@ describe('memory layer', () => {
 	it('returns null for an unknown key', () => {
 		expect(readMemoryFeed('test:missing')).toBeNull();
 	});
+
+	it('can be read past the freshness window for a stale first paint', () => {
+		writeFeed('test:stale-paint', [item], null);
+		const later = Date.now() + FEED_CACHE_TTL_MS + 1;
+
+		expect(readMemoryFeed('test:stale-paint', later)).toBeNull();
+		expect(
+			readMemoryFeed('test:stale-paint', later, FEED_STALE_PAINT_MS)
+		).not.toBeNull();
+	});
 });
 
 describe('disk layer', () => {
@@ -109,6 +126,53 @@ describe('disk layer', () => {
 			JSON.stringify({ items: [item], nextCursor: null, savedAt: 0 })
 		);
 		expect(await readDiskFeed('test:disk')).toBeNull();
+	});
+
+	it('accepts an expired entry when a stale first paint asks for it', async () => {
+		getItem.mockResolvedValue(
+			JSON.stringify({
+				items: [item],
+				nextCursor: null,
+				savedAt: Date.now() - FEED_CACHE_TTL_MS - 1
+			})
+		);
+
+		expect(await readDiskFeed('test:disk', FEED_STALE_PAINT_MS)).not.toBeNull();
+	});
+});
+
+describe('clearing one page', () => {
+	it('drops it from memory and from disk', () => {
+		writeFeed('test:clear', [item], null);
+		expect(readMemoryFeed('test:clear')).not.toBeNull();
+
+		clearFeed('test:clear');
+
+		expect(readMemoryFeed('test:clear')).toBeNull();
+		expect(removeItem).toHaveBeenCalledWith('newzcrime.feed.v1:test:clear');
+	});
+});
+
+describe('priming before the first paint', () => {
+	it('moves a stored page into memory', async () => {
+		getItem.mockResolvedValue(
+			JSON.stringify({
+				items: [item],
+				nextCursor: 'cursor-2',
+				savedAt: Date.now()
+			})
+		);
+
+		expect(await primeFeedFromDisk('test:prime')).toBe(true);
+
+		const primed = readMemoryFeed('test:prime');
+		expect(primed?.items).toHaveLength(1);
+		expect(primed?.nextCursor).toBe('cursor-2');
+	});
+
+	it('reports when there is nothing to prime', async () => {
+		getItem.mockResolvedValue(null);
+		expect(await primeFeedFromDisk('test:prime-empty')).toBe(false);
 	});
 });
 

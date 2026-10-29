@@ -2,7 +2,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { NO_STORE, publicCache } from '../cacheControl';
+import {
+	NO_STORE,
+	pageCache,
+	publicCache,
+	skipConditionalGet,
+} from '../cacheControl';
 
 describe('publicCache', () => {
 	it('sets a public max-age in seconds', () => {
@@ -23,5 +28,33 @@ describe('NO_STORE', () => {
 	it('forbids caching', () => {
 		expect(NO_STORE).toContain('no-store');
 		expect(NO_STORE).toContain('max-age=0');
+	});
+});
+
+describe('pageCache', () => {
+	it('never stores an empty page', () => {
+		expect(pageCache(300, true)).toBe(NO_STORE);
+	});
+
+	it('caches a non-empty page normally', () => {
+		expect(pageCache(300, false)).toContain('max-age=300');
+	});
+});
+
+describe('skipConditionalGet', () => {
+	it('removes both validators', () => {
+		const req = {
+			headers: {
+				'if-none-match': 'W/"abc"',
+				'if-modified-since': 'Wed, 21 Oct 2026 07:28:00 GMT',
+				accept: 'application/json',
+			},
+		};
+
+		skipConditionalGet(req);
+
+		expect(req.headers).not.toHaveProperty('if-none-match');
+		expect(req.headers).not.toHaveProperty('if-modified-since');
+		expect(req.headers.accept).toBe('application/json');
 	});
 });

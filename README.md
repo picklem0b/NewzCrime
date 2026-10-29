@@ -11,21 +11,21 @@ and true-life shows, with background audio and lock-screen controls.
 
 | Area      | State                                                                    |
 | --------- | ------------------------------------------------------------------------ |
-| Ingestion | 10 live outlets and 6 podcast shows, fetched on a 15-minute schedule     |
+| Ingestion | 29 active sources: 10 outlets, 13 court divisions and 6 shows, run 2-hourly |
 | Database  | `sources` and `content_items`, with full-text and trigram search indexes |
 | API       | Feed, item, source, podcast, search and health endpoints under `/v1`     |
 | Cache     | Redis with an in-process fallback; feed and search invalidated on ingest |
 | Mobile    | Today, Discover, Podcasts and Library, with search and settings on top   |
+| First run | A one-time illustrated introduction that preloads the feed before Today   |
 
 Two publishers (Daily Maverick, News24) are seeded but switched off: their feeds
 refuse this host. Turn them on where they are reachable.
 
 ## Not built yet
 
-Accounts and syncing. Bookmarks and settings live on the device, and the app
-routes straight to the tabs. Everything else deferred — YouTube video, live
-streams, audiobooks and newsletters — is recorded in
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
+Accounts and syncing. Bookmarks and settings live on the device. Everything
+else deferred — YouTube video, live streams, audiobooks and newsletters — is
+recorded in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Repository layout
 
@@ -45,14 +45,22 @@ See [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md). Short version:
 ```bash
 pnpm install
 cp .env.example .env
-pnpm --filter @newzcrime/db migrate up   # schema and the starter sources
-pnpm --filter @newzcrime/worker ingest   # one ingest run
-pnpm dev:api                             # API on :4000
-pnpm dev:worker                          # scheduler and queue
-pnpm dev:mobile                          # Expo
+pnpm db:setup     # migrate, seed sources, report host and row counts
+pnpm ingest       # one ingest run
+pnpm db:verify    # confirm sources and items are present
+pnpm dev:api      # API on :4000
+pnpm dev:worker   # scheduler and queue
+pnpm dev:mobile   # Expo
 ```
 
-Postgres and Redis must be reachable at the addresses in `.env`.
+Postgres and Redis must be reachable at the addresses in `.env`. For Supabase,
+the two URLs are the transaction pooler (6543, used by the API) and the session
+pooler (5432, used by migrations and ingestion); [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+has the step-by-step.
+
+If the app shows "No stories here yet", run `pnpm db:verify`. It distinguishes
+an empty database from one the API cannot reach, and tells you which ingest
+command to run.
 
 ### Installing it on a phone
 

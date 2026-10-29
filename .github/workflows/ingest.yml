@@ -31,6 +31,18 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            # Failing here, with a named error, beats failing inside the worker
+            # with "Invalid worker environment": a missing secret is the
+            # common reason this job has never collected a story.
+            - name: Check the database secret
+              env:
+                  DATABASE_URL_DIRECT: ${{ secrets.DATABASE_URL_DIRECT }}
+              run: |
+                  if [ -z "$DATABASE_URL_DIRECT" ]; then
+                    echo "::error title=Missing DATABASE_URL_DIRECT::Add the Supabase direct connection string (port 5432) in Settings > Secrets and variables > Actions."
+                    exit 1
+                  fi
+
             - uses: pnpm/action-setup@v4
               with:
                   version: 9.12.0

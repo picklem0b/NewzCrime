@@ -13,6 +13,9 @@
     "dev:worker": "pnpm --filter @newzcrime/worker dev",
     "dev:mobile": "pnpm --filter ./apps/mobile start",
     "db:migrate": "pnpm --filter @newzcrime/db migrate",
+    "db:verify": "pnpm --filter @newzcrime/db verify",
+    "db:setup": "pnpm --filter @newzcrime/db migrate && pnpm --filter @newzcrime/db verify",
+    "ingest": "pnpm --filter @newzcrime/worker ingest",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

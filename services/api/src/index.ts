@@ -5,7 +5,10 @@
  * connections on shutdown.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { createCache } from '@newzcrime/cache';
 import { createDatabase } from '@newzcrime/db';
@@ -13,6 +16,13 @@ import { createDatabase } from '@newzcrime/db';
 import { createApp } from './app';
 import { loadApiConfig } from './config/env';
 import { createLogger } from './logger';
+
+// pnpm runs the workspace script from services/api, so the default
+// `dotenv/config` would look in the wrong directory. Load the root file the
+// setup guide tells the reader to edit; process env still wins over it.
+dotenv.config({
+  path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env'),
+});
 
 async function main(): Promise<void> {
   const config = loadApiConfig();

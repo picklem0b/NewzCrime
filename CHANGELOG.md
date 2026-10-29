@@ -11,6 +11,29 @@ EAS profile configuration, Kotlin pins, single-ABI trimming — is deliberately
 left out; the tags remain the complete record. Dates are omitted because the
 tags already order the work.
 
+## 1.16 — a first run that arrives ready
+
+**1.16.0** — The introduction, warm starts, and a database you can diagnose.
+
+- A first launch now opens on four illustrated cards: the news, podcasts, world
+  events and court rulings, each with the supplied artwork on a cream disc, six
+  floating icons and a caption. It is stored separately from the settings, so
+  it appears once and Skip is remembered too.
+- The feed and source directory are fetched while the introduction is on screen,
+  and the last page is moved from disk into memory before the first tab renders.
+  Today therefore paints stories instead of a skeleton, on the first run and on
+  every cold start after it.
+- An empty feed, source page or search result is sent with `Cache-Control:
+  no-store` and is cached server-side for only 15 seconds. The app used to hold
+  an empty page for five minutes (twenty more through `stale-while-revalidate`),
+  which made a freshly filled Supabase database look broken.
+- TLS is inferred for any non-local Postgres host, so a Supabase pooler URL works
+  without extra configuration. `pnpm db:verify` prints the host, TLS state,
+  migrations and row counts without revealing the password; `pnpm db:setup`
+  migrates, seeds and verifies in one step. The ingest workflow now fails with a
+  named error when `DATABASE_URL_DIRECT` is missing, which is the actual reason
+  the scheduled run never collected a story.
+
 ## 1.15 — more control, a faster read, and updates that install themselves
 
 **1.15.0** — Six settings sections, a rebuilt search, and in-app updates.

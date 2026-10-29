@@ -69,7 +69,11 @@ export async function listSourceItems(
     cursor: page.cursor,
     limit: page.limit,
   });
-  await deps.cache.set(key, result, CACHE_TTL.FEED);
+  await deps.cache.set(
+    key,
+    result,
+    result.items.length === 0 ? CACHE_TTL.EMPTY_PAGE : CACHE_TTL.FEED
+  );
 
   return result;
 }

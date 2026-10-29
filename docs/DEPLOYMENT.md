@@ -8,18 +8,44 @@ requires a credit card on the free tier.
 
 ## 1. Database
 
-Supabase is the primary database. Create a project, then take two connection
-strings from **Project settings → Database → Connection string**:
+Supabase is the primary database. Create a project (Frankfurt is the closest
+free region to South Africa), then open **Project settings → Database →
+Connection string → URI** and copy the two pooler strings:
 
-| Variable               | Port | Used by                          |
-| ---------------------- | ---- | -------------------------------- |
-| `DATABASE_URL`         | 6543 | The API (transaction pooler)     |
-| `DATABASE_URL_DIRECT`  | 5432 | Migrations, the worker, pg-boss  |
+| Variable               | Supabase pooler | Port | Used by                          |
+| ---------------------- | --------------- | ---- | -------------------------------- |
+| `DATABASE_URL`         | Transaction     | 6543 | The API (reads)                  |
+| `DATABASE_URL_DIRECT`  | Session         | 5432 | Migrations, ingestion, pg-boss   |
 
-The two are not interchangeable. pg-boss needs `LISTEN/NOTIFY`, which the
-transaction pooler does not support; using the pooled URL for the worker gives
-a queue that never runs. The API runs migrations at boot, so it also needs the
-direct URL.
+Append `?sslmode=require` if the copied string does not already carry it. The
+driver also turns TLS on for any non-local host, so Supabase works even when the
+parameter is missing, but keeping it explicit documents the requirement.
+
+Use the **session pooler** for the direct URL rather than `db.<ref>.supabase.co`:
+newer Supabase projects expose that host over IPv6 only, and neither GitHub
+runners nor some Node hosts have an IPv6 route. The session pooler is IPv4 and
+supports the `LISTEN/NOTIFY` that pg-boss needs.
+
+The two are not interchangeable. The transaction pooler does not hold a session,
+so pg-boss and migrations must use the session URL. The API runs migrations at
+boot, so it needs the direct URL too.
+
+### Prove the connection
+
+Before wiring Render or Actions, fill both URLs in `.env` and run from the
+repository root:
+
+```bash
+pnpm db:setup     # apply migrations, seed sources, print host and row counts
+pnpm ingest       # one ingest run against the same database
+pnpm db:verify    # sources > 0 and items > 0
+```
+
+`db:verify` never prints the password or the full URL. It reports the host,
+whether TLS is on, the latest migration and the row counts, which is the
+quickest way to tell an empty database from a database the app is not reaching.
+`pnpm db:verify --strict` exits non-zero when `content_items` is empty, so it can
+guard a deploy.
 
 ### Render Postgres as a fallback
 
@@ -60,6 +86,29 @@ Render background workers are paid-only, so ingestion runs on GitHub Actions
 - `PODCAST_INDEX_API_KEY` / `PODCAST_INDEX_API_SECRET` (optional)
 
 Run the workflow manually once after the first deploy to fill an empty database.
+The workflow now fails at a named "Check the database secret" step when
+`DATABASE_URL_DIRECT` is absent, instead of failing later inside the worker with
+an environment error.
+
+## 4b. When the app says "No stories here yet"
+
+Work through these in order; each one rules out a different layer.
+
+1. `curl https://<service>.onrender.com/health` — `"database": true` means the
+   API is connected. A `503` or `"database": false` is the API's pool, not the
+   app.
+2. `pnpm db:verify` against the same URL the API uses. `sources 0` means the
+   migrations never ran; `items 0` means ingestion never ran.
+3. Open **Actions → Ingest feeds**. If the run is red, read the failing step. If
+   it never ran, the schedule is only active on the default branch and the
+   `DATABASE_URL_DIRECT` secret must exist on that repository.
+4. Run the workflow manually. A successful run logs `inserted` counts and the
+   API's feed is non-empty on the next request.
+
+Empty pages are deliberately sent with `Cache-Control: no-store`. Before that
+change the app cached an empty page for five minutes and could keep showing it
+for another twenty through `stale-while-revalidate`, which made a freshly
+filled database look broken.
 
 ## 5. Android builds
 

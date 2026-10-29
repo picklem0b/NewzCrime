@@ -6,7 +6,10 @@
  * drains the queue before closing the pool.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { createCache } from '@newzcrime/cache';
 import { createDatabase } from '@newzcrime/db';
@@ -21,6 +24,11 @@ import {
   INGEST_ALL_QUEUE,
   INGEST_SOURCE_QUEUE,
 } from './queue/queue';
+
+// `pnpm --filter` runs this from services/worker; read the repository's .env.
+dotenv.config({
+  path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env'),
+});
 
 async function main(): Promise<void> {
   const config = loadWorkerConfig();

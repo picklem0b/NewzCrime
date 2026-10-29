@@ -26,6 +26,11 @@ isolated layout `@expo/metro-config` cannot find `expo-asset`, so the bundler
 fails before it starts. See
 [`DECISIONS.md`](DECISIONS.md) for the full reasoning.
 
+All three entrypoints read the repository-root `.env` explicitly, so a single
+file configures the API, the worker and the migrations even when pnpm runs them
+from `services/*`. Variables already set in the process environment take
+precedence.
+
 The defaults in `.env.example` point at the addresses used by
 `docker-compose.yml`. Two are easy to get wrong:
 
@@ -45,15 +50,18 @@ createuser --createdb newzcrime
 createdb --owner newzcrime newzcrime
 ```
 
-Then apply the schema and seed the starter sources:
+Then apply the schema, seed the starter sources and check the connection:
 
 ```bash
-pnpm --filter @newzcrime/db migrate up
+pnpm db:setup
 ```
 
 This creates `sources`, `content_items`, the search indexes and the pg-boss
-schema, then inserts the outlets and podcast shows listed in
-[`SOURCES.md`](SOURCES.md).
+schema, inserts the outlets and podcast shows listed in
+[`SOURCES.md`](SOURCES.md), then prints the host, TLS state, migration and row
+counts. On an empty database it names the failing layer rather than leaving the
+app to report "No stories here yet". Run `pnpm db:verify` on its own at any time;
+`pnpm db:verify --strict` exits non-zero while there are no items.
 
 ## Collect content
 
@@ -63,6 +71,11 @@ pnpm --filter @newzcrime/worker ingest
 
 Reads every active source once and exits. Pass a source id to ingest just one.
 A source that fails is reported and skipped; the run continues.
+
+`pnpm db:verify` after the first run should report `items` above zero. If it
+still reports zero, the feed fetch failed — SAFLII and several publishers answer
+datacentre addresses with a challenge, so a local network is the reliable way to
+test those adapters.
 
 ## Run
 

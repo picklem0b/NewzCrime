@@ -5,7 +5,7 @@ import { searchQuerySchema } from '../schemas/searchQuery.schema';
 import { search } from '../services/searchService';
 import type { ApiDependencies } from '../types';
 import { asyncHandler } from '../utils/asyncHandler';
-import { publicCache } from '../utils/cacheControl';
+import { pageCache, skipConditionalGet } from '../utils/cacheControl';
 
 /**
  * `/v1/search` — full-text search over stored items.
@@ -27,7 +27,10 @@ export function createSearchRouter(deps: ApiDependencies): Router {
         limit: input.limit,
       });
 
-      res.set('Cache-Control', publicCache(CACHE_TTL.SEARCH));
+      const isEmpty = page.items.length === 0;
+      if (isEmpty) skipConditionalGet(req);
+
+      res.set('Cache-Control', pageCache(CACHE_TTL.SEARCH, isEmpty));
       res.json(page);
     })
   );

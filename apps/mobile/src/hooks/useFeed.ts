@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { contentService } from '@/services/contentService';
 import {
+	FEED_STALE_PAINT_MS,
+	clearFeed,
 	feedCacheKey,
 	readDiskFeed,
 	readMemoryFeed,
@@ -23,11 +25,25 @@ export function useFeed({
 	topic,
 	includePodcasts = false
 }: UseFeedOptions): FeedResult {
-	const [items, setItems] = useState<ContentItem[]>([]);
-	const [state, setState] = useState<AsyncState<ContentItem[]>>({
-		status: 'loading'
-	});
-	const [cursor, setCursor] = useState<string | null>(null);
+	// Read the cache during the first render rather than in an effect. An effect
+	// runs after paint, which is one frame of skeleton even when a full page is
+	// already in memory from onboarding or the boot route.
+	const [initial] = useState(() =>
+		readMemoryFeed(
+			feedCacheKey(topic, includePodcasts),
+			Date.now(),
+			FEED_STALE_PAINT_MS
+		)
+	);
+	const [items, setItems] = useState<ContentItem[]>(initial?.items ?? []);
+	const [state, setState] = useState<AsyncState<ContentItem[]>>(
+		initial
+			? { status: 'success', data: initial.items }
+			: { status: 'loading' }
+	);
+	const [cursor, setCursor] = useState<string | null>(
+		initial?.nextCursor ?? null
+	);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [refreshFailed, setRefreshFailed] = useState(false);
@@ -50,7 +66,11 @@ export function useFeed({
 		} else {
 			// Paint the cached page first: it is already in memory on a tab
 			// switch, so Today appears without a skeleton and without a request.
-			const cached = readMemoryFeed(cacheKey);
+			const cached = readMemoryFeed(
+				cacheKey,
+				Date.now(),
+				FEED_STALE_PAINT_MS
+			);
 			if (cached) {
 				setItems(cached.items);
 				setCursor(cached.nextCursor);
@@ -77,7 +97,11 @@ export function useFeed({
 				setCursor(page.nextCursor);
 				setState({ status: 'success', data: page.items });
 				setIsRefreshing(false);
-				writeFeed(cacheKey, page.items, page.nextCursor);
+				if (page.items.length > 0) {
+					writeFeed(cacheKey, page.items, page.nextCursor);
+				} else {
+					clearFeed(cacheKey);
+				}
 			})
 			.catch(async (error: unknown) => {
 				if (generation.current !== current || controller.signal.aborted)
@@ -91,7 +115,7 @@ export function useFeed({
 				}
 
 				// A cold start with no network can still show the last page.
-				const cached = await readDiskFeed(cacheKey);
+				const cached = await readDiskFeed(cacheKey, FEED_STALE_PAINT_MS);
 				if (generation.current !== current) return;
 
 				if (cached) {

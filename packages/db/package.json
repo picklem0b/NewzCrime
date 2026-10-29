@@ -10,6 +10,7 @@
   },
   "scripts": {
     "migrate": "tsx scripts/migrate.ts",
+    "verify": "tsx scripts/verify.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"no lint configured\""

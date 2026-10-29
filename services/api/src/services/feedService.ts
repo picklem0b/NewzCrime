@@ -18,7 +18,11 @@ export async function getFeed(
   if (cached) return cached;
 
   const page = await listItems(deps.db, query);
-  await deps.cache.set(key, page, CACHE_TTL.FEED);
+  await deps.cache.set(
+    key,
+    page,
+    page.items.length === 0 ? CACHE_TTL.EMPTY_PAGE : CACHE_TTL.FEED
+  );
 
   return page;
 }

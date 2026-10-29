@@ -23,7 +23,11 @@ export async function search(
   if (cached) return cached;
 
   const page = await searchItems(deps.db, query);
-  await deps.cache.set(key, page, CACHE_TTL.SEARCH);
+  await deps.cache.set(
+    key,
+    page,
+    page.items.length === 0 ? CACHE_TTL.EMPTY_PAGE : CACHE_TTL.SEARCH
+  );
 
   return page;
 }

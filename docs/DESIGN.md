@@ -88,6 +88,22 @@ newest five with an image), three top stories, topic sections only when a topic
 has two or more stories, then the remainder as compact rows. Filtered topics
 show a flat list.
 
+## First run
+
+Four cards introduce the product once per installation: news, podcasts, world
+events and court rulings. The supplied illustrations have no background, so
+each sits on a paper disc (`onboardingTheme.paper`) over a three-stop gradient
+built from the brand accents — `#C34B00`, `#E58A3A`, `#D29922` — with a dark
+scrim behind the caption for contrast. Six Phosphor icons float around each
+disc at different sizes, speeds and depths; the motion respects the system and
+in-app reduced-motion settings. Skip and the primary action both complete the
+introduction, and the flag is stored separately from settings.
+
+The screen doubles as the app's warm-up: the feed and source directory are
+fetched while it is visible, and the boot route moves the last page from disk
+into memory before the first tab renders. Today should never show a skeleton on
+a launch that follows a completed introduction.
+
 ## Article page
 
 Headline, kicker (topic, Judgment or Episode), byline, publication date and
@@ -120,5 +136,11 @@ Phosphor, `*Icon` exports, regular when inactive and fill when active.
 
 `welcomeHero.png` and `authBackdrop.png` were used by screens that no longer
 exist. `splash.png`, `appIcon.png` and `adaptiveIcon.png` are still required;
-see `app.json`. Artwork rules: readability first, one visual language, no
+see `app.json`.
+
+The introduction uses `assets/onboarding/{guotln,ltpfa,guotleatp,vtlcr}.png`,
+rendered from the supplied SVGs at roughly 2× (the originals are kept in
+`assets/onboarding/source/`). They are transparent PNGs because the app ships
+`expo-image`, not an SVG runtime; the paper disc supplies the background the
+artwork does not have. Artwork rules: readability first, one visual language, no
 stock filler, both palettes considered.

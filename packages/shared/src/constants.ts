@@ -62,6 +62,12 @@ export const CACHE_TTL = {
   SOURCES: 3600,
   SEARCH: 120,
   PODCAST_FEED: 3600,
+  /**
+   * An empty page is cached only briefly. A cold database that has just been
+   * seeded by the ingester would otherwise keep serving "no stories" for the
+   * full feed TTL, which looks like a broken app rather than a quiet feed.
+   */
+  EMPTY_PAGE: 15,
 } as const;
 
 /**
@@ -74,7 +80,7 @@ export const CACHE_TTL = {
  * ships; `CHANGELOG.md` is the long-form record of the same history.
  */
 export const APP_RELEASE = {
-  latestVersion: '1.15.0',
+  latestVersion: '1.16.0',
   minimumVersion: '1.0.0',
   /**
    * Direct APK, not a page. The app downloads this itself and hands it to the
@@ -98,6 +104,15 @@ export const RELEASE_NOTES: ReadonlyArray<{
   version: string;
   highlights: ReadonlyArray<string>;
 }> = [
+  {
+    version: '1.16.0',
+    highlights: [
+      'A one-time illustrated introduction with the four supplied artworks',
+      'The feed and source directory preload during onboarding, so Today opens without a skeleton',
+      'Empty pages are no longer cached, so newly collected stories appear immediately',
+      'Clearer database checks and Supabase connection guidance',
+    ],
+  },
   {
     version: '1.15.0',
     highlights: [

@@ -10,7 +10,11 @@ import {
 } from '../services/sourceService';
 import type { ApiDependencies } from '../types';
 import { asyncHandler } from '../utils/asyncHandler';
-import { publicCache } from '../utils/cacheControl';
+import {
+  pageCache,
+  publicCache,
+  skipConditionalGet,
+} from '../utils/cacheControl';
 import { HttpError } from '../utils/httpError';
 
 const pageQuerySchema = z.object({
@@ -44,7 +48,10 @@ export function createSourceRouter(deps: ApiDependencies): Router {
 
       const result = await listSourceItems(deps, sourceId, page);
 
-      res.set('Cache-Control', publicCache(CACHE_TTL.FEED));
+      const isEmpty = result.items.length === 0;
+      if (isEmpty) skipConditionalGet(req);
+
+      res.set('Cache-Control', pageCache(CACHE_TTL.FEED, isEmpty));
       res.json(result);
     })
   );

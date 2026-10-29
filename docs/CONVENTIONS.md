@@ -129,6 +129,7 @@ components/     reusable UI, grouped by domain
 constants/      index.ts (barrel) · theme.ts · settings.ts
 feed/           constants.ts and layout.ts: feed topic options and hierarchy
 home/           HomeScreen.tsx
+onboarding/     OnboardingScreen, OnboardingArt, BootSplash, slides
 discover/       DiscoverScreen.tsx
 search/         SearchScreen.tsx
 podcasts/       PodcastsScreen.tsx

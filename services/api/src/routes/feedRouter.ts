@@ -5,7 +5,7 @@ import { feedQuerySchema, toItemTopic } from '../schemas/feedQuery.schema';
 import { getFeed } from '../services/feedService';
 import type { ApiDependencies } from '../types';
 import { asyncHandler } from '../utils/asyncHandler';
-import { publicCache } from '../utils/cacheControl';
+import { pageCache, skipConditionalGet } from '../utils/cacheControl';
 
 /**
  * `/v1/feed` — reverse-chronological feed of court, crime and news items.
@@ -28,7 +28,10 @@ export function createFeedRouter(deps: ApiDependencies): Router {
         includePodcasts: input.includePodcasts,
       });
 
-      res.set('Cache-Control', publicCache(CACHE_TTL.FEED));
+      const isEmpty = page.items.length === 0;
+      if (isEmpty) skipConditionalGet(req);
+
+      res.set('Cache-Control', pageCache(CACHE_TTL.FEED, isEmpty));
       res.json(page);
     })
   );
