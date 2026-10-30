@@ -9,6 +9,7 @@
 import type { SourceAdapter, WorkerConfig } from '../types';
 import { createRssAdapter } from './rssAdapter';
 import { createSafliiAdapter } from './safliiAdapter';
+import { createYoutubeAdapter } from './youtubeAdapter';
 
 export function createAdapters(config: WorkerConfig): SourceAdapter[] {
   return [
@@ -20,7 +21,11 @@ export function createAdapters(config: WorkerConfig): SourceAdapter[] {
       userAgent: config.userAgent,
       timeoutMs: config.fetchTimeoutMs,
     }),
+    createYoutubeAdapter({
+      userAgent: config.userAgent,
+      timeoutMs: config.fetchTimeoutMs,
+    }),
   ];
 }
 
-export { createRssAdapter, createSafliiAdapter };
+export { createRssAdapter, createSafliiAdapter, createYoutubeAdapter };

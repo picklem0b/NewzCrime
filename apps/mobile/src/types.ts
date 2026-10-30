@@ -4,7 +4,7 @@
  * in the matching `constants.ts`.
  */
 
-import type { ContentItem, Source } from '@newzcrime/shared';
+import type { ContentItem, Province, Source } from '@newzcrime/shared';
 
 /**
  * The single way loading state is represented in this app.
@@ -139,7 +139,27 @@ export type QuietHours = 'off' | 'night' | 'late';
 /** Release channel the update check follows. */
 export type UpdateChannel = 'stable' | 'beta';
 
-/** The whole persisted settings document — 49 keys across six sections. */
+/** The Watch rail the tab opens on. */
+export type WatchCategory =
+	| 'for_you'
+	| 'local'
+	| 'true_crime'
+	| 'courts'
+	| 'news';
+
+/** `all` keeps the national feed; a province narrows the local rail. */
+export type ProvinceFilter = 'all' | Province;
+
+/** Maximum reading measure for long-form article text. */
+export type ArticleWidth = 'narrow' | 'standard' | 'wide';
+
+/** Strength of the tap feedback the reader wants to feel. */
+export type HapticStrength = 'light' | 'medium' | 'strong';
+
+/** How aggressively remote thumbnails are downscaled. */
+export type ThumbnailQuality = 'standard' | 'low';
+
+/** The whole persisted settings document — 61 keys across eleven sections. */
 export interface SettingsState {
 	// Appearance
 	colourMode: ColourMode;
@@ -167,10 +187,32 @@ export interface SettingsState {
 	textAlign: TextAlign;
 	readingProgress: boolean;
 	keepAwake: boolean;
+	articleWidth: ArticleWidth;
+	sepiaReading: boolean;
+
+	// Playback
 	playbackSpeed: PlaybackSpeed;
 	skipInterval: SkipInterval;
 	resumePlayback: boolean;
 	autoplayNext: boolean;
+	videoAutoplayNext: boolean;
+	videoStartMuted: boolean;
+	captionsOn: boolean;
+
+	// Watch
+	watchStartTab: WatchCategory;
+	showVideoDescriptions: boolean;
+
+	// Local
+	province: ProvinceFilter;
+	localFirst: boolean;
+
+	// Accessibility
+	largeTouchTargets: boolean;
+	hapticStrength: HapticStrength;
+
+	// Storage
+	thumbnailQuality: ThumbnailQuality;
 
 	// Notifications
 	breakingNews: boolean;
@@ -234,6 +276,16 @@ export interface SettingsStore {
 /* ================================================================== *
  * Saved items
  * ================================================================== */
+
+/** The sources the reader follows, implemented in `src/stores/following.store.ts`. */
+export interface FollowingStore {
+	sourceIds: string[];
+	isHydrated: boolean;
+	isFollowing: (sourceId: string) => boolean;
+	toggle: (sourceId: string) => void;
+	clear: () => void;
+	hydrate: () => Promise<void>;
+}
 
 /** The bookmarks store, implemented in `src/stores/saved.store.ts`. */
 export interface SavedStore {
@@ -320,8 +372,23 @@ export interface SourcesStore {
 	load: (force?: boolean) => Promise<void>;
 }
 
-/** Result filters on the Search tab. */
-export type SearchScope = 'all' | 'stories' | 'judgments' | 'episodes';
+/** Result filters on the Search screen. */
+export type SearchScope =
+	| 'all'
+	| 'videos'
+	| 'channels'
+	| 'podcasts'
+	| 'stories'
+	| 'judgments';
+
+/** Date window applied by advanced search. */
+export type SearchDateRange = 'any' | 'day' | 'week' | 'month' | 'year';
+
+/** Result ordering offered by advanced search. */
+export type SearchSort = 'newest' | 'oldest';
+
+/** Topic filter in the advanced panel; `undefined` means every topic. */
+export type SearchTopic = 'court' | 'crime' | 'politics' | 'world' | undefined;
 
 /** Search terms the reader has submitted, newest first. */
 export interface RecentSearchesStore {

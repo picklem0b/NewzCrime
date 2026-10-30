@@ -10,7 +10,12 @@ import {
 } from 'phosphor-react-native';
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+	ScrollView,
+	StyleSheet,
+	View,
+	useWindowDimensions
+} from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import ErrorState from '@/components/feedback/ErrorState';
@@ -23,12 +28,16 @@ import Button from '@/components/ui/Button';
 import Column from '@/components/ui/Column';
 import IconButton from '@/components/ui/IconButton';
 import SectionHeader from '@/components/ui/SectionHeader';
+import Skeleton from '@/components/ui/Skeleton';
 import Text from '@/components/ui/Text';
 import Thumb from '@/components/ui/Thumb';
+import YouTubePlayer from '@/components/youtube/YouTubePlayer';
 import { useItem } from '@/hooks/useItem';
+import { useItemContent } from '@/hooks/useItemContent';
 import { useLayout } from '@/hooks/useLayout';
 import { usePlayer } from '@/hooks/usePlayer';
 import { useReaderType } from '@/hooks/useReaderType';
+import { useSetting } from '@/hooks/useSettings';
 import { useSpeech, useStopSpeechOnUnmount } from '@/hooks/useSpeech';
 import { useSourceIndex, useSourceItems } from '@/hooks/useSources';
 import { useTextScale } from '@/hooks/useTextScale';
@@ -36,12 +45,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { textVariants } from '@/constants/theme';
 import { openExternalUrl, shareItem } from '@/utils/external';
 import { formatRelativeTime } from '@/utils/time';
+import { youtubeVideoId } from '@/utils/youtube';
 
 export default function ItemDetailScreen(): ReactElement {
 	const { itemId } = useLocalSearchParams<{ itemId?: string }>();
 	const router = useRouter();
-	const { colour, layout, spacing } = useTheme();
+	const { colour, layout, spacing, scheme } = useTheme();
 	const { gutter, isWide } = useLayout();
+	const { width: windowWidth } = useWindowDimensions();
 
 	const { state, reload } = useItem(itemId ?? '');
 	const sourceIndex = useSourceIndex();
@@ -49,6 +60,8 @@ export default function ItemDetailScreen(): ReactElement {
 	const player = usePlayer();
 	const reader = useReaderType();
 	const textScale = useTextScale();
+	const articleWidth = useSetting('articleWidth');
+	const sepiaReading = useSetting('sepiaReading');
 	const [scrollProgress, setScrollProgress] = useState(0);
 
 	useStopSpeechOnUnmount();
@@ -100,6 +113,35 @@ export default function ItemDetailScreen(): ReactElement {
 		player.status === 'playing';
 	const isJudgment = item?.type === 'court_ruling';
 	const isEpisode = Boolean(item?.audioUrl);
+	const videoId = item ? youtubeVideoId(item.url) : null;
+	const isVideo = videoId !== null;
+	const isTextItem =
+		item !== null &&
+		!isEpisode &&
+		!isVideo &&
+		item.type !== 'podcast_episode';
+
+	const fullText = useItemContent(item?.id ?? '', isTextItem);
+	const body = fullText.state.status === 'success' ? fullText.state.data.body : null;
+	const hasFullText = Boolean(body);
+
+	const articleMeasure = {
+		narrow: 560,
+		standard: layout.readingMax,
+		wide: 820
+	}[articleWidth];
+	const readingMax = articleMeasure + gutter * 2;
+	const readingInk = sepiaReading
+		? scheme === 'dark'
+			? '#F3E7D6'
+			: '#2B2118'
+		: colour.text;
+	const sepiaSurface = scheme === 'dark' ? '#2A211A' : '#F6EDE0';
+	const embedWidth = Math.max(
+		0,
+		Math.min(windowWidth, readingMax) - gutter * 2
+	);
+	const embedHeight = Math.round((embedWidth * 9) / 16);
 
 	const goBack = () => {
 		if (router.canGoBack()) {
@@ -113,9 +155,31 @@ export default function ItemDetailScreen(): ReactElement {
 		if (item) void openExternalUrl(item.url);
 	};
 
-	const readLabel = isJudgment
-		? `Read the full judgment${sourceName ? ` on ${sourceName}` : ''}`
-		: `Read the full story${sourceName ? ` on ${sourceName}` : ''}`;
+	const readLabel = isVideo
+		? 'Watch on YouTube'
+		: isEpisode
+			? 'Open episode page'
+			: hasFullText
+				? `Open original${sourceName ? ` on ${sourceName}` : ''}`
+				: isJudgment
+					? `Read the full judgment${sourceName ? ` on ${sourceName}` : ''}`
+					: `Read the full story${sourceName ? ` on ${sourceName}` : ''}`;
+
+	const listenLabel = isSpeaking
+		? 'Stop reading'
+		: isVideo
+			? 'Listen to the description'
+			: 'Listen to article';
+
+	const paragraphs = body
+		? body
+				.split(/\n{2,}/)
+				.map((paragraph) => paragraph.trim())
+				.filter((paragraph) => paragraph.length > 0)
+		: [];
+
+	/** The embed, the audio player or the inline text is the primary action. */
+	const openInBrowserIsSecondary = isEpisode || isVideo || hasFullText;
 
 	return (
 		<Screen showPlayer>
@@ -186,8 +250,8 @@ export default function ItemDetailScreen(): ReactElement {
 					scrollEventThrottle={32}
 					contentContainerStyle={{ paddingBottom: spacing.xxxl }}
 				>
-					<Column max={layout.readingMax + gutter * 2}>
-						{item.imageUrl ? (
+					<Column max={readingMax}>
+						{item.imageUrl && !isVideo ? (
 							<Thumb
 								uri={item.imageUrl}
 								label={sourceName}
@@ -246,6 +310,22 @@ export default function ItemDetailScreen(): ReactElement {
 								</Text>
 							) : null}
 
+							{videoId ? (
+								<View
+									style={{ gap: spacing.xs, marginTop: spacing.sm }}
+								>
+									<YouTubePlayer
+										videoId={videoId}
+										width={embedWidth}
+										height={embedHeight}
+									/>
+									<Text variant='meta' tone='faint'>
+										The video plays inside the app while this screen is open.
+										YouTube does not allow background or audio-only playback.
+									</Text>
+								</View>
+							) : null}
+
 							<View
 								style={{
 									gap: spacing.sm,
@@ -287,13 +367,13 @@ export default function ItemDetailScreen(): ReactElement {
 								<Button
 									label={readLabel}
 									variant={
-										isEpisode ? 'secondary' : 'primary'
+										openInBrowserIsSecondary ? 'secondary' : 'primary'
 									}
 									icon={
 										<ArrowSquareOutIcon
 											size={20}
 											color={
-												isEpisode
+												openInBrowserIsSecondary
 													? colour.text
 													: colour.onPrimary
 											}
@@ -304,11 +384,7 @@ export default function ItemDetailScreen(): ReactElement {
 
 								{!isEpisode ? (
 									<Button
-										label={
-											isSpeaking
-												? 'Stop reading'
-												: 'Listen to summary'
-										}
+										label={listenLabel}
 										variant='quiet'
 										icon={
 											isSpeaking ? (
@@ -328,10 +404,9 @@ export default function ItemDetailScreen(): ReactElement {
 											if (isSpeaking) {
 												stop();
 												return;
-											}
-											speak(
+											}											speak(
 												item.id,
-												`${item.title}. ${item.excerpt ?? ''}`
+												`${item.title}. ${body ?? item.excerpt ?? ''}`
 											);
 										}}
 									/>
@@ -343,11 +418,99 @@ export default function ItemDetailScreen(): ReactElement {
 								tone='faint'
 								style={{ marginTop: spacing.sm }}
 							>
-								{isJudgment
-									? 'Judgments are published by the court. NewzCrime links to the full text and does not summarise or interpret it.'
-									: `Summary and link from ${sourceName ?? 'the publisher'}. Statements are the publisher's reporting; read the full story for context and sourcing.`}
+								{isVideo
+									? `Video from ${sourceName ?? 'the publisher'}. YouTube does not permit background playback, so the video pauses when you leave this screen.`
+									: isJudgment
+										? hasFullText
+											? `Full judgment from ${sourceName ?? 'the court'}, reproduced for readers. The judgment is the court's text; NewzCrime does not interpret it.`
+											: 'Judgments are published by the court. NewzCrime links to the full text and does not summarise or interpret it.'
+										: hasFullText
+											? `Full text from ${sourceName ?? 'the publisher'}, reproduced for readers. Copyright remains with the publisher.`
+											: `Summary and link from ${sourceName ?? 'the publisher'}. The publisher did not provide a readable full text; open the original for the complete story.`}
 							</Text>
 						</View>
+
+						{isTextItem && fullText.state.status !== 'idle' ? (
+							<View>
+								<SectionHeader
+									title={isJudgment ? 'Full judgment' : 'Full story'}
+								/>
+
+								<View
+									style={{
+										paddingHorizontal: sepiaReading ? spacing.lg : gutter,
+										paddingTop: spacing.sm,
+										paddingBottom: sepiaReading ? spacing.lg : 0,
+										marginHorizontal: sepiaReading ? gutter : 0,
+										borderRadius: sepiaReading ? 12 : 0,
+										backgroundColor: sepiaReading ? sepiaSurface : 'transparent',
+										gap: spacing.md
+									}}
+								>
+									{fullText.state.status === 'loading' ? (
+										<View style={{ gap: spacing.md, paddingVertical: spacing.xs }}>
+											<Skeleton width='100%' height={14} rounded='sm' />
+											<Skeleton width='96%' height={14} rounded='sm' />
+											<Skeleton width='99%' height={14} rounded='sm' />
+											<Skeleton width='72%' height={14} rounded='sm' />
+										</View>
+									) : null}
+
+									{fullText.state.status === 'error' ? (
+										<>
+											<Text variant='small' tone='muted'>
+												The full text could not be loaded just now.
+											</Text>
+											<Button
+												label='Try again'
+												variant='quiet'
+												onPress={fullText.reload}
+											/>
+										</>
+									) : null}
+
+									{fullText.state.status === 'success' && !hasFullText ? (
+										<Text variant='small' tone='muted'>
+											The publisher's page did not provide a readable full
+											text. It may be paywalled, login-only or blocked. Open the
+											original for the complete story.
+										</Text>
+									) : null}
+
+									{paragraphs.map((paragraph, index) => (
+										<Text
+											key={`${index}-${paragraph.slice(0, 24)}`}
+											variant='body'
+											selectable
+											style={{
+												textAlign: reader.textAlign,
+												color: readingInk,
+												lineHeight:
+													textVariants.body.lineHeight *
+													textScale *
+													reader.lineHeight
+											}}
+										>
+											{paragraph}
+										</Text>
+									))}
+
+									{hasFullText ? (
+										<Button
+											label={`Open original${sourceName ? ` on ${sourceName}` : ''}`}
+											variant='quiet'
+											icon={
+												<ArrowSquareOutIcon
+													size={18}
+													color={colour.accent}
+												/>
+											}
+											onPress={openSource}
+										/>
+									) : null}
+								</View>
+							</View>
+						) : null}
 
 						{relatedItems.length > 0 ? (
 							<View style={{ marginTop: spacing.xl }}>

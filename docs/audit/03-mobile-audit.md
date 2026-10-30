@@ -8,8 +8,8 @@ was turned off in 1.14.2, because the audio player cannot load under it.
 
 | Item | Value | Assessment |
 |---|---|---|
-| `version` | `1.14.5` | matches `APP_RELEASE.latestVersion` and `RELEASE_NOTES[0]` |
-| `android.versionCode` | `4` | increments per build |
+| `version` | `1.15.15` | matches `APP_RELEASE.latestVersion` and `RELEASE_NOTES[0]` |
+| `android.versionCode` | `8` | increments per build |
 | `android.package` | `za.co.newzcrime.app` | stable |
 | `newArchEnabled` | `false` | the player cannot load under the New Architecture |
 | `userInterfaceStyle` | `automatic` | paired with the theme hook |

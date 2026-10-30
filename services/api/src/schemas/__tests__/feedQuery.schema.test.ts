@@ -66,6 +66,25 @@ describe('feedQuerySchema', () => {
   it('rejects an includePodcasts value that is neither flag', () => {
     expect(() => feedQuerySchema.parse({ includePodcasts: 'yes' })).toThrowError();
   });
+
+  it('parses followed sources and the includeVideos flag', () => {
+    const parsed = feedQuerySchema.parse({
+      sourceIds:
+        '11111111-1111-1111-1111-111111111111,22222222-2222-2222-2222-222222222222',
+      includeVideos: '1',
+    });
+
+    expect(parsed.sourceIds).toHaveLength(2);
+    expect(parsed.includeVideos).toBe(true);
+  });
+
+  it('treats an empty sourceIds list as no filter', () => {
+    expect(feedQuerySchema.parse({ sourceIds: ' , ' }).sourceIds).toBeUndefined();
+  });
+
+  it('rejects a malformed followed-source id', () => {
+    expect(() => feedQuerySchema.parse({ sourceIds: 'nope' })).toThrowError();
+  });
 });
 
 describe('toFeedQuery', () => {

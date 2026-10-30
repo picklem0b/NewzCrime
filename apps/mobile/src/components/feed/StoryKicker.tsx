@@ -1,5 +1,9 @@
 import type { ContentItem } from '@newzcrime/shared';
-import { MicrophoneIcon, ScalesIcon } from 'phosphor-react-native';
+import {
+	MicrophoneIcon,
+	PlayCircleIcon,
+	ScalesIcon
+} from 'phosphor-react-native';
 import type { ReactElement } from 'react';
 
 import Badge from '@/components/ui/Badge';
@@ -21,6 +25,22 @@ export function StoryKicker({ item }: StoryKickerProps): ReactElement | null {
 				tone='accent'
 				icon={
 					<ScalesIcon size={14} color={colour.accent} weight='bold' />
+				}
+			/>
+		);
+	}
+
+	if (item.type === 'video') {
+		return (
+			<Badge
+				label='Video'
+				tone='accent'
+				icon={
+					<PlayCircleIcon
+						size={14}
+						color={colour.accent}
+						weight='fill'
+					/>
 				}
 			/>
 		);

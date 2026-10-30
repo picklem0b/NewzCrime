@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
+import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/hooks/useTheme';
 
 export interface IconButtonProps {
@@ -18,7 +19,8 @@ export function IconButton({
 	selected = false,
 	disabled = false
 }: IconButtonProps): ReactElement {
-	const { colour, layout, radius } = useTheme();
+	const { colour, radius } = useTheme();
+	const { touch } = useLayout();
 
 	return (
 		<Pressable
@@ -30,8 +32,8 @@ export function IconButton({
 			style={({ pressed }) => [
 				styles.base,
 				{
-					width: layout.touch,
-					height: layout.touch,
+					width: touch,
+					height: touch,
 					borderRadius: radius.pill,
 					backgroundColor: pressed ? colour.pressed : 'transparent',
 					opacity: disabled ? 0.45 : 1

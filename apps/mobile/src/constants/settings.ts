@@ -9,14 +9,17 @@
 
 import type {
 	AccentColour,
+	ArticleWidth,
 	BriefingTime,
 	ColourMode,
 	DefaultTopic,
 	Density,
 	FontStyle,
+	HapticStrength,
 	LineHeight,
 	Option,
 	PlaybackSpeed,
+	ProvinceFilter,
 	QuietHours,
 	RefreshInterval,
 	SettingsKey,
@@ -25,7 +28,9 @@ import type {
 	StartTab,
 	TextAlign,
 	TextSize,
-	UpdateChannel
+	ThumbnailQuality,
+	UpdateChannel,
+	WatchCategory
 } from '@/types';
 
 /* ===== Appearance ===== */
@@ -57,6 +62,12 @@ export const fontStyles: readonly Option<FontStyle>[] = [
 export const densities: readonly Option<Density>[] = [
 	{ id: 'comfortable', label: 'Comfortable' },
 	{ id: 'compact', label: 'Compact' }
+];
+
+export const articleWidths: readonly Option<ArticleWidth>[] = [
+	{ id: 'narrow', label: 'Narrow' },
+	{ id: 'standard', label: 'Standard' },
+	{ id: 'wide', label: 'Wide' }
 ];
 
 /* ===== General ===== */
@@ -106,6 +117,46 @@ export const skipIntervals: readonly Option<SkipInterval>[] = [
 	{ id: '10', label: '10 s' },
 	{ id: '15', label: '15 s' },
 	{ id: '30', label: '30 s' }
+];
+
+/* ===== Watch ===== */
+
+export const watchStartTabs: readonly Option<WatchCategory>[] = [
+	{ id: 'for_you', label: 'For you' },
+	{ id: 'local', label: 'Local' },
+	{ id: 'true_crime', label: 'True crime' },
+	{ id: 'courts', label: 'Courts' },
+	{ id: 'news', label: 'News' }
+];
+
+/* ===== Local ===== */
+
+export const provinceFilters: readonly Option<ProvinceFilter>[] = [
+	{ id: 'all', label: 'All provinces' },
+	{ id: 'gauteng', label: 'Gauteng' },
+	{ id: 'western_cape', label: 'Western Cape' },
+	{ id: 'kwazulu_natal', label: 'KwaZulu-Natal' },
+	{ id: 'eastern_cape', label: 'Eastern Cape' },
+	{ id: 'free_state', label: 'Free State' },
+	{ id: 'limpopo', label: 'Limpopo' },
+	{ id: 'mpumalanga', label: 'Mpumalanga' },
+	{ id: 'north_west', label: 'North West' },
+	{ id: 'northern_cape', label: 'Northern Cape' }
+];
+
+/* ===== Accessibility ===== */
+
+export const hapticStrengths: readonly Option<HapticStrength>[] = [
+	{ id: 'light', label: 'Light' },
+	{ id: 'medium', label: 'Medium' },
+	{ id: 'strong', label: 'Strong' }
+];
+
+/* ===== Storage ===== */
+
+export const thumbnailQualities: readonly Option<ThumbnailQuality>[] = [
+	{ id: 'standard', label: 'Standard' },
+	{ id: 'low', label: 'Data saver' }
 ];
 
 /* ===== Notifications ===== */
@@ -159,10 +210,32 @@ export const defaultSettings: SettingsState = {
 	textAlign: 'left',
 	readingProgress: true,
 	keepAwake: false,
+	articleWidth: 'standard',
+	sepiaReading: false,
+
+	// Playback
 	playbackSpeed: '1',
 	skipInterval: '15',
 	resumePlayback: true,
 	autoplayNext: false,
+	videoAutoplayNext: true,
+	videoStartMuted: false,
+	captionsOn: false,
+
+	// Watch
+	watchStartTab: 'for_you',
+	showVideoDescriptions: true,
+
+	// Local
+	province: 'all',
+	localFirst: true,
+
+	// Accessibility
+	largeTouchTargets: false,
+	hapticStrength: 'light',
+
+	// Storage
+	thumbnailQuality: 'standard',
 
 	// Notifications
 	breakingNews: true,
@@ -216,11 +289,16 @@ export const choiceOptions = {
 	refreshInterval: idsOf(refreshIntervals),
 	lineHeight: idsOf(lineHeights),
 	textAlign: idsOf(textAligns),
+	articleWidth: idsOf(articleWidths),
 	playbackSpeed: idsOf(playbackSpeeds),
 	skipInterval: idsOf(skipIntervals),
 	briefingTime: idsOf(briefingTimes),
 	quietHours: idsOf(quietHoursOptions),
-	updateChannel: idsOf(updateChannels)
+	updateChannel: idsOf(updateChannels),
+	watchStartTab: idsOf(watchStartTabs),
+	province: idsOf(provinceFilters),
+	hapticStrength: idsOf(hapticStrengths),
+	thumbnailQuality: idsOf(thumbnailQualities)
 } satisfies Partial<Record<SettingsKey, readonly string[]>>;
 
 /** How many keys the document holds; pinned by the store tests. */

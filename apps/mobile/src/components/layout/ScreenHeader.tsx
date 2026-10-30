@@ -22,15 +22,15 @@ export function ScreenHeader({
 	actions,
 	large = false
 }: ScreenHeaderProps): ReactElement {
-	const { colour, layout, spacing } = useTheme();
-	const { gutter } = useLayout();
+	const { colour, spacing } = useTheme();
+	const { gutter, touch } = useLayout();
 
 	return (
 		<View
 			style={[
 				styles.container,
 				{
-					minHeight: layout.touch + spacing.sm,
+					minHeight: touch + spacing.sm,
 					paddingLeft: onBack ? spacing.xs : gutter,
 					paddingRight: actions ? spacing.xs : gutter,
 					paddingTop: large ? spacing.md : 0,

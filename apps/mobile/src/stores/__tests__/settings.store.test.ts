@@ -229,7 +229,7 @@ describe('stored values are checked, not trusted', () => {
 	});
 });
 
-describe('the full 49-key document', () => {
+describe('the full 61-key document', () => {
 	/** The keys added by the 1.15 settings release, seven per section. */
 	const NEW_KEYS = {
 		Appearance: [
@@ -288,8 +288,31 @@ describe('the full 49-key document', () => {
 		]
 	} as const;
 
-	it('holds 49 keys: seven existing plus 42 new', () => {
-		expect(SETTINGS_KEY_COUNT).toBe(49);
+	it('holds 61 keys: 49 existing plus 12 customisation keys', () => {
+		expect(SETTINGS_KEY_COUNT).toBe(61);
+	});
+
+	/** The twelve keys added with the Watch tab and the five new sections. */
+	const CUSTOMISATION_KEYS = [
+		'articleWidth',
+		'sepiaReading',
+		'videoAutoplayNext',
+		'videoStartMuted',
+		'captionsOn',
+		'watchStartTab',
+		'showVideoDescriptions',
+		'province',
+		'localFirst',
+		'largeTouchTargets',
+		'hapticStrength',
+		'thumbnailQuality'
+	] as const;
+
+	it('adds exactly twelve customisation settings', () => {
+		expect(CUSTOMISATION_KEYS).toHaveLength(12);
+		for (const key of CUSTOMISATION_KEYS) {
+			expect(defaultSettings, key).toHaveProperty(key);
+		}
 	});
 
 	it('adds exactly seven settings to each of the six sections', () => {
@@ -324,7 +347,12 @@ describe('the full 49-key document', () => {
 			['skipInterval', '45'],
 			['briefingTime', '05:00'],
 			['quietHours', 'always'],
-			['updateChannel', 'nightly']
+			['updateChannel', 'nightly'],
+			['articleWidth', 'full'],
+			['watchStartTab', 'sports'],
+			['province', 'atlantis'],
+			['hapticStrength', 'extreme'],
+			['thumbnailQuality', 'ultra']
 		] as const;
 
 		for (const [key, value] of cases) {
@@ -364,7 +392,14 @@ describe('the full 49-key document', () => {
 			'showReleaseNotes',
 			'includeDiagnostics',
 			'showBuildInfo',
-			'confirmBeforeInstall'
+			'confirmBeforeInstall',
+			'sepiaReading',
+			'videoAutoplayNext',
+			'videoStartMuted',
+			'captionsOn',
+			'showVideoDescriptions',
+			'localFirst',
+			'largeTouchTargets'
 		] as const;
 
 		for (const key of toggles) {
@@ -387,6 +422,11 @@ describe('the full 49-key document', () => {
 			briefingTime: '18:00',
 			quietHours: 'night',
 			updateChannel: 'beta',
+			articleWidth: 'wide',
+			watchStartTab: 'courts',
+			province: 'kwazulu_natal',
+			hapticStrength: 'strong',
+			thumbnailQuality: 'low',
 			highContrast: true,
 			dataSaver: true
 		} as never);
@@ -404,6 +444,11 @@ describe('the full 49-key document', () => {
 			briefingTime: '18:00',
 			quietHours: 'night',
 			updateChannel: 'beta',
+			articleWidth: 'wide',
+			watchStartTab: 'courts',
+			province: 'kwazulu_natal',
+			hapticStrength: 'strong',
+			thumbnailQuality: 'low',
 			highContrast: true,
 			dataSaver: true
 		});

@@ -6,6 +6,7 @@ import type { DimensionValue } from 'react-native';
 
 import { useSetting } from '@/hooks/useSettings';
 import { useTheme } from '@/hooks/useTheme';
+import { thumbnailUri } from '@/utils/images';
 
 import Text from './Text';
 
@@ -29,8 +30,10 @@ export function Thumb({
 	const { colour, radius } = useTheme();
 	const offlineImages = useSetting('offlineImages');
 	const dataSaver = useSetting('dataSaver');
+	const quality = useSetting('thumbnailQuality');
+	const sourceUri = thumbnailUri(uri, quality);
 	const [failedUri, setFailedUri] = useState<string | null>(null);
-	const failed = failedUri === uri;
+	const failed = failedUri === sourceUri;
 
 	const box = {
 		width,
@@ -60,15 +63,15 @@ export function Thumb({
 
 	return (
 		<Image
-			source={{ uri }}
-			recyclingKey={uri}
+			source={{ uri: sourceUri }}
+			recyclingKey={sourceUri}
 			accessible={false}
 			style={box}
 			contentFit='cover'
 			cachePolicy={offlineImages ? 'memory-disk' : 'memory'}
 			allowDownscaling={dataSaver}
 			transition={dataSaver ? 0 : 120}
-			onError={() => setFailedUri(uri)}
+			onError={() => setFailedUri(sourceUri)}
 		/>
 	);
 }

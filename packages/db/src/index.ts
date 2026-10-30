@@ -8,20 +8,26 @@ export {
   listActiveSources,
   listSources,
   mapSource,
+  searchSources,
   upsertSource,
 } from './repositories/sourceRepository';
 export type { UpsertSourceInput } from './repositories/sourceRepository';
 
 export {
   countItems,
+  getItemBody,
   getItemById,
   listItems,
   listItemsBySource,
   mapContentItem,
+  saveItemBody,
   searchItems,
   upsertItems,
 } from './repositories/contentItemRepository';
-export type { UpsertItemsResult } from './repositories/contentItemRepository';
+export type {
+  StoredItemBody,
+  UpsertItemsResult,
+} from './repositories/contentItemRepository';
 
 export type {
   ContentItemInput,
@@ -29,7 +35,9 @@ export type {
   Cursor,
   Database,
   DatabaseConfig,
+  ItemBodyRow,
   ItemPageQuery,
   SearchQuery,
+  SearchSort,
   SourceRow,
 } from './types';

@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import Text from '@/components/ui/Text';
 import { formatRelativeTime, isFresh } from '@/utils/time';
+import { formatViewCount } from '@/utils/watch';
 
 import SaveButton from './SaveButton';
 
@@ -15,12 +16,14 @@ export interface StoryMetaProps {
 export function StoryMeta({ item, sourceName }: StoryMetaProps): ReactElement {
 	const time = formatRelativeTime(item.publishedAt);
 	const fresh = isFresh(item.publishedAt);
+	const views = item.type === 'video' ? formatViewCount(item.viewCount) : null;
 
 	return (
 		<View style={styles.row}>
 			<View style={styles.text}>
 				<Text variant='meta' tone='faint' numberOfLines={1}>
 					{sourceName ? `${sourceName}${time ? ' · ' : ''}` : ''}
+					{views ? `${views}${time ? ' · ' : ''}` : ''}
 					{time ? (
 						<Text variant='meta' tone={fresh ? 'accent' : 'faint'}>
 							{time}

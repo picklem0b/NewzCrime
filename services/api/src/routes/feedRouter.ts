@@ -10,7 +10,7 @@ import { pageCache, skipConditionalGet } from '../utils/cacheControl';
 /**
  * `/v1/feed` — reverse-chronological feed of court, crime and news items.
  *
- * Query: `?topic= &sourceId= &includePodcasts=1 &cursor= &limit=`
+ * Query: `?topic= &sourceId= &sourceIds=a,b &includePodcasts=1 &includeVideos=1 &cursor= &limit=`
  */
 export function createFeedRouter(deps: ApiDependencies): Router {
   const router = Router();
@@ -25,7 +25,9 @@ export function createFeedRouter(deps: ApiDependencies): Router {
         limit: input.limit,
         topic: toItemTopic(input.topic),
         sourceId: input.sourceId,
+        sourceIds: input.sourceIds,
         includePodcasts: input.includePodcasts,
+        includeVideos: input.includeVideos,
       });
 
       const isEmpty = page.items.length === 0;

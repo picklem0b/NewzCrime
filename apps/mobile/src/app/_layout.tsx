@@ -11,6 +11,7 @@ import UpdateGate from '@/components/update/UpdateGate';
 import { useTheme } from '@/hooks/useTheme';
 import { playbackService } from '@/services/playbackService';
 import { loadPlayer } from '@/services/playerService';
+import { useFollowingStore } from '@/stores/following.store';
 import { useSavedStore } from '@/stores/saved.store';
 import { useRecentSearchesStore } from '@/stores/search.store';
 import { useSettingsStore } from '@/stores/settings.store';
@@ -31,6 +32,7 @@ export default function RootLayout(): ReactElement {
 	const { colour, scheme } = useTheme();
 	const hydrateSettings = useSettingsStore(state => state.hydrate);
 	const hydrateSaved = useSavedStore(state => state.hydrate);
+	const hydrateFollowing = useFollowingStore(state => state.hydrate);
 	const hydrateRecents = useRecentSearchesStore(state => state.hydrate);
 	const hydrateUpdates = useUpdateStore(state => state.hydrate);
 
@@ -49,9 +51,16 @@ export default function RootLayout(): ReactElement {
 	useEffect(() => {
 		void hydrateSettings();
 		void hydrateSaved();
+		void hydrateFollowing();
 		void hydrateRecents();
 		void hydrateUpdates();
-	}, [hydrateSettings, hydrateSaved, hydrateRecents, hydrateUpdates]);
+	}, [
+		hydrateSettings,
+		hydrateSaved,
+		hydrateFollowing,
+		hydrateRecents,
+		hydrateUpdates
+	]);
 
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>

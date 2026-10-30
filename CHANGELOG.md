@@ -11,53 +11,114 @@ EAS profile configuration, Kotlin pins, single-ABI trimming — is deliberately
 left out; the tags remain the complete record. Dates are omitted because the
 tags already order the work.
 
-## 1.16 — a first run that arrives ready
+## 1.15 — search, follow, watch, and a first run that arrives ready
 
-**1.16.0** — The introduction, warm starts, and a database you can diagnose.
+The largest phase: every feature, fix and chore below is its own step, numbered
+in the 1.15.x line. There is no 1.15.0 — the phase opens at 1.15.1 and each
+shipped change advances the last number.
 
-- A first launch now opens on four illustrated cards: the news, podcasts, world
-  events and court rulings, each with the supplied artwork on a cream disc, six
-  floating icons and a caption. It is stored separately from the settings, so
-  it appears once and Skip is remembered too.
+**1.15.15** — Discover, grouped by medium.
+
+- Discover is grouped into newsletters and sites, YouTube channels and podcasts,
+  with the same follow control everywhere. Every source carries its province and
+  shelf, so local and court channels are findable rather than buried in a list.
+  Chips filter the screen to Following, YouTube, Podcasts or Newsletters.
+- Following sits above the shelves: the newest stories, episodes and videos from
+  every followed source render first, with a Manage shortcut.
+- Every workspace and the app report version 1.15.15, and the release metadata,
+  Android version code and changelog name the same release.
+
+**1.15.14** — Follow any outlet, channel or show.
+
+- The follow list is stored on the device. Watch gains a "From channels you
+  follow" rail and Discover shows the latest items from every followed source.
+- Search can restrict itself to followed sources, and each source row, channel
+  tile and show tile carries the same follow control.
+
+**1.15.13** — A search that finds channels, podcasts and video.
+
+- Search returns video rows with thumbnails, channel results and podcast shows
+  alongside stories and judgments, and the idle screen can jump straight to
+  Watch, Podcasts, Discover and the rest of the app.
+
+**1.15.12** — Advanced search.
+
+- Filters narrow by topic, publication date, order and followed-only, with a
+  single reset. Every option is one tap; there is no modal and no Apply button.
+
+**1.15.11** — The Watch tab.
+
+- Watch is a fifth tab: a lead video, live rails, true-crime files, courts and
+  commissions, provincial updates and the channels behind them. The player lives
+  on the detail screen with an Up next playlist, counts, the description and the
+  original YouTube link. Nothing autoplays.
+
+**1.15.10** — YouTube channels ingest.
+
+- Watch sources are seeded with their province and shelf, and a YouTube adapter
+  turns each channel's uploads into normalised items with thumbnails and counts.
+
+**1.15.9** — A database you can diagnose.
+
+- TLS is inferred for any non-local Postgres host, so a Supabase pooler URL works
+  without extra configuration. `pnpm db:verify` prints the host, TLS state,
+  migrations and row counts without revealing the password; `pnpm db:setup`
+  migrates, seeds and verifies in one step. The ingest workflow fails with a
+  named error when `DATABASE_URL_DIRECT` is missing.
+
+**1.15.8** — An empty page is not kept.
+
+- An empty feed, source page or search result is sent with `Cache-Control:
+  no-store` and cached server-side for only 15 seconds, so a freshly filled
+  database no longer looks broken for five minutes.
+
+**1.15.7** — A first run that arrives ready.
+
 - The feed and source directory are fetched while the introduction is on screen,
   and the last page is moved from disk into memory before the first tab renders.
   Today therefore paints stories instead of a skeleton, on the first run and on
   every cold start after it.
-- An empty feed, source page or search result is sent with `Cache-Control:
-  no-store` and is cached server-side for only 15 seconds. The app used to hold
-  an empty page for five minutes (twenty more through `stale-while-revalidate`),
-  which made a freshly filled Supabase database look broken.
-- TLS is inferred for any non-local Postgres host, so a Supabase pooler URL works
-  without extra configuration. `pnpm db:verify` prints the host, TLS state,
-  migrations and row counts without revealing the password; `pnpm db:setup`
-  migrates, seeds and verifies in one step. The ingest workflow now fails with a
-  named error when `DATABASE_URL_DIRECT` is missing, which is the actual reason
-  the scheduled run never collected a story.
 
-## 1.15 — more control, a faster read, and updates that install themselves
+**1.15.6** — The introduction.
 
-**1.15.0** — Six settings sections, a rebuilt search, and in-app updates.
+- A first launch opens on four illustrated cards: the news, podcasts, world
+  events and court rulings, each with the supplied artwork on a cream disc, six
+  floating icons and a caption. It is stored separately from the settings, so it
+  appears once and Skip is remembered too.
 
-- Settings grows from 7 to 49 values: 42 new ones, seven in each of Appearance,
-  General and About, plus three new sections — Reading & audio, Notifications,
-  and Data & privacy. Accent colour, headline face, density, quiet hours, text
-  alignment, playback speed and the rest are applied immediately and validated
-  on read, so a stored value from an older build cannot reach a component.
-- The update button now downloads the APK and then asks whether to install it,
-  with a banner when a build is waiting and a notification when alerts are
-  allowed. "Later" snoozes that version for a day. The release URL is a direct
-  APK, produced by the new Android build workflow rather than EAS.
-- Search has the same back header as Settings, an animated field and results,
-  recent searches as a list, suggested queries and the outlet directory.
-  Search history can be turned off, and turning it off clears what was stored.
+**1.15.5** — CI and scheduled ingestion.
+
+- CI typechecks and tests every workspace, ingestion runs on a schedule from
+  GitHub Actions (the Render worker is paid-only), and the API deploys with
+  Supabase as the primary database and Render Postgres as a documented fallback.
+
+**1.15.4** — Today survives a tab switch and a cold start.
+
 - Today caches its page in memory and on disk, so a tab switch is instant and a
   cold start with no network shows the last page instead of an error. The API
   sends `stale-while-revalidate`, keeps a five-connection pool and recycles
   keep-alive connections, which is what the free instance can sustain.
-- CI typechecks and tests every workspace, ingestion runs on a schedule from
-  GitHub Actions (the Render worker is paid-only), and the API deploys with
-  Supabase as the primary database and Render Postgres as a documented
-  fallback.
+
+**1.15.3** — Updates install themselves.
+
+- The update button downloads the APK and then asks whether to install it, with
+  a banner when a build is waiting and a notification when alerts are allowed.
+  "Later" snoozes that version for a day. The release URL is a direct APK,
+  produced by the new Android build workflow rather than EAS.
+
+**1.15.2** — More control over how the app reads.
+
+- Settings grows from 7 to 49 values across Appearance, General, Reading &
+  audio, Notifications, Data & privacy and About. Accent colour, headline face,
+  density, quiet hours, text alignment, playback speed and the rest are applied
+  immediately and validated on read, so a stored value from an older build cannot
+  reach a component.
+
+**1.15.1** — Search, rebuilt.
+
+- Search has the same back header as Settings, an animated field, recent
+  searches as a list, suggested queries and the outlet directory. Search history
+  can be turned off, and turning it off clears what was stored.
 
 ## 1.14 — an app that installs itself, plays, and keeps search within reach
 

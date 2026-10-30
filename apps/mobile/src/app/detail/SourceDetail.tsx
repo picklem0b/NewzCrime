@@ -11,6 +11,8 @@ import StoryRow from '@/components/feed/StoryRow';
 import Screen from '@/components/layout/Screen';
 import ScreenHeader from '@/components/layout/ScreenHeader';
 import EpisodeRow from '@/components/podcast/EpisodeRow';
+import FollowButton from '@/components/source/FollowButton';
+import VideoRow from '@/components/watch/VideoRow';
 import Column from '@/components/ui/Column';
 import IconButton from '@/components/ui/IconButton';
 import Text from '@/components/ui/Text';
@@ -32,14 +34,24 @@ export default function SourceDetailScreen(): ReactElement {
 
 	const sourceData = source.status === 'success' ? source.data : null;
 	const isPodcast = sourceData?.contentType === 'podcast_episode';
+	const isVideoChannel = sourceData?.contentType === 'video';
 	const list = items.status === 'success' ? items.data.items : [];
 	const playable = list.filter(item => item.audioUrl);
 
-	const openItem = (item: ContentItem) =>
+	const openItem = (item: ContentItem) => {
+		if (item.type === 'video') {
+			router.push({
+				pathname: '/watch/VideoDetail',
+				params: { itemId: item.id, sourceId: item.sourceId }
+			});
+			return;
+		}
+
 		router.push({
 			pathname: '/detail/ItemDetail',
 			params: { itemId: item.id }
 		});
+	};
 
 	const goBack = () => {
 		if (router.canGoBack()) {
@@ -55,19 +67,26 @@ export default function SourceDetailScreen(): ReactElement {
 				title={sourceData?.name ?? 'Source'}
 				onBack={goBack}
 				actions={
-					sourceData?.siteUrl ? (
-						<IconButton
-							label={`Open ${sourceData.name} website`}
-							onPress={() => {
-								void openExternalUrl(sourceData.siteUrl ?? '');
-							}}
-							icon={
-								<ArrowSquareOutIcon
-									size={22}
-									color={colour.text}
+					sourceData ? (
+						<>
+							<FollowButton sourceId={sourceData.id} compact />
+							{sourceData.siteUrl ? (
+								<IconButton
+									label={`Open ${sourceData.name} website`}
+									onPress={() => {
+										void openExternalUrl(
+											sourceData.siteUrl ?? ''
+										);
+									}}
+									icon={
+										<ArrowSquareOutIcon
+											size={22}
+											color={colour.text}
+										/>
+									}
 								/>
-							}
-						/>
+							) : null}
+						</>
 					) : undefined
 				}
 			/>
@@ -116,7 +135,14 @@ export default function SourceDetailScreen(): ReactElement {
 					) : null}
 
 					{list.map(item =>
-						isPodcast ? (
+						isVideoChannel ? (
+							<VideoRow
+								key={item.id}
+								item={item}
+								sourceName={sourceData?.name}
+								onPress={() => openItem(item)}
+							/>
+						) : isPodcast ? (
 							<EpisodeRow
 								key={item.id}
 								episode={item}

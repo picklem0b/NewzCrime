@@ -11,15 +11,15 @@ import {
 
 describe('apkFileName', () => {
 	it('names the build after its version', () => {
-		expect(apkFileName('1.15.0')).toBe('newzcrime-1.15.0.apk');
+		expect(apkFileName('1.15.15')).toBe('newzcrime-1.15.15.apk');
 	});
 
 	it('strips characters that do not belong in a file name', () => {
-		expect(apkFileName('1.15.0 beta/2')).toBe('newzcrime-1.15.0-beta-2.apk');
+		expect(apkFileName('1.15.15 beta/2')).toBe('newzcrime-1.15.15-beta-2.apk');
 	});
 
 	it('trims surrounding whitespace', () => {
-		expect(apkFileName(' 1.15.0 ')).toBe('newzcrime-1.15.0.apk');
+		expect(apkFileName(' 1.15.15 ')).toBe('newzcrime-1.15.15.apk');
 	});
 });
 

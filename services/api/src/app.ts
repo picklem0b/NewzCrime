@@ -26,6 +26,7 @@ import { createItemRouter } from './routes/itemRouter';
 import { createPodcastRouter } from './routes/podcastRouter';
 import { createSearchRouter } from './routes/searchRouter';
 import { createSourceRouter } from './routes/sourceRouter';
+import { createVideoRouter } from './routes/videoRouter';
 import type { ApiDependencies } from './types';
 
 export function createApp(deps: ApiDependencies): Express {
@@ -70,6 +71,7 @@ export function createApp(deps: ApiDependencies): Express {
   app.use('/v1/items', createItemRouter(deps));
   app.use('/v1/sources', createSourceRouter(deps));
   app.use('/v1/podcasts', createPodcastRouter(deps));
+  app.use('/v1/videos', createVideoRouter(deps));
   app.use('/v1/search', createSearchRouter(deps));
 
   app.use(notFoundMiddleware);

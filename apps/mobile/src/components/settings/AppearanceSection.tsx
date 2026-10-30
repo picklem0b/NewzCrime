@@ -74,18 +74,6 @@ export function AppearanceSection(): ReactElement {
 				description='Hides artwork in lists to save data and screen space'
 				value={draft.showThumbnails}
 				onChange={value => apply('showThumbnails', value)}
-			/>
-			<ToggleRow
-				label='High contrast'
-				description='Stronger borders and muted text'
-				value={draft.highContrast}
-				onChange={value => apply('highContrast', value)}
-			/>
-			<ToggleRow
-				label='Reduce motion'
-				description='Turns off transitions and press animations'
-				value={draft.reduceMotion}
-				onChange={value => apply('reduceMotion', value)}
 				last
 			/>
 			<View

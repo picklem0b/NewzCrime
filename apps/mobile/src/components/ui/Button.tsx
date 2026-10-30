@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/hooks/useTheme';
 
 import Text from './Text';
@@ -27,6 +28,7 @@ export function Button({
 	loading = false
 }: ButtonProps): ReactElement {
 	const { colour, radius, spacing } = useTheme();
+	const { touch } = useLayout();
 	const isInactive = disabled || loading;
 
 	const tone =
@@ -46,6 +48,7 @@ export function Button({
 			style={({ pressed }) => [
 				styles.base,
 				{
+					minHeight: Math.max(48, touch),
 					borderRadius: radius.lg,
 					paddingHorizontal: spacing.xl,
 					alignSelf: fullWidth ? 'stretch' : 'center',
@@ -85,9 +88,8 @@ export function Button({
 
 const styles = StyleSheet.create({
 	base: {
-        minHeight: 48,
         alignItems: 'center',
-        justifyContent: 'center' 
+        justifyContent: 'center'
     },
 	content: {
         flexDirection: 'row',

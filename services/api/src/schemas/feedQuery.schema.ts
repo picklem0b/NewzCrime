@@ -21,10 +21,26 @@ const booleanFlag = z
   .enum(['1', '0', 'true', 'false'])
   .transform((value) => value === '1' || value === 'true');
 
+/** `?sourceIds=a,b,c` — one page from several followed sources. */
+const sourceIdList = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (!value) return undefined;
+    const ids = value
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+    return ids.length > 0 ? ids : undefined;
+  })
+  .pipe(z.array(z.string().uuid()).max(50).optional());
+
 export const feedQuerySchema = z.object({
   topic: z.enum(topicValues).default(TOPIC.ALL),
   sourceId: z.string().uuid().optional(),
+  sourceIds: sourceIdList,
   includePodcasts: booleanFlag.optional(),
+  includeVideos: booleanFlag.optional(),
   cursor: z.string().min(1).optional(),
   limit: z.coerce
     .number()
@@ -41,7 +57,9 @@ export function toFeedQuery(input: FeedQueryInput): FeedQuery {
   return {
     topic: input.topic,
     sourceId: input.sourceId,
+    sourceIds: input.sourceIds,
     includePodcasts: input.includePodcasts ?? false,
+    includeVideos: input.includeVideos ?? false,
     cursor: input.cursor,
     limit: input.limit,
   };

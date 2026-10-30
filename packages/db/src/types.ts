@@ -13,6 +13,8 @@ import type {
   ContentType,
   ItemTopic,
   NormalizedItem,
+  Province,
+  SourceCategory,
   SourceType,
 } from '@newzcrime/shared';
 
@@ -60,6 +62,8 @@ export interface SourceRow extends QueryResultRow {
   site_url: string | null;
   logo_url: string | null;
   description: string | null;
+  province: Province | null;
+  category: SourceCategory | null;
   is_active: boolean;
   created_at: Date;
 }
@@ -78,7 +82,15 @@ export interface ContentItemRow extends QueryResultRow {
   audio_url: string | null;
   author: string | null;
   published_at: Date;
+  view_count: string | null;
+  like_count: number | null;
   created_at: Date;
+}
+
+/** The cached body columns of `content_items`, read separately from the feed. */
+export interface ItemBodyRow extends QueryResultRow {
+  body: string | null;
+  body_fetched_at: Date | null;
 }
 
 /** Cursor page request shared by the item list queries. */
@@ -87,14 +99,33 @@ export interface ItemPageQuery {
   limit: number;
   topic?: ItemTopic | undefined;
   sourceId?: string | undefined;
+  /** Several sources at once, for the following shelf. */
+  sourceIds?: string[] | undefined;
   includePodcasts?: boolean | undefined;
+  /** Exact content type, for the Watch shelf. */
+  contentType?: ContentType | undefined;
+  /** Home excludes video; the Watch endpoint opts back in. */
+  includeVideos?: boolean | undefined;
 }
 
-/** Full-text search request. */
+/** Ordering for search results. */
+export type SearchSort = 'newest' | 'oldest';
+
+/** Full-text search request, with the advanced filters the app exposes. */
 export interface SearchQuery {
   query: string;
   cursor?: string | undefined;
   limit: number;
+  type?: ContentType | undefined;
+  topic?: ItemTopic | undefined;
+  sourceId?: string | undefined;
+  /** Restrict to several followed sources. */
+  sourceIds?: string[] | undefined;
+  /** ISO timestamp; results published before this are excluded. */
+  from?: string | undefined;
+  /** ISO timestamp; results published after this are excluded. */
+  to?: string | undefined;
+  sort?: SearchSort | undefined;
 }
 
 /** Opaque pagination cursor, decoded for the `WHERE` clause. */

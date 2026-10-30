@@ -1,20 +1,43 @@
 import { CACHE_TTL } from '@newzcrime/shared';
 import { Router } from 'express';
 
-import { searchQuerySchema } from '../schemas/searchQuery.schema';
-import { search } from '../services/searchService';
+import {
+  searchQuerySchema,
+  sourceSearchQuerySchema,
+} from '../schemas/searchQuery.schema';
+import { search, searchDirectory } from '../services/searchService';
 import type { ApiDependencies } from '../types';
 import { asyncHandler } from '../utils/asyncHandler';
-import { pageCache, skipConditionalGet } from '../utils/cacheControl';
+import { pageCache, publicCache, skipConditionalGet } from '../utils/cacheControl';
 
 /**
  * `/v1/search` — full-text search over stored items.
+ *
+ * `/v1/search/sources` — the matching rows in the directory, so a query can
+ * find a channel or podcast whose name never appears in an item title.
  *
  * Search runs against the local database and does not proxy third-party search
  * APIs, whose quotas are shared across all users.
  */
 export function createSearchRouter(deps: ApiDependencies): Router {
   const router = Router();
+
+  // Registered before the item search so the path is explicit and cannot be
+  // mistaken for a query parameter in a future refactor.
+  router.get(
+    '/sources',
+    asyncHandler(async (req, res) => {
+      const input = sourceSearchQuerySchema.parse(req.query);
+      const sources = await searchDirectory(deps, input.q, input.limit);
+
+      if (sources.length === 0) skipConditionalGet(req);
+      res.set(
+        'Cache-Control',
+        publicCache(sources.length === 0 ? CACHE_TTL.EMPTY_PAGE : CACHE_TTL.SOURCES)
+      );
+      res.json(sources);
+    })
+  );
 
   router.get(
     '/',
@@ -25,6 +48,13 @@ export function createSearchRouter(deps: ApiDependencies): Router {
         query: input.q,
         cursor: input.cursor,
         limit: input.limit,
+        type: input.type,
+        topic: input.topic,
+        sourceId: input.sourceId,
+        sourceIds: input.sourceIds,
+        from: input.from,
+        to: input.to,
+        sort: input.sort,
       });
 
       const isEmpty = page.items.length === 0;

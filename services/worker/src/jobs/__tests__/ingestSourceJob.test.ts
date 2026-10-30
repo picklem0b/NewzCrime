@@ -39,6 +39,8 @@ const source = (overrides: Partial<Source> = {}): Source => ({
   siteUrl: null,
   logoUrl: null,
   description: null,
+  province: null,
+  category: null,
   createdAt: '2023-01-01T00:00:00.000Z',
   ...overrides,
 });

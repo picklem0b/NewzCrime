@@ -64,11 +64,20 @@ export default function SavedScreen(): ReactElement {
 	);
 	const queue = items.filter(isEpisode);
 
-	const openItem = (item: ContentItem) =>
+	const openItem = (item: ContentItem) => {
+		if (item.type === 'video') {
+			router.push({
+				pathname: '/watch/VideoDetail',
+				params: { itemId: item.id, sourceId: item.sourceId }
+			});
+			return;
+		}
+
 		router.push({
 			pathname: '/detail/ItemDetail',
 			params: { itemId: item.id }
 		});
+	};
 
 	return (
 		<TabScreen>

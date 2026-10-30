@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import Text from '@/components/ui/Text';
+import { useLayout } from '@/hooks/useLayout';
 import { useTheme } from '@/hooks/useTheme';
 import type { Option } from '@/types';
 
@@ -53,6 +54,7 @@ export function SettingRow({
 	last = false
 }: SettingRowProps): ReactElement {
 	const { colour, spacing } = useTheme();
+	const { touch } = useLayout();
 
 	return (
 		<Pressable
@@ -63,7 +65,7 @@ export function SettingRow({
 			style={({ pressed }) => [
 				styles.row,
 				{
-					minHeight: 56,
+					minHeight: touch + 12,
 					paddingHorizontal: spacing.lg,
 					paddingVertical: spacing.md,
 					gap: spacing.md,
@@ -110,6 +112,7 @@ export function ToggleRow({
 	last = false
 }: ToggleRowProps): ReactElement {
 	const { colour, spacing } = useTheme();
+	const { touch } = useLayout();
 
 	return (
 		<Pressable
@@ -121,7 +124,7 @@ export function ToggleRow({
 			style={({ pressed }) => [
 				styles.row,
 				{
-					minHeight: 56,
+					minHeight: touch + 12,
 					paddingHorizontal: spacing.lg,
 					paddingVertical: spacing.md,
 					gap: spacing.md,
@@ -170,6 +173,7 @@ export function ChoiceRow<TId extends string>({
 	last = false
 }: ChoiceRowProps<TId>): ReactElement {
 	const { colour, radius, spacing } = useTheme();
+	const { touch } = useLayout();
 
 	return (
 		<View
@@ -216,6 +220,7 @@ export function ChoiceRow<TId extends string>({
 							style={[
 								styles.segment,
 								{
+									minHeight: Math.max(40, touch - 4),
 									borderRadius: radius.md - 2,
 									backgroundColor: isActive
 										? colour.accent

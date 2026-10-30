@@ -40,6 +40,17 @@ export async function listPodcastShows(deps: ServiceDeps): Promise<Source[]> {
   );
 }
 
+/**
+ * Video channels, for the Watch tab.
+ *
+ * Filtered from the same cached directory as every other source, so opening
+ * Watch does not add another database query to a cold request.
+ */
+export async function listVideoChannels(deps: ServiceDeps): Promise<Source[]> {
+  const sources = await loadSources(deps);
+  return sources.filter((source) => source.contentType === CONTENT_TYPE.VIDEO);
+}
+
 export async function getSource(
   deps: ServiceDeps,
   sourceId: string

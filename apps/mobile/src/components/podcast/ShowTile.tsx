@@ -3,6 +3,7 @@ import { MicrophoneIcon } from 'phosphor-react-native';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 
+import FollowButton from '@/components/source/FollowButton';
 import Text from '@/components/ui/Text';
 import Thumb from '@/components/ui/Thumb';
 import { useTheme } from '@/hooks/useTheme';
@@ -13,63 +14,70 @@ export interface ShowTileProps {
 	show: Source;
 	selected: boolean;
 	onPress: () => void;
+	/** Podcasts playlists follow in place; search rails can opt out. */
+	showFollow?: boolean;
 }
 
 export function ShowTile({
 	show,
 	selected,
-	onPress
+	onPress,
+	showFollow = true
 }: ShowTileProps): ReactElement {
 	const { colour, radius, spacing } = useTheme();
 
 	return (
-		<Pressable
-			accessibilityRole='button'
-			accessibilityLabel={show.name}
-			accessibilityState={{ selected }}
-			onPress={onPress}
-			style={{ width: SHOW_TILE_SIZE, gap: spacing.sm }}
-		>
-			<View
-				style={{
-					padding: 3,
-					borderRadius: radius.md + 3,
-					borderWidth: 2,
-					borderColor: selected ? colour.accent : 'transparent'
-				}}
+		<View style={{ width: SHOW_TILE_SIZE, gap: spacing.xs }}>
+			<Pressable
+				accessibilityRole='button'
+				accessibilityLabel={show.name}
+				accessibilityState={{ selected }}
+				onPress={onPress}
+				style={{ gap: spacing.sm }}
 			>
-				{show.logoUrl ? (
-					<Thumb
-						uri={show.logoUrl}
-						label={show.name}
-						width={SHOW_TILE_SIZE - 10}
-						aspectRatio={1}
-					/>
-				) : (
-					<View
-						style={{
-							width: SHOW_TILE_SIZE - 10,
-							aspectRatio: 1,
-							borderRadius: radius.md,
-							backgroundColor: colour.surfaceRaised,
-							alignItems: 'center',
-							justifyContent: 'center'
-						}}
-					>
-						<MicrophoneIcon size={32} color={colour.textFaint} />
-					</View>
-				)}
-			</View>
+				<View
+					style={{
+						padding: 3,
+						borderRadius: radius.md + 3,
+						borderWidth: 2,
+						borderColor: selected ? colour.accent : 'transparent'
+					}}
+				>
+					{show.logoUrl ? (
+						<Thumb
+							uri={show.logoUrl}
+							label={show.name}
+							width={SHOW_TILE_SIZE - 10}
+							aspectRatio={1}
+						/>
+					) : (
+						<View
+							style={{
+								width: SHOW_TILE_SIZE - 10,
+								aspectRatio: 1,
+								borderRadius: radius.md,
+								backgroundColor: colour.surfaceRaised,
+								alignItems: 'center',
+								justifyContent: 'center'
+							}}
+						>
+							<MicrophoneIcon size={32} color={colour.textFaint} />
+						</View>
+					)}
+				</View>
 
-			<Text
-				variant='small'
-				tone={selected ? 'accent' : 'default'}
-				numberOfLines={2}
-				style={{ fontWeight: '600' }}
-			>
-				{show.name}
-			</Text>
-		</Pressable>
+				<Text
+					variant='small'
+					tone={selected ? 'accent' : 'default'}
+					numberOfLines={2}
+					style={{ fontWeight: '600' }}
+				>
+					{show.name}
+				</Text>
+			</Pressable>
+
+			{showFollow ? <FollowButton sourceId={show.id} compact /> : null}
+		</View>
 	);
 }
 

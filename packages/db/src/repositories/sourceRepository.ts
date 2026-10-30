@@ -18,13 +18,15 @@ export function mapSource(row: SourceRow): Source {
     siteUrl: row.site_url,
     logoUrl: row.logo_url,
     description: row.description,
+    province: row.province,
+    category: row.category,
     createdAt: row.created_at.toISOString(),
   };
 }
 
 const SELECT_COLUMNS = `
   id, name, type, content_type, feed_url, site_url, logo_url,
-  description, is_active, created_at
+  description, province, category, is_active, created_at
 `;
 
 export async function listSources(db: Database): Promise<Source[]> {
@@ -39,6 +41,37 @@ export async function listActiveSources(db: Database): Promise<Source[]> {
   const result = await db.query<SourceRow>(
     `SELECT ${SELECT_COLUMNS} FROM sources WHERE is_active ORDER BY name ASC`
   );
+  return result.rows.map(mapSource);
+}
+
+/**
+ * Directory search over source names and descriptions.
+ *
+ * This is deliberately separate from item search: channel and show names are
+ * not stored on every item, so they would otherwise never match a query.
+ * Videos sort ahead of podcasts and articles so a search for "news" surfaces
+ * the channels a reader can actually watch.
+ */
+export async function searchSources(
+  db: Database,
+  term: string,
+  limit: number
+): Promise<Source[]> {
+  const result = await db.query<SourceRow>(
+    `SELECT ${SELECT_COLUMNS} FROM sources
+     WHERE name ILIKE '%' || $1 || '%'
+       OR coalesce(description, '') ILIKE '%' || $1 || '%'
+     ORDER BY
+       CASE content_type
+         WHEN 'video' THEN 0
+         WHEN 'podcast_episode' THEN 1
+         ELSE 2
+       END,
+       name ASC
+     LIMIT $2`,
+    [term, limit]
+  );
+
   return result.rows.map(mapSource);
 }
 
@@ -61,6 +94,8 @@ export interface UpsertSourceInput {
   siteUrl?: string | null;
   logoUrl?: string | null;
   description?: string | null;
+  province?: Source['province'];
+  category?: Source['category'];
 }
 
 /** Add or refresh a source. Re-running with the same `feed_url` is a no-op. */
@@ -69,15 +104,18 @@ export async function upsertSource(
   input: UpsertSourceInput
 ): Promise<Source> {
   const result = await db.query<SourceRow>(
-    `INSERT INTO sources (name, type, content_type, feed_url, site_url, logo_url, description)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO sources
+       (name, type, content_type, feed_url, site_url, logo_url, description, province, category)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      ON CONFLICT (feed_url) DO UPDATE SET
        name = EXCLUDED.name,
        type = EXCLUDED.type,
        content_type = EXCLUDED.content_type,
        site_url = COALESCE(EXCLUDED.site_url, sources.site_url),
        logo_url = COALESCE(EXCLUDED.logo_url, sources.logo_url),
-       description = COALESCE(EXCLUDED.description, sources.description)
+       description = COALESCE(EXCLUDED.description, sources.description),
+       province = COALESCE(EXCLUDED.province, sources.province),
+       category = COALESCE(EXCLUDED.category, sources.category)
      RETURNING ${SELECT_COLUMNS}`,
     [
       input.name,
@@ -87,6 +125,8 @@ export async function upsertSource(
       input.siteUrl ?? null,
       input.logoUrl ?? null,
       input.description ?? null,
+      input.province ?? null,
+      input.category ?? null,
     ]
   );
 

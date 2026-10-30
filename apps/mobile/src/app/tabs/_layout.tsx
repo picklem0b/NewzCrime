@@ -3,7 +3,8 @@ import {
 	BookmarkSimpleIcon,
 	CompassIcon,
 	MicrophoneIcon,
-	NewspaperIcon
+	NewspaperIcon,
+	PlayCircleIcon
 } from 'phosphor-react-native';
 import type { ReactElement } from 'react';
 import { StyleSheet } from 'react-native';
@@ -11,12 +12,14 @@ import { StyleSheet } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 
 /**
- * The four content tabs.
+ * The five content tabs.
  *
- * Search and Settings are not here: both live in the top bar that every tab
- * renders, so they are one tap away without occupying a seat. A file in this
- * directory becomes a tab whether or not it is declared, which is why the
- * routes they used to have are gone rather than hidden.
+ * Watch sits beside Today rather than inside it: video is a different way to
+ * consume the same beat, and a shelf deserves a tab. Search and Settings are
+ * not here: both live in the top bar that every tab renders, so they are one
+ * tap away without occupying a seat. A file in this directory becomes a tab
+ * whether or not it is declared, which is why the routes they used to have are
+ * gone rather than hidden.
  */
 export default function TabsLayout(): ReactElement {
 	const { colour } = useTheme();
@@ -41,6 +44,19 @@ export default function TabsLayout(): ReactElement {
 					title: 'Today',
 					tabBarIcon: ({ color, size, focused }) => (
 						<NewspaperIcon
+							size={size}
+							color={color}
+							weight={focused ? 'fill' : 'regular'}
+						/>
+					)
+				}}
+			/>
+			<Tabs.Screen
+				name='Watch'
+				options={{
+					title: 'Watch',
+					tabBarIcon: ({ color, size, focused }) => (
+						<PlayCircleIcon
 							size={size}
 							color={color}
 							weight={focused ? 'fill' : 'regular'}

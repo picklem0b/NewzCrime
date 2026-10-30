@@ -7,13 +7,21 @@
  * First-release scope: articles, court rulings and podcast episodes.
  */
 
-import type { ContentType, ItemTopic, SourceType, Topic } from './types';
+import type {
+  ContentType,
+  ItemTopic,
+  Province,
+  SourceCategory,
+  SourceType,
+  Topic,
+} from './types';
 
 /** Content kinds stored in `content_items.type`. */
 export const CONTENT_TYPE = {
   ARTICLE: 'article',
   COURT_RULING: 'court_ruling',
   PODCAST_EPISODE: 'podcast_episode',
+  VIDEO: 'video',
 } as const satisfies Record<string, ContentType>;
 
 /** Ingestion source kinds handled by worker adapters. */
@@ -21,7 +29,42 @@ export const SOURCE_TYPE = {
   RSS: 'rss',
   PODCAST_INDEX: 'podcast_index',
   SAFLII: 'saflii',
+  YOUTUBE: 'youtube',
 } as const satisfies Record<string, SourceType>;
+
+/** Editorial shelves for video channels. */
+export const SOURCE_CATEGORY = {
+  NEWS: 'news',
+  TRUE_CRIME: 'true_crime',
+  COURTS: 'courts',
+  LOCAL: 'local',
+} as const satisfies Record<string, SourceCategory>;
+
+/** Every province, in display order. */
+export const PROVINCES = [
+  'gauteng',
+  'western_cape',
+  'kwazulu_natal',
+  'eastern_cape',
+  'free_state',
+  'limpopo',
+  'mpumalanga',
+  'north_west',
+  'northern_cape',
+] as const satisfies ReadonlyArray<Province>;
+
+/** Human-readable province names, shared by the API and the app. */
+export const PROVINCE_LABEL: Record<Province, string> = {
+  gauteng: 'Gauteng',
+  western_cape: 'Western Cape',
+  kwazulu_natal: 'KwaZulu-Natal',
+  eastern_cape: 'Eastern Cape',
+  free_state: 'Free State',
+  limpopo: 'Limpopo',
+  mpumalanga: 'Mpumalanga',
+  north_west: 'North West',
+  northern_cape: 'Northern Cape',
+};
 
 /** Feed topics offered as filter chips on Home. */
 export const TOPIC = {
@@ -80,7 +123,7 @@ export const CACHE_TTL = {
  * ships; `CHANGELOG.md` is the long-form record of the same history.
  */
 export const APP_RELEASE = {
-  latestVersion: '1.16.0',
+  latestVersion: '1.15.15',
   minimumVersion: '1.0.0',
   /**
    * Direct APK, not a page. The app downloads this itself and hands it to the
@@ -105,24 +148,15 @@ export const RELEASE_NOTES: ReadonlyArray<{
   highlights: ReadonlyArray<string>;
 }> = [
   {
-    version: '1.16.0',
+    version: '1.15.15',
     highlights: [
-      'A one-time illustrated introduction with the four supplied artworks',
-      'The feed and source directory preload during onboarding, so Today opens without a skeleton',
-      'Empty pages are no longer cached, so newly collected stories appear immediately',
-      'Clearer database checks and Supabase connection guidance',
+      'A new Watch tab: live courts, true crime, national news and local channels',
+      'Search now finds stories, judgments, channels, podcasts and video, with advanced filters',
+      'Discover lists every newsletter, YouTube channel and podcast in one place',
+      'Follow any outlet, channel or show to put its newest items first',
+      'A one-time illustrated introduction, with the feed preloaded before the first tab',
     ],
   },
-  {
-    version: '1.15.0',
-    highlights: [
-      '42 new settings across Appearance, General, About, Reading & audio, Notifications, and Data & privacy',
-      'Updates now download in the app and prompt to install, with an in-app banner when one is ready',
-      'Search rebuilt with a back header, animated results and faster filtering',
-      'Lighter requests and a cache-first feed for the free hosting tier',
-    ],
-  },
-
 ];
 
 /** Prefixes for every cached key, so the worker can invalidate in bulk. */

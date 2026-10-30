@@ -8,6 +8,7 @@ import {
   sourceCacheKey,
   sourceItemsCacheKey,
   sourcesCacheKey,
+  sourceSearchCacheKey,
 } from '.././cacheKeys';
 
 describe('feedCacheKey', () => {
@@ -18,7 +19,9 @@ describe('feedCacheKey', () => {
   });
 
   it('fills in readable defaults for absent parameters', () => {
-    expect(feedCacheKey({ limit: 20 })).toBe('feed:all:any:articles:first:20');
+    expect(feedCacheKey({ limit: 20 })).toBe(
+      'feed:all:any:any-sources:articles:mixed:no-videos:first:20'
+    );
   });
 
   it('changes when any parameter that changes the result changes', () => {
@@ -27,6 +30,8 @@ describe('feedCacheKey', () => {
     expect(feedCacheKey({ limit: 20, topic: 'court' })).not.toBe(base);
     expect(feedCacheKey({ limit: 20, sourceId: 'abc' })).not.toBe(base);
     expect(feedCacheKey({ limit: 20, includePodcasts: true })).not.toBe(base);
+    expect(feedCacheKey({ limit: 20, contentType: 'video' })).not.toBe(base);
+    expect(feedCacheKey({ limit: 20, includeVideos: true })).not.toBe(base);
     expect(feedCacheKey({ limit: 20, cursor: 'next' })).not.toBe(base);
     expect(feedCacheKey({ limit: 21 })).not.toBe(base);
   });
@@ -50,6 +55,7 @@ describe('other keys', () => {
     expect(sourceCacheKey('1')).toBe('sources:source:1');
     expect(sourcesCacheKey('all')).toBe('sources:all');
     expect(sourcesCacheKey('podcasts')).toBe('sources:podcasts');
+    expect(sourcesCacheKey('videos')).toBe('sources:videos');
   });
 
   it('does not collide an item with a source that share an id', () => {
@@ -83,9 +89,45 @@ describe('searchCacheKey', () => {
     expect(searchCacheKey({ query: 'court', limit: 21 })).not.toBe(base);
   });
 
-  it('keeps different queries apart', () => {
-    expect(searchCacheKey({ query: 'court', limit: 20 })).not.toBe(
-      searchCacheKey({ query: 'crime', limit: 20 })
+  it('varies with every advanced filter', () => {
+    const base = searchCacheKey({ query: 'court', limit: 20 });
+
+    expect(searchCacheKey({ query: 'court', limit: 20, type: 'video' })).not.toBe(base);
+    expect(searchCacheKey({ query: 'court', limit: 20, topic: 'crime' })).not.toBe(base);
+    expect(
+      searchCacheKey({
+        query: 'court',
+        limit: 20,
+        sourceId: '11111111-1111-1111-1111-111111111111',
+      })
+    ).not.toBe(base);
+    expect(
+      searchCacheKey({
+        query: 'court',
+        limit: 20,
+        from: '2026-01-01T00:00:00.000Z',
+      })
+    ).not.toBe(base);
+    expect(searchCacheKey({ query: 'court', limit: 20, sort: 'oldest' })).not.toBe(base);
+  });
+});
+
+describe('sourceSearchCacheKey', () => {
+  it('normalises case and whitespace', () => {
+    expect(sourceSearchCacheKey('  News24 ', 20)).toBe(
+      sourceSearchCacheKey('news24', 20)
+    );
+  });
+
+  it('varies with the limit', () => {
+    expect(sourceSearchCacheKey('news', 20)).not.toBe(
+      sourceSearchCacheKey('news', 30)
+    );
+  });
+
+  it('keeps different directory queries apart', () => {
+    expect(sourceSearchCacheKey('news', 20)).not.toBe(
+      sourceSearchCacheKey('podcast', 20)
     );
   });
 });
