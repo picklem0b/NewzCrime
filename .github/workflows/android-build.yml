@@ -105,7 +105,12 @@ jobs:
             - name: Build debug APK
               if: github.event_name == 'workflow_dispatch' && inputs.mode == 'debug'
               working-directory: apps/mobile/android
-              run: ./gradlew assembleDebug --no-daemon
+              run: |
+                  # A debug variant normally loads its JavaScript from Metro. Bundle it
+                  # instead, so the downloaded APK opens on a phone with no dev server.
+                  sed -i 's|// debuggableVariants = \["liteDebug", "prodDebug"\]|debuggableVariants = []|' app/build.gradle
+                  grep -q 'debuggableVariants = \[\]' app/build.gradle
+                  ./gradlew assembleDebug --no-daemon
 
             - name: Collect the APK
               run: |
